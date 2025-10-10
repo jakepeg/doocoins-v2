@@ -1,20 +1,19 @@
-# Various IDEs and Editors
-.vscode/
-.idea/
-**/*~
-
-# Mac OSX temporary files
-.DS_Store
-**/.DS_Store
-
-# dfx temporary files
+echo "
+# DFX
 .dfx/
+canister_ids.json
 
-# frontend code
-node_modules/
+# Build outputs  
 dist/
+src/declarations/
+
+# Environment
 .env
 
-src/declarations
+# Dependencies
+node_modules/
+.mops/
 
-.mops
+# IDE
+.vscode/
+.idea/" >> .gitignore

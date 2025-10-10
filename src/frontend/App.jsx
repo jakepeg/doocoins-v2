@@ -2,10 +2,6 @@ import React from "react";
 import LoggedOut from "./screens/LoggedOut";
 import { AuthProvider } from "./use-auth-client";
 
-import "@nfid/identitykit/react/styles.css";
-import { IdentityKitProvider } from "@nfid/identitykit/react";
-import { IdentityKitAuthType, NFIDW } from "@nfid/identitykit";
-
 import "./assets/css/main.css";
 import ChildList from "./screens/ChildList";
 import {
@@ -156,24 +152,10 @@ export default () => {
   };
 
   return (
-    <IdentityKitProvider
-      onConnectSuccess={(res) => {
-        console.log("logged in successfully", res);
-        // return <Navigate to="/" replace />
-      }}
-      onDisconnect={(res) => {
-        console.log("logged out successfully", res);
-      }}
-      signers={[NFIDW]}
-      theme="light"
-      signerClientOptions={clientOptions}
-      authType={IdentityKitAuthType.Delegation}
-    >
-      <AuthProvider>
-        <ChakraProvider>
-          <App />
-        </ChakraProvider>
-      </AuthProvider>
-    </IdentityKitProvider>
+    <AuthProvider>
+      <ChakraProvider>
+        <App />
+      </ChakraProvider>
+    </AuthProvider>
   );
 };

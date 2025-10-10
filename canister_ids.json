@@ -1,18 +1,22 @@
 {
   "backend": {
-    "ic": "f5cpb-qyaaa-aaaah-qdbeq-cai",
-    "staging": "ssj5f-kyaaa-aaaah-qdcyq-cai"
+    "local": "uxrrr-q7777-77774-qaaaq-cai",
+    "ic": "yh4zm-5yaaa-aaaah-qqf3q-cai",
+    "staging": "yo7sq-lqaaa-aaaah-qqf2a-cai"
   },
   "frontend": {
-    "ic": "fube5-gqaaa-aaaah-qdbfa-cai",
-    "staging": "s3kwz-4qaaa-aaaah-qdcza-cai"
+    "local": "u6s2n-gx777-77774-qaaba-cai",
+    "ic": "zks5c-sqaaa-aaaah-qqf4a-cai",
+    "staging": "yj6ue-giaaa-aaaah-qqf2q-cai"
   },
   "frontend_kids": {
-    "ic": "24mf5-nqaaa-aaaah-qddpa-cai",
-    "staging": "tddd2-sqaaa-aaaah-qdc5a-cai"
+    "local": "uzt4z-lp777-77774-qaabq-cai",
+    "ic": "znt3w-7iaaa-aaaah-qqf4q-cai",
+    "staging": "ya57y-qaaaa-aaaah-qqf3a-cai"
   },
   "internet_identity": {
-    "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai",
-    "staging": "s4lqn-riaaa-aaaah-qdczq-cai"
+    "local": "rdmx6-jaaaa-aaaaa-aaadq-cai",
+    "staging": "be2us-64aaa-aaaaa-qaabq-cai",
+    "ic": "be2us-64aaa-aaaaa-qaabq-cai"
   }
 }

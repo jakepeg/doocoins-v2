@@ -1,18 +1,45 @@
-# DooCoins PWA + Internet Computer
+# DooCoins V2
 
-DooCoins kids rewards app - Children earn DooCoins for good behavior, completing chores and personal achievements, goals are set and DooCoins are redeemed for rewards. See https://www.doo.co
+A modern kids rewards app built on the Internet Computer with Internet Identity authentication.
 
-PWA frontend built with React, Motoko Internet Computer backend with auth by https://nfid.one/
+## Features
 
-## Setting up for local development
+- 🔐 **Internet Identity Auth** - Social login with Google, Apple, Email, Passkeys
+- 👨‍👩‍👧‍👦 **Family Management** - Parents create children profiles and manage rewards
+- 🪙 **Virtual Currency** - Parent-controlled DooCoins economy
+- 📱 **Dual Apps** - Separate parent and kids interfaces
+- 🔄 **Migration Ready** - Import data from DooCoins V1
 
-To get started, start a local dfx development environment in this directory with the following steps:
+## Quick Start
 
-- dfx start --background --clean
-- dfx deploy
-- npm run build
-- npm start (to run the parents app)
-- npm run buildkids
-- npm run startkids (to run the kids app)
+```bash
+# Install dependencies
+npm install
 
-# doocoins-pwa
+# Start local IC replica
+dfx start --background --clean
+
+# Deploy canisters
+dfx deploy
+
+# Start development server
+npm start          # Parent app at http://localhost:5173
+npm run startkids  # Kids app at http://localhost:5174
+```
+
+## Migration from V1
+
+If you're upgrading from DooCoins V1 (NFID version), use the migration feature to transfer your family's data.
+
+## Tech Stack
+
+- **Backend**: Motoko on Internet Computer
+- **Frontend**: React + Chakra UI
+- **Auth**: Internet Identity
+- **Build**: Webpack + Vite
+
+## Development
+
+- `npm run build` - Build parent app
+- `npm run buildkids` - Build kids app
+- `dfx generate backend` - Generate type declarations

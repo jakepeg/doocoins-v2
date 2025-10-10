@@ -1,6 +1,5 @@
 import React from "react";
 import { useAuth } from "../use-auth-client";
-import { ConnectWallet } from "@nfid/identitykit/react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Box, Button, Link, Text } from "@chakra-ui/react";
 import ICBadge from "../assets/images/ic-badge.svg";
@@ -34,8 +33,9 @@ function checkForIOS() {
 }
 
 function LoggedOut() {
-  const { login, isAuthenticated, isLoading, logout } = useAuth();
-  const clearContextState = useClearContextState();
+  useClearContextState();
+  const navigate = useNavigate();
+  const { actor, isAuthenticated, login, isLoading } = useAuth();
   
   if (!isLoading && isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -75,9 +75,7 @@ function LoggedOut() {
           </Link>
         </Text>
 
-        <ConnectWallet
-          connectButtonComponent={ConnectWalletButton || ConnectWalletButton}
-        />
+        <ConnectWalletButton onClick={login} disabled={isLoading} isLoading={isLoading} />
 
         <Box>
           {checkForIOS() ? (
@@ -103,7 +101,7 @@ function LoggedOut() {
   );
 }
 
-function ConnectWalletButton({ onClick, ...props }) {
+function ConnectWalletButton({ onClick, disabled, isLoading, ...props }) {
   return (
     <Button
       variant="ghost"
@@ -118,9 +116,10 @@ function ConnectWalletButton({ onClick, ...props }) {
       py={6}
       _hover={{}}
       _active={{}}
-      disabled={props.disabled}
+      disabled={disabled}
+      isLoading={isLoading}
     >
-      Connect
+      {isLoading ? "Connecting..." : "Connect"}
     </Button>
   );
 }
