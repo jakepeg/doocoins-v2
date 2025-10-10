@@ -1,0 +1,18 @@
+{
+  "backend": {
+    "ic": "f5cpb-qyaaa-aaaah-qdbeq-cai",
+    "staging": "ssj5f-kyaaa-aaaah-qdcyq-cai"
+  },
+  "frontend": {
+    "ic": "fube5-gqaaa-aaaah-qdbfa-cai",
+    "staging": "s3kwz-4qaaa-aaaah-qdcza-cai"
+  },
+  "frontend_kids": {
+    "ic": "24mf5-nqaaa-aaaah-qddpa-cai",
+    "staging": "tddd2-sqaaa-aaaah-qdc5a-cai"
+  },
+  "internet_identity": {
+    "ic": "rdmx6-jaaaa-aaaaa-aaadq-cai",
+    "staging": "s4lqn-riaaa-aaaah-qdczq-cai"
+  }
+}
