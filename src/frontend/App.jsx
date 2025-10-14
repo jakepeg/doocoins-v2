@@ -24,6 +24,7 @@ import ImageLoader from "./utils/ImageLoader";
 import InviteChild from "./screens/InviteChild";
 import Alerts from "./screens/Alerts";
 import { canisterId } from "../declarations/backend";
+import { MigrationHandler } from "./components/MigrationHandler";
 
 function App() {
   return (
@@ -154,7 +155,9 @@ export default () => {
   return (
     <AuthProvider>
       <ChakraProvider>
-        <App />
+        <MigrationHandler>
+          <App />
+        </MigrationHandler>
       </ChakraProvider>
     </AuthProvider>
   );

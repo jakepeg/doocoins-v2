@@ -16,15 +16,26 @@ import {
 import { ReactComponent as EditIcon } from "../assets/images/pencil.svg";
 import { ReactComponent as DeleteIcon } from "../assets/images/delete.svg";
 import { ReactComponent as InviteIcon } from "../assets/images/invite.svg";
-import { Skeleton, Stack, Text, useDisclosure } from "@chakra-ui/react";
+import { 
+  Skeleton, 
+  Stack, 
+  Text, 
+  useDisclosure,
+  Box,
+  VStack,
+  Button,
+  Link
+} from "@chakra-ui/react";
 import AddItemToListCallout from "../components/Callouts/AddItemToListCallout";
 import { ChildContext } from "../contexts/ChildContext";
+import { MigrationContext } from "../components/MigrationHandler";
 import strings from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 
 function ChildList() {
   const { actor, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const migrationContext = React.useContext(MigrationContext);
   const {
     isNewToSystem: { childList },
     handleUpdateCalloutState,
@@ -288,10 +299,47 @@ function ChildList() {
               </SwipeableList>
             </ul>
           </div>
-        ) : null}
+        ) : (
+          // Empty state with migration option
+          <Box p={6} textAlign="center" color="white">
+            <VStack spacing={4}>
+              <Text fontSize="lg" fontWeight="semibold">
+                Add a child to get started
+              </Text>
+              <Text fontSize="sm" color="whiteAlpha.800">
+                Tap the + icon above to create your first child profile
+              </Text>
+              {migrationContext?.canMigrate && (
+                <>
+                  <Box my={4} width="100px" height="1px" bg="whiteAlpha.400" />
+                  <VStack spacing={2}>
+                    <Text fontSize="sm" color="whiteAlpha.700">
+                      Already have children but they're not showing?
+                    </Text>
+                    <Link
+                      as={Button}
+                      variant="outline"
+                      size="sm"
+                      colorScheme="blue"
+                      color="white"
+                      borderColor="whiteAlpha.400"
+                      _hover={{
+                        borderColor: "blue.400",
+                        color: "blue.200"
+                      }}
+                      onClick={migrationContext.openMigrationModal}
+                    >
+                      Transfer from previous account
+                    </Link>
+                  </VStack>
+                </>
+              )}
+            </VStack>
+          </Box>
+        )}
       </>
     );
-  }, [children]);
+  }, [children, migrationContext]);
 
   return (
     <>

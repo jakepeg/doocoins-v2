@@ -7,6 +7,7 @@ import Result "mo:base/Result";
 import Iter "mo:base/Iter";
 import Option "mo:base/Option";
 import Types "./Types";
+import Migration "./Migration";
 import Buffer "mo:base/Buffer";
 import Time "mo:base/Time";
 // WARNING REMOVE? unused field "recurringTimer"
@@ -43,6 +44,9 @@ persistent actor {
   //for child to request task complete and request claim reward
   var childRequestsTasks : Trie.Trie<Text, Types.TaskReqMap> = Trie.empty();
   var childRequestsRewards : Trie.Trie<Text, Types.RewardReqMap> = Trie.empty();
+
+  // MIGRATION: NFID to Internet Identity principal linking
+  var principalLinks : Migration.PrincipalLinks = Migration.initLinks();
 
   //who am I
   //----------------------------------------------------------------------------------------------------
@@ -1070,6 +1074,78 @@ persistent actor {
       case null { return "" };
       case (?e) {
         return e.name;
+      };
+    };
+  };
+
+  // MIGRATION FUNCTIONS: NFID to Internet Identity
+  //----------------------------------------------------------------------------------------------------
+
+  // Helper function to check if an NFID principal has existing data
+  private func hasNfidData(nfidPrincipal : Principal) : Bool {
+    switch (Trie.get(profiles, keyPrincipal(nfidPrincipal), Principal.equal)) {
+      case null { false };
+      case (?_) { true };
+    };
+  };
+
+  // Link NFID principal to Internet Identity principal
+  public shared (msg) func linkPrincipals(nfidPrincipal : Principal, iiPrincipal : Principal) : async Result.Result<(), Text> {
+    let caller = msg.caller;
+
+    // Create closure for data check
+    let hasData = func() : Bool { hasNfidData(nfidPrincipal) };
+
+    switch (Migration.linkPrincipals(principalLinks, caller, nfidPrincipal, iiPrincipal, hasData)) {
+      case (#ok(newLinks)) {
+        principalLinks := newLinks;
+        #ok();
+      };
+      case (#err(#NotAuthorized)) {
+        #err("Not authorized: Only Internet Identity principal can link");
+      };
+      case (#err(#NoDataFound)) { #err("No data found for NFID principal") };
+      case (#err(#AlreadyLinked)) { #err("Principal already linked") };
+      case (#err(#InvalidPrincipal)) { #err("Invalid principal format") };
+    };
+  };
+
+  // Get migration status for current caller
+  public shared query (msg) func getMigrationStatus() : async {
+    nfidPrincipal : ?Text;
+    isLinked : Bool;
+  } {
+    Migration.getMigrationStatus(principalLinks, msg.caller);
+  };
+
+  // Resolve caller principal (use NFID principal if linked, otherwise use caller)
+  private func resolveCaller(caller : Principal) : Principal {
+    Migration.resolvePrincipal(principalLinks, caller);
+  };
+
+  // Update existing functions to use resolveCaller
+  // Example: Update getChildren to resolve principal
+  public shared (msg) func getChildrenWithMigration() : async Result.Result<[Types.Child], Types.Error> {
+    let resolvedCaller = resolveCaller(msg.caller);
+
+    if (Principal.toText(resolvedCaller) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    let allChildren = Trie.find(
+      profiles,
+      keyPrincipal(resolvedCaller),
+      Principal.equal,
+    );
+
+    switch (allChildren) {
+      case null {
+        #err(#NotFound);
+      };
+      case (?e) {
+        let vals = Iter.toArray(Trie.iter(e));
+        let formatted = Array.map<(Text, Types.Child), Types.Child>(vals, func(val) = val.1);
+        #ok(formatted);
       };
     };
   };
