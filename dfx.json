@@ -42,7 +42,7 @@
   },
   "defaults": {
     "build": {
-      "args": ""
+      "args": "--enhanced-orthogonal-persistence"
     }
   },
   "output_env_file": ".env",
