@@ -189,7 +189,9 @@ persistent actor {
       return #err(#NotAuthorized);
     };
 
-    let childId = Principal.toText(callerId) # "-" # Nat.toText(childNumber);
+    // Resolve principal: use NFID principal if this II principal is linked
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+    let childId = Principal.toText(resolvedPrincipal) # "-" # Nat.toText(childNumber);
     childNumber += 1;
     let finalChild : Types.Child = {
       name = child.name;
@@ -238,7 +240,7 @@ persistent actor {
 
     let newProfiles = Trie.put2D(
       profiles,
-      keyPrincipal(callerId),
+      keyPrincipal(resolvedPrincipal),
       Principal.equal,
       keyText(childId),
       Text.equal,
@@ -322,9 +324,12 @@ persistent actor {
       return #err(#NotAuthorized);
     };
 
+    // Resolve principal: use NFID principal if this II principal is linked
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
     let allChildren = Trie.find(
       profiles,
-      keyPrincipal(callerId),
+      keyPrincipal(resolvedPrincipal),
       Principal.equal,
     );
     let allChildrenFormatted = Option.get(allChildren, Trie.empty());
@@ -652,9 +657,12 @@ persistent actor {
       return #err(#NotAuthorized);
     };
 
+    // Resolve principal: use NFID principal if this II principal is linked
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
     let profilesUpdate = Trie.put2D(
       profiles,
-      keyPrincipal(callerId),
+      keyPrincipal(resolvedPrincipal),
       Principal.equal,
       keyText(childId),
       Text.equal,

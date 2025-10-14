@@ -28,14 +28,13 @@ import {
 } from "@chakra-ui/react";
 import AddItemToListCallout from "../components/Callouts/AddItemToListCallout";
 import { ChildContext } from "../contexts/ChildContext";
-import { MigrationContext } from "../components/MigrationHandler";
 import strings from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 
 function ChildList() {
   const { actor, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const migrationContext = React.useContext(MigrationContext);
+  // Migration context removed - users directed to V1 to upgrade
   const {
     isNewToSystem: { childList },
     handleUpdateCalloutState,
@@ -300,7 +299,7 @@ function ChildList() {
             </ul>
           </div>
         ) : (
-          // Empty state with migration option
+          // Empty state with V1 upgrade instructions
           <Box p={6} textAlign="center" color="white">
             <VStack spacing={4}>
               <Text fontSize="lg" fontWeight="semibold">
@@ -309,37 +308,38 @@ function ChildList() {
               <Text fontSize="sm" color="whiteAlpha.800">
                 Tap the + icon above to create your first child profile
               </Text>
-              {migrationContext?.canMigrate && (
-                <>
-                  <Box my={4} width="100px" height="1px" bg="whiteAlpha.400" />
-                  <VStack spacing={2}>
-                    <Text fontSize="sm" color="whiteAlpha.700">
-                      Already have children but they're not showing?
-                    </Text>
-                    <Link
-                      as={Button}
-                      variant="outline"
-                      size="sm"
-                      colorScheme="blue"
-                      color="white"
-                      borderColor="whiteAlpha.400"
-                      _hover={{
-                        borderColor: "blue.400",
-                        color: "blue.200"
-                      }}
-                      onClick={migrationContext.openMigrationModal}
-                    >
-                      Transfer from previous account
-                    </Link>
-                  </VStack>
-                </>
-              )}
+              <Box my={4} width="100px" height="1px" bg="whiteAlpha.400" />
+              <VStack spacing={3}>
+                <Text fontSize="sm" color="whiteAlpha.700">
+                  Already added children but they're not displaying?
+                </Text>
+                <Text fontSize="xs" color="whiteAlpha.600" maxWidth="280px">
+                  You need to upgrade from DooCoins V1 to transfer your data
+                </Text>
+                <Link
+                  as={Button}
+                  href="https://fube5-gqaaa-aaaah-qdbfa-cai.icp0.io"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="outline"
+                  size="sm"
+                  colorScheme="blue"
+                  color="white"
+                  borderColor="whiteAlpha.400"
+                  _hover={{
+                    borderColor: "blue.400",
+                    color: "blue.200"
+                  }}
+                >
+                  Go to V1 to upgrade
+                </Link>
+              </VStack>
             </VStack>
           </Box>
         )}
       </>
     );
-  }, [children, migrationContext]);
+  }, [children]);
 
   return (
     <>

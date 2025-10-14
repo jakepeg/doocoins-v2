@@ -1,6 +1,7 @@
 import React from "react";
 import LoggedOut from "./screens/LoggedOut";
 import { AuthProvider } from "./use-auth-client";
+import "./utils/migration-preserver"; // Preserve migration params early
 
 import "./assets/css/main.css";
 import ChildList from "./screens/ChildList";
