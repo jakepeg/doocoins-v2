@@ -324,11 +324,12 @@ function ChildList() {
                   variant="outline"
                   size="sm"
                   colorScheme="blue"
-                  color="white"
-                  borderColor="whiteAlpha.400"
+                  color="blue.600"
+                  borderColor="blue.400"
                   _hover={{
-                    borderColor: "blue.400",
-                    color: "blue.200"
+                    borderColor: "blue.500",
+                    color: "blue.700",
+                    bg: "blue.50"
                   }}
                 >
                   Go to V1 to upgrade
