@@ -1,8 +1,9 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { Box, Button, Text } from "@chakra-ui/react";
+import { Box, Button, Text, Image } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
+import qrChildImage from "../assets/images/qr-child.png";
 
 const InviteChild = () => {
   const { actor } = useAuth();
@@ -73,8 +74,16 @@ const InviteChild = () => {
           </Text>
 
           <Box as="ol" ml="20px" color="#fff">
-            <Box as="li" fontSize="xl">
-            On {child.name}'s device, in Safari (iOS) or Chrome (Android) go to www.doo.kids 
+            <Box as="li" fontSize="xl" mb="20px">
+              Scan the QR code below using your child's device camera
+              <Box mt="10px">
+                <Image 
+                  src={qrChildImage} 
+                  alt="QR code for DooCoins Kids app" 
+                  maxWidth="200px" 
+                  height="auto"
+                />
+              </Box>
             </Box>
             <Box as="li" fontSize="xl">
             Follow the instructions to install the app 
