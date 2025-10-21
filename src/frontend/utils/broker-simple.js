@@ -4,10 +4,12 @@
     if (typeof window === 'undefined' || !window.addEventListener) return;
 
     window.__brokerLastURL = null;
+    window.__brokerProcessing = false;
     window.addEventListener('broker:callback', async (e) => {
       try {
         const url = e?.detail || '';
         window.__brokerLastURL = url;
+        window.__brokerProcessing = true;
         console.log('[broker] callback URL:', url);
         
         const u = new URL(url);
@@ -86,9 +88,11 @@
         
         // Clean up temporary session key
         localStorage.removeItem('broker_session_key');
+        window.__brokerProcessing = false;
         
       } catch (err) {
         console.error('[broker] Error:', err?.message || err);
+        window.__brokerProcessing = false;
       }
     });
   } catch {}

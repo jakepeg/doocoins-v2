@@ -36,9 +36,52 @@ function LoggedOut() {
   useClearContextState();
   const navigate = useNavigate();
   const { actor, isAuthenticated, login, isLoading } = useAuth();
+  const [brokerProcessing, setBrokerProcessing] = React.useState(false);
+  
+  // Check if we're in the middle of a broker callback (redirect from II)
+  const isBrokerCallback = React.useMemo(() => {
+    try {
+      const hash = window.location.hash;
+      const hasCallback = hash.includes('code=') && hash.includes('nonce=');
+      const processing = window.__brokerProcessing === true;
+      console.log('[LoggedOut] checking broker callback:', { hash, hasCallback, processing });
+      return hasCallback || processing;
+    } catch {
+      return false;
+    }
+  }, []);
+  
+  // Also watch for broker processing changes
+  React.useEffect(() => {
+    const checkBroker = () => {
+      setBrokerProcessing(window.__brokerProcessing === true);
+    };
+    const interval = setInterval(checkBroker, 100);
+    return () => clearInterval(interval);
+  }, []);
   
   if (!isLoading && isAuthenticated) {
     return <Navigate to="/" replace />;
+  }
+  
+  // Show loading state during broker callback processing
+  if (isBrokerCallback || brokerProcessing) {
+    return (
+      <Box
+        className="container"
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="100vh"
+        backgroundColor="#0B334D"
+      >
+        <img className="logo" src={logo} alt="DooCoins" style={{ width: '200px', marginBottom: '2rem' }} />
+        <Text fontSize="xl" color="#fff">
+          Completing sign in...
+        </Text>
+      </Box>
+    );
   }
 
   return (
