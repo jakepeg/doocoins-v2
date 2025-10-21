@@ -44,7 +44,6 @@ function LoggedOut() {
       const hash = window.location.hash;
       const hasCallback = hash.includes('code=') && hash.includes('nonce=');
       const processing = window.__brokerProcessing === true;
-      console.log('[LoggedOut] checking broker callback:', { hash, hasCallback, processing });
       return hasCallback || processing;
     } catch {
       return false;

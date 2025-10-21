@@ -64,7 +64,6 @@ export const AuthProvider = ({ children }) => {
     
     // Listen for broker auth completion
     const handleBrokerAuth = (event) => {
-      console.log('[auth] Received broker:auth-complete event');
       const { identity: delegationIdentity } = event.detail;
       
       if (!delegationIdentity) {
@@ -72,12 +71,10 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       
-      console.log('[auth] Setting identity and actor from broker');
       setIdentity(delegationIdentity);
       const newActor = createActorWithIdentity(delegationIdentity);
       setActor(newActor);
       setLoginStatus("success");
-      console.log('[auth] ✅ Authentication complete via broker');
     };
     
     window.addEventListener('broker:auth-complete', handleBrokerAuth);

@@ -23,9 +23,6 @@ export default function AuthRelay() {
           throw new Error("Missing required params: nonce, publicKey, or return");
         }
 
-        console.log('[relay] starting secure delegation chain flow');
-        console.log('[relay] mobile publicKey:', mobilePublicKeyHex);
-
         // Prepare fallback link early
         const codeEarly = Array.from(crypto.getRandomValues(new Uint8Array(16)))
           .map((b) => b.toString(16).padStart(2, "0"))
@@ -35,24 +32,19 @@ export default function AuthRelay() {
 
         // STEP 1: Generate intermediate session key (controlled by relay, not mobile app)
         // This key never leaves this page and prevents attackers from controlling the delegation
-        console.log('[relay] generating intermediate session key');
         const intermediateIdentity = Ed25519KeyIdentity.generate();
         const intermediatePublicKey = intermediateIdentity.getPublicKey();
-        console.log('[relay] intermediate key generated');
 
         // STEP 2: Authenticate with II using the intermediate key
-        console.log('[relay] creating AuthClient');
         const client = await AuthClient.create({
           idleOptions: { disableDefaultIdleCallback: true, disableIdle: true },
           identity: intermediateIdentity,
         });
         
-        console.log('[relay] starting II login with intermediate key');
         await new Promise((resolve, reject) => {
           client.login({
             identityProvider: "https://id.ai/#authorize",
             onSuccess: () => {
-              console.log('[relay] II login success');
               resolve();
             },
             onError: (err) => {
@@ -63,11 +55,9 @@ export default function AuthRelay() {
           });
         });
         
-        console.log('[relay] waiting for delegation to be processed');
         await new Promise(r => setTimeout(r, 1000));
         
         const isAuth = await client.isAuthenticated();
-        console.log('[relay] isAuthenticated:', isAuth);
         
         if (!isAuth) {
           throw new Error('Not authenticated after II login');
@@ -80,26 +70,19 @@ export default function AuthRelay() {
         }
         
         const iiDelegation = delegatedIdentity.getDelegation();
-        console.log('[relay] got delegation from II');
 
         // STEP 4: Create a second delegation (intermediate key → mobile app key)
         // Parse mobile public key from hex (this is DER-encoded, 44 bytes)
-        console.log('[relay] parsing mobile public key from hex');
         const mobilePublicKeyBytes = new Uint8Array(
           mobilePublicKeyHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16))
         );
-        console.log('[relay] mobile public key bytes length:', mobilePublicKeyBytes.length);
-        console.log('[relay] mobile public key bytes:', Array.from(mobilePublicKeyBytes.slice(0, 12)).join(','), '...');
         
         // Create Ed25519PublicKey object from DER bytes
-        console.log('[relay] creating Ed25519PublicKey from DER');
         const mobilePublicKey = Ed25519PublicKey.fromDer(mobilePublicKeyBytes);
-        console.log('[relay] mobile public key object created');
         
         // Create delegation from intermediate to mobile key
         // Use Date object for expiration (30 days from now)
         const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-        console.log('[relay] creating delegation chain to mobile key with expiration:', expirationDate.toISOString());
         
         let mobileDelegation;
         try {
@@ -108,15 +91,10 @@ export default function AuthRelay() {
             mobilePublicKey, // Ed25519PublicKey object
             expirationDate
           );
-          console.log('[relay] delegation chain created successfully');
         } catch (err) {
           console.error('[relay] DelegationChain.create failed:', err);
-          console.error('[relay] Error details:', err.message, err.stack);
-          console.error('[relay] Stack:', err.stack);
           throw new Error(`Failed to create delegation: ${err.message}`);
         }
-        
-        console.log('[relay] created delegation chain: II → intermediate → mobile');
 
         // STEP 5: Combine into a delegation chain
         // The chain is: [II → intermediate, intermediate → mobile]
@@ -142,26 +120,20 @@ export default function AuthRelay() {
             delegationChain.publicKey
           );
           const chainJson = JSON.stringify(chainToStore.toJSON());
-          console.log('[relay] storing delegation chain (using toJSON())');
           const bytes = new TextEncoder().encode(chainJson);
           await actor.putAuthBlob(code, nonce, bytes, expiresAt);
-          console.log('[relay] delegation chain stored');
         } catch (e) {
-          console.error("[relay] failed to store delegation chain", e);
+          console.error("[relay] Failed to store delegation chain:", e);
           throw e;
         }
 
         // STEP 7: Redirect back using URI fragment (not GET param to avoid leaking to server)
         const finalUrl = `${ret}#code=${encodeURIComponent(code)}&nonce=${encodeURIComponent(nonce)}`;
-        console.log('[relay] redirecting to app with delegation chain');
         setRetLink(finalUrl);
         window.location.replace(finalUrl);
         
       } catch (e) {
-        console.error("[relay] error during auth:", e);
-        console.error("[relay] error stack:", e.stack);
-        console.error("[relay] error message:", e.message);
-        console.error("[relay] error details:", JSON.stringify(e, null, 2));
+        console.error("[relay] Authentication error:", e);
         
         const errorMsg = e instanceof Error ? e.message : String(e);
         setError(`ERROR: ${errorMsg}\n\nStack: ${e.stack || 'no stack'}`);
@@ -175,7 +147,6 @@ export default function AuthRelay() {
             const code = `error:${encodeURIComponent(errorMsg.substring(0, 50))}`;
             const fallbackUrl = `${ret}#code=${encodeURIComponent(code)}&nonce=${encodeURIComponent(nonce)}`;
             setRetLink(fallbackUrl);
-            console.log('[relay] redirecting back with error code');
             setTimeout(() => window.location.replace(fallbackUrl), 3000);
           }
         } catch {}
