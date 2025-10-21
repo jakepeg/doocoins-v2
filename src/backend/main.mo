@@ -48,6 +48,12 @@ persistent actor {
   // MIGRATION: NFID to Internet Identity principal linking
   var principalLinks : Migration.PrincipalLinks = Migration.initLinks();
 
+  // AUTH BROKER: Ephemeral storage for one-time code exchanges
+  // Stores a short-lived blob (e.g., serialized delegation package) keyed by a random code
+  // and protected by a caller-provided nonce. Entries are deleted on successful read.
+  // expiresAt uses Time.now() units (nanoseconds since Unix epoch).
+  var authBlobs : Trie.Trie<Text, { nonce : Text; blob : Blob; expiresAt : Int }> = Trie.empty();
+
   //who am I
   //----------------------------------------------------------------------------------------------------
 
@@ -173,6 +179,52 @@ persistent actor {
   };
 
   // END MILESTONE #1 TASKS
+
+  // AUTH BROKER ENDPOINTS
+  //-----------------------------------------------------------------------------------------------
+  // putAuthBlob: Store a one-time blob under a random code with a nonce and expiry (TTL).
+  public shared func putAuthBlob(code : Text, nonce : Text, blob : Blob, expiresAt : Int) : async Bool {
+    // Reject obviously short codes to avoid accidental collisions
+    if (Text.size(code) < 16) { return false };
+    // Reject expired entries
+    if (expiresAt <= Time.now()) { return false };
+    let (updated, _old) = Trie.put(
+      authBlobs,
+      keyText(code),
+      Text.equal,
+      {
+        nonce;
+        blob;
+        expiresAt;
+      },
+    );
+    authBlobs := updated;
+    return true;
+  };
+
+  // takeAuthBlob: Return and delete the blob if the code+nonce match and TTL is valid.
+  public shared func takeAuthBlob(code : Text, nonce : Text) : async ?Blob {
+    let entryOpt = Trie.find(authBlobs, keyText(code), Text.equal);
+    switch (entryOpt) {
+      case null { return null };
+      case (?entry) {
+        // Enforce nonce match and TTL
+        if (entry.nonce != nonce) {
+          return null;
+        };
+        if (entry.expiresAt <= Time.now()) {
+          // Expired: delete and return null
+          let (next, _old) = Trie.remove(authBlobs, keyText(code), Text.equal);
+          authBlobs := next;
+          return null;
+        };
+        // Valid: delete-on-read and return blob
+        let (next, _old) = Trie.remove(authBlobs, keyText(code), Text.equal);
+        authBlobs := next;
+        return ?entry.blob;
+      };
+    };
+  };
 
   //count users
   //----------------------------------------------------------------------------------------------------

@@ -124,4 +124,13 @@ function ConnectWalletButton({ onClick, disabled, isLoading, ...props }) {
   );
 }
 
+// TODO(auth-broker): When enabling the broker flow on iOS, this Connect button can:
+// - Generate a nonce and construct the relay URL:
+//   `https://zks5c-sqaaa-aaaah-qqf4a-cai.icp0.io/auth/relay?nonce=<rand>&return=doocoins://ii-callback`
+// - Call the native bridge to start ASWebAuthenticationSession:
+//   `window.webkit?.messageHandlers?.broker?.postMessage({ relayUrl })`
+// The web app listens for the deep link via a custom event injected by native:
+//   `window.addEventListener('broker:callback', (e) => {/* parse e.detail */})`
+// and then calls backend `takeAuthBlob(code, nonce)` to import the session.
+
 export default LoggedOut;

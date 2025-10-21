@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>DooCoins Parent</string>
+	<string>DooCoins Parent</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,35 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>doocoins</string>
+				</array>
+			</dict>
+		</array>
+		<!--
+		TODO(auth-broker): Callback registration for the broker flow.
+		Phase 1 (dev/custom scheme):
+			- Add CFBundleURLTypes here to register a custom URL scheme, e.g. "doocoins".
+				Example structure to add when ready:
+				<key>CFBundleURLTypes</key>
+				<array>
+					<dict>
+						<key>CFBundleURLSchemes</key>
+						<array>
+							<string>doocoins</string>
+						</array>
+					</dict>
+				</array>
+
+		Phase 2 (production/universal links):
+			- Enable Associated Domains capability in the Xcode target and add:
+					applinks:zks5c-sqaaa-aaaah-qqf4a-cai.icp0.io
+			- Host AASA at https://zks5c-sqaaa-aaaah-qqf4a-cai.icp0.io/.well-known/apple-app-site-association
+				mapping the path /ii-callback to this app (TeamID + bundle ID required).
+		-->
 </dict>
 </plist>

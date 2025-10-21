@@ -22,14 +22,18 @@ import About from "./screens/About";
 import Help from "./screens/Help";
 import ChildProvider from "./contexts/ChildContext";
 import ImageLoader from "./utils/ImageLoader";
+import "./utils/broker-simple"; // Broker pattern for mobile II authentication (completes delegation flow)
 import InviteChild from "./screens/InviteChild";
 import Alerts from "./screens/Alerts";
 import { canisterId } from "../declarations/backend";
 import { MigrationHandler } from "./components/MigrationHandler";
+import AuthRelay from "./screens/AuthRelay";
 
 function App() {
   return (
     <main id="pageContent">
+      {/* Native-only safe-area spacer to keep header/logo below iOS status bar */}
+      <div className="native-only-safe-spacer" />
       <ImageLoader />
       <ChildProvider>
         <Router>
@@ -107,6 +111,7 @@ function App() {
               }
             />
             <Route path="/login" element={<LoggedOut />} />
+            <Route path="/auth/relay" element={<AuthRelay />} />
             <Route path="*" element={<NoMatch />} />
           </Routes>
         </Router>

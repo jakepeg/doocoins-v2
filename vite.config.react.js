@@ -79,7 +79,7 @@ export default defineConfig({
     EnvironmentPlugin("all", { prefix: "CANISTER_" }),
     EnvironmentPlugin("all", { prefix: "DFX_" }),
     EnvironmentPlugin({ BACKEND_CANISTER_ID: "" }),
-    VitePWA(manifestForPlugin),
+    // VitePWA(manifestForPlugin), // TEMPORARILY DISABLED for testing
     svgr()
   ]
 });
