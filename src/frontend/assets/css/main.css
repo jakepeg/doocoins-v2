@@ -3,6 +3,18 @@ body {
   background: #F0F7FC!important;
 }
 
+/* iOS Status Bar Background */
+.ios-status-bar-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background-color: #0B334D !important;
+  z-index: 9999;
+  pointer-events: none; /* Allow clicks to pass through */
+}
+
 .rstra-content-container, .rstra-container {
   background-color: transparent !important;
   justify-content: end !important;

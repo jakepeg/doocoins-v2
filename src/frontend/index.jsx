@@ -1,17 +1,38 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from '@capacitor/status-bar';
 import './assets/css/index.css'
 import "react-swipeable-list/dist/styles.css";
 
 import App from "./App";
 
-// Add a class to body for native apps so we can apply safe-area insets via CSS
-try {
-	if (Capacitor?.isNativePlatform?.() === true) {
-		document.body.classList.add("native-safe");
-	}
-} catch {}
+// Configure status bar for native apps
+if (Capacitor?.isNativePlatform?.()) {
+	document.body.classList.add("native-safe");
+	
+	// iOS: Set status bar to light content (white text on dark background)
+	StatusBar.setStyle({ style: Style.Light }).catch(err => {
+		console.log('[StatusBar] Error setting style:', err);
+	});
+	
+	// Add blue background div that covers status bar + safe area
+	// We make it tall enough to cover the status bar AND extend down
+	const statusBarBg = document.createElement('div');
+	statusBarBg.id = 'status-bar-bg';
+	statusBarBg.style.cssText = `
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 200px;
+		background-color: #0B334D;
+		z-index: -1;
+	`;
+	document.body.prepend(statusBarBg);
+	
+	console.log('[StatusBar] Blue background added - Build: Oct 22 11:20 AM');
+}
 
 const root = createRoot(document.getElementById("root"));
 root.render(<App />);
