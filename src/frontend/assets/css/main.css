@@ -81,7 +81,7 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 }
 
 .light-panel {
-  background-color: #F0F7FC;
+  background-color: transparent;
   min-height: 95%;
   /* min-height: calc(100vh - 50px); */
 }

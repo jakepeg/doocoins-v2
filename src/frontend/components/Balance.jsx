@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 import { noGoalEntity } from "../utils/constants";
+import { Capacitor } from "@capacitor/core";
 
 const Balance = () => {
   const {
@@ -261,6 +262,9 @@ const Balance = () => {
               ? PlainGoalBackground
               : null
           })`,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          WebkitBorderRadius: '12px',
         }}
         className={`${styles.hero}`} //${props.isModalOpen}
       >

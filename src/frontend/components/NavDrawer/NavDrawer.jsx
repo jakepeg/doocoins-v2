@@ -30,9 +30,10 @@ function NavDrawer() {
         display={"flex"}
         flexDirection={"row"}
         justifyContent={"space-between"}
-        style={{ zIndex: 9, position: "relative" }}
-        px={showMobileLayout && 4}
-        pt={showMobileLayout && 5}
+        style={{ zIndex: 100, position: "relative" }}
+        px={showMobileLayout ? 4 : 0}
+        pt={showMobileLayout ? 5 : 0}
+        pb={showMobileLayout ? 4 : 0}
       >
         <NavLink to="/">
           <img
@@ -41,7 +42,7 @@ function NavDrawer() {
             src={LogoIcon}
             style={{
               height: "28px",
-              marginLeft: showMobileLayout ? 0 : "10px",
+              marginLeft: showMobileLayout ? "0" : "10px",
               marginTop: "10px",
             }}
           />
@@ -54,7 +55,7 @@ function NavDrawer() {
           src={ProfileIcon}
           style={{
             height: "28px",
-            marginRight: showMobileLayout ? "5px" : "15px",
+            marginRight: showMobileLayout ? "-8px" : "15px",
             marginTop: "10px",
           }}
         />

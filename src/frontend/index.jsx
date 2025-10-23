@@ -25,13 +25,13 @@ if (Capacitor?.isNativePlatform?.()) {
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 200px;
+		height: 50px;
 		background-color: #0B334D;
 		z-index: -1;
 	`;
 	document.body.prepend(statusBarBg);
 	
-	console.log('[StatusBar] Blue background added - Build: Oct 22 11:20 AM');
+	console.log('[StatusBar] Blue background added - Build: Oct 23 12:00 PM - NEW NAV STRUCTURE');
 }
 
 const root = createRoot(document.getElementById("root"));

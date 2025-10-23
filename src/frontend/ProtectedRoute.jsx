@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "./use-auth-client";
 import NavDrawer from "./components/NavDrawer/NavDrawer";
 import { Box } from "@chakra-ui/react";
@@ -12,6 +12,11 @@ function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
   const { child } = React.useContext(ChildContext);
   const showMobileLayout = useIsMobileLayout();
+  const location = useLocation();
+  
+  // ChildList screen should be fully dark blue, others should have light background
+  const isChildListRoute = location.pathname === "/" || location.pathname === "/invite";
+  
   if (!isLoading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
@@ -19,24 +24,34 @@ function ProtectedRoute({ children }) {
   return (
     <Box
       className="container"
-      backgroundColor={!showMobileLayout && "#0B334D"}
+      backgroundColor="#0B334D"
       gap={0}
+      display="flex"
+      flexDirection="column"
+      minHeight="100vh"
     >
+      {/* Dark blue header section with NavDrawer */}
       <Box
-        sx={
-          showMobileLayout && {
-            backgroundColor: "#F0F7FC",
-            display: "flex",
-            flexDirection: "column",
-          }
-        }
+        backgroundColor="#0B334D"
+        paddingBottom={showMobileLayout ? 0 : 4}
       >
         <NavDrawer />
-        {showMobileLayout && (
+      </Box>
+
+      {/* Content area - light background for most screens, dark for child list */}
+      <Box
+        backgroundColor={isChildListRoute ? "#0B334D" : "#F0F7FC"}
+        display="flex"
+        flexDirection="column"
+        flex="1"
+        overflow="visible"
+      >
+        {showMobileLayout && !isChildListRoute && (
           <Balance childName={child?.name} childBalance={child?.balance} />
         )}
+        {children}
       </Box>
-      {children}
+
       {showMobileLayout && <BottomTabNav />}
     </Box>
   );
