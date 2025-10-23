@@ -32,8 +32,8 @@ function NavDrawer() {
         justifyContent={"space-between"}
         style={{ zIndex: 100, position: "relative" }}
         px={showMobileLayout ? 4 : 0}
-        pt={showMobileLayout ? 5 : 0}
-        pb={showMobileLayout ? 4 : 0}
+        pt={0}
+        pb={3}
       >
         <NavLink to="/">
           <img
@@ -42,7 +42,7 @@ function NavDrawer() {
             src={LogoIcon}
             style={{
               height: "28px",
-              marginLeft: showMobileLayout ? "0" : "10px",
+              marginLeft: "0",
               marginTop: "10px",
             }}
           />

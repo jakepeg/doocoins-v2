@@ -31,10 +31,7 @@ function ProtectedRoute({ children }) {
       minHeight="100vh"
     >
       {/* Dark blue header section with NavDrawer */}
-      <Box
-        backgroundColor="#0B334D"
-        paddingBottom={showMobileLayout ? 0 : 4}
-      >
+      <Box backgroundColor="#0B334D">
         <NavDrawer />
       </Box>
 
