@@ -23,7 +23,9 @@ export const AuthProvider = ({ children }) => {
   const [loginStatus, setLoginStatus] = useState("initializing");
   const [loginError, setLoginError] = useState(null);
 
-  const isLocal = process.env.NODE_ENV === "development";
+  const isLocal = process.env.NODE_ENV === "development" || 
+    window.location.hostname.includes("localhost") || 
+    window.location.hostname.includes("127.0.0.1");
   const identityProvider = isLocal 
     ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/#authorize`
     : "https://id.ai/#authorize";
