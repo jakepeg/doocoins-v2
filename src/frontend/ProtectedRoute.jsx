@@ -31,7 +31,15 @@ function ProtectedRoute({ children }) {
       minHeight="100vh"
     >
       {/* Dark blue header section with NavDrawer */}
-      <Box backgroundColor="#0B334D">
+      <Box 
+        backgroundColor="#0B334D"
+        width="100vw"
+        position="relative"
+        left="50%"
+        right="50%"
+        marginLeft="-50vw"
+        marginRight="-50vw"
+      >
         <NavDrawer />
       </Box>
 

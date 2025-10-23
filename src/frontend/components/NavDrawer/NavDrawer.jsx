@@ -55,7 +55,7 @@ function NavDrawer() {
           src={ProfileIcon}
           style={{
             height: "28px",
-            marginRight: showMobileLayout ? "-8px" : "15px",
+            marginRight: "10px",
             marginTop: "10px",
           }}
         />
