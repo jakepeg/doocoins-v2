@@ -24,7 +24,7 @@ function ProtectedRoute({ children }) {
   return (
     <Box
       className="container"
-      backgroundColor="#0B334D"
+      backgroundColor="#DFF3FF"
       gap={0}
       display="flex"
       flexDirection="column"
@@ -43,9 +43,9 @@ function ProtectedRoute({ children }) {
         <NavDrawer />
       </Box>
 
-      {/* Content area - light background for most screens, dark for child list */}
+      {/* Content area - light background for all screens */}
       <Box
-        backgroundColor={isChildListRoute ? "#0B334D" : "#F0F7FC"}
+        backgroundColor="#DFF3FF"
         display="flex"
         flexDirection="column"
         flex="1"

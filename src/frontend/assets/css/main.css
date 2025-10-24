@@ -366,7 +366,9 @@ input[type="text"]::placeholder {
 .swipeable-list-item__content {
   /* min-height: 50px; */
   justify-content: space-between;
-  margin-right: 20px;
+  width: 100%;
+  box-sizing: border-box;
+  margin-right: 0;
 }
 
 .swipeable-list-item__content {

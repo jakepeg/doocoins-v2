@@ -372,7 +372,7 @@ function ChildList() {
             ? modelStyles.blur_background
             : undefined
         }`}
-        style={{ background: "#0B334D" }}
+        style={{ background: "#DFF3FF" }}
       >
         {/* Hero Section - Full width with centered container */}
         <Box 
@@ -483,7 +483,7 @@ function ChildList() {
         </Box>
 
         <div className={`child-list-wrapper`} style={{ position: "relative" }}>
-          <h2 className="title-button light">
+          <h2 className="title-button dark">
             <span>My Children</span>
             <span
               className="plus-sign"

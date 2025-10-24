@@ -31,26 +31,32 @@ const ChildItem = ({ child }) => {
   };
 
   return (
-    <>
-      <Box
-        onClick={handleSelectChild}
-        display="flex"
-        justifyContent={"space-between"}
-        alignItems={"center"}
-      >
-        <Box textAlign={"left"} fontSize={"22px"} color={"#fff"}>
-          {child.name}
-        </Box>
+    <Box
+      backgroundColor="white"
+      borderRadius="md"
+      padding={4}
+      marginBottom={3}
+      display="flex"
+      justifyContent="space-between"
+      alignItems="center"
+      cursor="pointer"
+      onClick={handleSelectChild}
+      _hover={{ boxShadow: "sm" }}
+      width="100%"
+      boxSizing="border-box"
+    >
+      <Box textAlign={"left"} fontSize={"22px"} color={"#0B334D"}>
+        {child.name}
       </Box>
       <Link to="/wallet">
-        <div className="child-balance">
+        <Box className="child-balance">
           <DCIcon className="balance-dc-icon" width="1.2em" height="1.2em" />
-          <Box fontSize={"22px"} style={{ color: "#fff" }}>
+          <Box fontSize={"22px"} color={"#0B334D"}>
             {child.balance}
           </Box>
-        </div>
+        </Box>
       </Link>
-    </>
+    </Box>
   );
 };
 
