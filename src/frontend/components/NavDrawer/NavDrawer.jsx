@@ -31,7 +31,7 @@ function NavDrawer() {
         flexDirection={"row"}
         justifyContent={"space-between"}
         style={{ zIndex: 100, position: "relative" }}
-        px={showMobileLayout ? 4 : 0}
+        px={4}
         pt={0}
         pb={3}
       >
