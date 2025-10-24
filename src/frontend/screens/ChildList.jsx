@@ -374,6 +374,32 @@ function ChildList() {
         }`}
         style={{ background: "#0B334D" }}
       >
+        {/* Hero Section - Full width with centered container */}
+        <Box 
+          backgroundColor="#0B334D"
+          width="100vw"
+          position="relative"
+          left="50%"
+          right="50%"
+          marginLeft="-50vw"
+          marginRight="-50vw"
+          paddingY={4}
+        >
+          <Box 
+            className="container"
+            margin="0 auto"
+          >
+            <Text 
+              fontSize="2xl" 
+              fontWeight="bold" 
+              color="white"
+              paddingX={4}
+            >
+              Doo Dashboard
+            </Text>
+          </Box>
+        </Box>
+
         <div className={`child-list-wrapper`} style={{ position: "relative" }}>
           <h2 className="title-button light">
             <span>My Children</span>
