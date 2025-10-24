@@ -388,15 +388,97 @@ function ChildList() {
           <Box 
             className="container"
             margin="0 auto"
+            paddingX={4}
           >
             <Text 
               fontSize="2xl" 
               fontWeight="bold" 
               color="white"
-              paddingX={4}
             >
               Doo Dashboard
             </Text>
+            <Text 
+              fontSize="md" 
+              color="white"
+              opacity={0.8}
+              marginTop={1}
+            >
+              Manage your children's accounts
+            </Text>
+
+            {/* Dashboard Boxes */}
+            <Box 
+              display="grid"
+              gridTemplateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }}
+              gap={4}
+              marginTop={4}
+            >
+              {/* Box 1 - Children */}
+              <Box 
+                backgroundColor="#2C4F64"
+                padding={4}
+                borderRadius="md"
+              >
+                <Text 
+                  fontSize="3xl" 
+                  fontWeight="bold" 
+                  color="white"
+                >
+                  3
+                </Text>
+                <Text 
+                  fontSize="sm" 
+                  color="white"
+                  marginTop={1}
+                >
+                  Children
+                </Text>
+              </Box>
+
+              {/* Box 2 - Total DooCoins */}
+              <Box 
+                backgroundColor="#2C4F64"
+                padding={4}
+                borderRadius="md"
+              >
+                <Text 
+                  fontSize="3xl" 
+                  fontWeight="bold" 
+                  color="white"
+                >
+                  1864
+                </Text>
+                <Text 
+                  fontSize="sm" 
+                  color="white"
+                  marginTop={1}
+                >
+                  Total DooCoins
+                </Text>
+              </Box>
+
+              {/* Box 3 - Active Goals */}
+              <Box 
+                backgroundColor="#2C4F64"
+                padding={4}
+                borderRadius="md"
+              >
+                <Text 
+                  fontSize="3xl" 
+                  fontWeight="bold" 
+                  color="white"
+                >
+                  3
+                </Text>
+                <Text 
+                  fontSize="sm" 
+                  color="white"
+                  marginTop={1}
+                >
+                  Active Goals
+                </Text>
+              </Box>
+            </Box>
           </Box>
         </Box>
 
