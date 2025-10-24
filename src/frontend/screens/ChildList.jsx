@@ -6,16 +6,7 @@ import modelStyles from "../components/popup/confirmation_popup.module.css";
 import AddChildDialog from "../components/ChildList/AddChildDialog";
 import DeleteDialog from "../components/Dialogs/DeleteDialog";
 import EditDialog from "../components/Dialogs/EditDialog";
-import {
-  SwipeableList,
-  Type as ListType,
-  SwipeAction,
-  TrailingActions,
-  SwipeableListItem,
-} from "react-swipeable-list";
-import { ReactComponent as EditIcon } from "../assets/images/pencil.svg";
-import { ReactComponent as DeleteIcon } from "../assets/images/delete.svg";
-import { ReactComponent as InviteIcon } from "../assets/images/invite.svg";
+// Swipe interactions replaced by popup actions menu
 import { 
   Skeleton, 
   Stack, 
@@ -218,53 +209,7 @@ function ChildList() {
     }
   };
 
-  const trailingActions = React.useCallback(
-    ({ child }) => (
-      <TrailingActions>
-        <SwipeAction
-          className="invite"
-          onClick={() => navigate("/invite", { state: { child } })}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <InviteIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Invite
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-
-        <SwipeAction
-          className="edit"
-          onClick={() => handleTogglePopup(true, child, "edit")}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <EditIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Edit
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-        <SwipeAction
-          className="delete"
-          onClick={() => handleTogglePopup(true, child, "delete")}
-        >
-          <div className="action-btn">
-            <div className="ItemColumnCentered">
-              <DeleteIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Delete
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-      </TrailingActions>
-    ),
-    [],
-  );
+  // trailingActions removed
 
   const ChildrenList = React.useMemo(() => {
     return (
@@ -272,30 +217,18 @@ function ChildList() {
         {children?.length ? (
           <div className="example">
             <ul className="list-wrapper">
-              <SwipeableList
-                threshold={0.25}
-                type={ListType.IOS}
-                fullSwipe={false}
-              >
-                {children.length > 0 &&
-                  children.map((child, index) => {
-                    return (
-                      <SwipeableListItem
-                        leadingActions={null}
-                        trailingActions={trailingActions({ child })}
-                        key={child.id}
-                      >
-                        <ChildItem
-                          child={child}
-                          handleUpdateOpenItemId={setOpenItemId}
-                          openItemId={openItemId}
-                          index={index}
-                          handleTogglePopup={handleTogglePopup}
-                        />
-                      </SwipeableListItem>
-                    );
-                  })}
-              </SwipeableList>
+              {children.length > 0 &&
+                children.map((child, index) => (
+                  <li key={child.id} style={{ listStyle: "none" }}>
+                    <ChildItem
+                      child={child}
+                      handleUpdateOpenItemId={setOpenItemId}
+                      openItemId={openItemId}
+                      index={index}
+                      handleTogglePopup={handleTogglePopup}
+                    />
+                  </li>
+                ))}
             </ul>
           </div>
         ) : (
