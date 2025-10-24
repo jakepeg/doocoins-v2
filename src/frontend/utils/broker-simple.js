@@ -23,7 +23,22 @@
         }
         
         const mod = await import('../../declarations/backend/index.js');
-        const actor = mod.createActor(mod.canisterId, { agentOptions: { host: 'https://icp-api.io' } });
+        // Fallback to production canister ID if environment variable is not set (e.g., in iOS WebView)
+        // Also check if it's the local canister ID and use production instead
+        const LOCAL_CANISTER_ID = 'uxrrr-q7777-77774-qaaaq-cai';
+        const PRODUCTION_CANISTER_ID = 'f5cpb-qyaaa-aaaah-qdbeq-cai';
+        let canisterId = mod.canisterId && mod.canisterId.trim();
+        // If it's the local canister ID or empty, use production
+        if (!canisterId || canisterId === LOCAL_CANISTER_ID) {
+          canisterId = PRODUCTION_CANISTER_ID;
+        }
+        console.log('[broker] Using canister ID:', canisterId);
+        const actor = mod.createActor(canisterId, { 
+          agentOptions: { 
+            host: 'https://icp-api.io',
+            verifyQuerySignatures: false
+          } 
+        });
         const result = await actor.takeAuthBlob(code, nonce);
         
         if (!result || result.length === 0) {

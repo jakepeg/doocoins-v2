@@ -9,10 +9,20 @@ import React, {
 import { AuthClient } from "@dfinity/auth-client";
 import { DelegationIdentity, isDelegationValid, Ed25519KeyIdentity, DelegationChain } from "@dfinity/identity";
 import { Capacitor } from "@capacitor/core";
-import { canisterId, createActor } from "../declarations/backend";
+import { canisterId as declaredCanisterId, createActor } from "../declarations/backend";
 import { del, set } from "idb-keyval";
 
 const THIRTY_DAYS_IN_NANOSECONDS = BigInt(30 * 24 * 3_600_000_000_000);
+
+// Production canister ID - fallback when env var is not available (e.g., in iOS WebView)
+const LOCAL_CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai";
+const PRODUCTION_CANISTER_ID = "f5cpb-qyaaa-aaaah-qdbeq-cai";
+
+// Use declared canisterId if available and not empty, but override if it's the local canister ID
+let canisterId = declaredCanisterId && declaredCanisterId.trim();
+if (!canisterId || canisterId === LOCAL_CANISTER_ID) {
+  canisterId = PRODUCTION_CANISTER_ID;
+}
 
 export const AuthContext = createContext();
 
@@ -23,9 +33,16 @@ export const AuthProvider = ({ children }) => {
   const [loginStatus, setLoginStatus] = useState("initializing");
   const [loginError, setLoginError] = useState(null);
 
-  const isLocal = process.env.NODE_ENV === "development" || 
+  // Check if we're in native Capacitor (production iOS/Android)
+  const isNative = Capacitor.isNativePlatform();
+  
+  // Only use local development mode if NOT in native app AND hostname is localhost/127.0.0.1
+  const isLocal = !isNative && (
+    process.env.NODE_ENV === "development" || 
     window.location.hostname.includes("localhost") || 
-    window.location.hostname.includes("127.0.0.1");
+    window.location.hostname.includes("127.0.0.1")
+  );
+  
   const identityProvider = isLocal 
     ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/#authorize`
     : "https://id.ai/#authorize";
@@ -35,6 +52,7 @@ export const AuthProvider = ({ children }) => {
       agentOptions: {
         identity,
         host: isLocal ? "http://localhost:4943" : "https://icp-api.io",
+        verifyQuerySignatures: false,
       },
     });
   }, [isLocal]);
@@ -73,8 +91,14 @@ export const AuthProvider = ({ children }) => {
         return;
       }
       
+      console.log('[auth] Broker auth complete, creating actor');
+      console.log('[auth] Identity principal:', delegationIdentity.getPrincipal().toText());
+      console.log('[auth] Creating actor with canisterId:', canisterId);
+      console.log('[auth] Using host:', isLocal ? "http://localhost:4943" : "https://icp-api.io");
+      
       setIdentity(delegationIdentity);
       const newActor = createActorWithIdentity(delegationIdentity);
+      console.log('[auth] Actor created:', !!newActor);
       setActor(newActor);
       setLoginStatus("success");
     };

@@ -56,9 +56,17 @@ export const MigrationHandler = ({ children }) => {
         setProgress('Checking migration status...');
         
         // First check if migration already completed
-        const migrationStatus = await actor.getMigrationStatus();
-        console.log('Migration status from backend:', migrationStatus);
-        console.log('Migration status isLinked:', migrationStatus.isLinked);
+        let migrationStatus;
+        try {
+          migrationStatus = await actor.getMigrationStatus();
+          console.log('Migration status from backend:', migrationStatus);
+          console.log('Migration status isLinked:', migrationStatus.isLinked);
+        } catch (err) {
+          console.warn('Failed to get migration status, assuming no migration needed:', err);
+          // If we can't check migration status, assume no migration and proceed
+          setMigrationState('completed');
+          return;
+        }
         
         if (migrationStatus.isLinked) {
           // Already migrated, proceed normally
