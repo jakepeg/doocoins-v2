@@ -7,6 +7,7 @@ import React, {
   useMemo,
 } from "react";
 import { AuthClient } from "@dfinity/auth-client";
+import { Actor } from "@dfinity/agent";
 import { DelegationIdentity, isDelegationValid, Ed25519KeyIdentity, DelegationChain } from "@dfinity/identity";
 import { Capacitor } from "@capacitor/core";
 import { canisterId as declaredCanisterId, createActor } from "../declarations/backend";
@@ -14,15 +15,9 @@ import { del, set } from "idb-keyval";
 
 const THIRTY_DAYS_IN_NANOSECONDS = BigInt(30 * 24 * 3_600_000_000_000);
 
-// Production canister ID - fallback when env var is not available (e.g., in iOS WebView)
+// Canister IDs for different environments
 const LOCAL_CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai";
 const PRODUCTION_CANISTER_ID = "f5cpb-qyaaa-aaaah-qdbeq-cai";
-
-// Use declared canisterId if available and not empty, but override if it's the local canister ID
-let canisterId = declaredCanisterId && declaredCanisterId.trim();
-if (!canisterId || canisterId === LOCAL_CANISTER_ID) {
-  canisterId = PRODUCTION_CANISTER_ID;
-}
 
 export const AuthContext = createContext();
 
@@ -43,21 +38,49 @@ export const AuthProvider = ({ children }) => {
     window.location.hostname.includes("127.0.0.1")
   );
   
+  // Determine which canister ID to use based on environment
+  // Native apps always use production canister
+  // Browser uses local canister in dev mode, production canister otherwise
+  const canisterId = isNative ? PRODUCTION_CANISTER_ID : (
+    isLocal ? LOCAL_CANISTER_ID : PRODUCTION_CANISTER_ID
+  );
+  
   const identityProvider = isLocal 
-    ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943/#authorize`
-    : "https://id.ai/#authorize";
+    ? `http://rdmx6-jaaaa-aaaaa-aaadq-cai.localhost:4943`
+    : "https://id.ai";
 
-  const createActorWithIdentity = useCallback((identity) => {
-    return createActor(canisterId, {
+  const createActorWithIdentity = useCallback(async (identity) => {
+    console.log('[auth] createActorWithIdentity called, isLocal:', isLocal);
+    
+    const host = isLocal ? "http://localhost:4943" : "https://icp-api.io";
+    
+    const actor = createActor(canisterId, {
       agentOptions: {
         identity,
-        host: isLocal ? "http://localhost:4943" : "https://icp-api.io",
+        host,
         verifyQuerySignatures: false,
       },
     });
-  }, [isLocal]);
+    
+    // Fetch root key for local development (standard practice)
+    if (isLocal) {
+      const agent = Actor.agentOf(actor);
+      if (agent && typeof agent.fetchRootKey === 'function') {
+        try {
+          console.log('[auth] Fetching root key for local development...');
+          await agent.fetchRootKey();
+          console.log('[auth] Root key fetched successfully');
+        } catch (err) {
+          console.warn('[auth] Failed to fetch root key:', err);
+        }
+      }
+    }
+    
+    console.log('[auth] Actor created successfully');
+    return actor;
+  }, [isLocal, canisterId]);
 
-  const handleLoginSuccess = useCallback(() => {
+  const handleLoginSuccess = useCallback(async () => {
     if (!authClient) return;
     
     const latestIdentity = authClient.getIdentity();
@@ -69,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     
     setIdentity(latestIdentity);
     
-    const newActor = createActorWithIdentity(latestIdentity);
+    const newActor = await createActorWithIdentity(latestIdentity);
     setActor(newActor);
     setLoginStatus("success");
   }, [authClient, createActorWithIdentity]);
@@ -83,7 +106,7 @@ export const AuthProvider = ({ children }) => {
     let cancelled = false;
     
     // Listen for broker auth completion
-    const handleBrokerAuth = (event) => {
+    const handleBrokerAuth = async (event) => {
       const { identity: delegationIdentity } = event.detail;
       
       if (!delegationIdentity) {
@@ -97,7 +120,7 @@ export const AuthProvider = ({ children }) => {
       console.log('[auth] Using host:', isLocal ? "http://localhost:4943" : "https://icp-api.io");
       
       setIdentity(delegationIdentity);
-      const newActor = createActorWithIdentity(delegationIdentity);
+      const newActor = await createActorWithIdentity(delegationIdentity);
       console.log('[auth] Actor created:', !!newActor);
       setActor(newActor);
       setLoginStatus("success");
@@ -139,7 +162,7 @@ export const AuthProvider = ({ children }) => {
           }
           
           setIdentity(loadedIdentity);
-          const newActor = createActorWithIdentity(loadedIdentity);
+          const newActor = await createActorWithIdentity(loadedIdentity);
           setActor(newActor);
           setLoginStatus("success");
         } else {
@@ -398,20 +421,20 @@ export const AuthProvider = ({ children }) => {
                   if (isAuth) {
                     const clientIdentity = newClient.getIdentity();
                     setIdentity(clientIdentity);
-                    const newActor = createActorWithIdentity(clientIdentity);
+                    const newActor = await createActorWithIdentity(clientIdentity);
                     setActor(newActor);
                     setLoginStatus('success');
                     console.log('[broker] login complete - using AuthClient identity');
                   } else {
                     console.warn('[broker] AuthClient still not authenticated, using manual identity');
                     setIdentity(importedIdentity);
-                    const newActor = createActorWithIdentity(importedIdentity);
+                    const newActor = await createActorWithIdentity(importedIdentity);
                     setActor(newActor);
                     setLoginStatus('success');
                   }
                 } else {
                   setIdentity(importedIdentity);
-                  const newActor = createActorWithIdentity(importedIdentity);
+                  const newActor = await createActorWithIdentity(importedIdentity);
                   setActor(newActor);
                   setLoginStatus('success');
                 }
@@ -419,7 +442,7 @@ export const AuthProvider = ({ children }) => {
                 console.warn('[broker] failed to persist delegation', e);
                 // Still try to use the identity even if persistence failed
                 setIdentity(importedIdentity);
-                const newActor = createActorWithIdentity(importedIdentity);
+                const newActor = await createActorWithIdentity(importedIdentity);
                 setActor(newActor);
                 setLoginStatus('success');
               }
