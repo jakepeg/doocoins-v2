@@ -342,7 +342,7 @@ function ChildList() {
             {/* Dashboard Boxes */}
             <Box 
               display="grid"
-              gridTemplateColumns={{ base: "1fr", sm: "repeat(3, 1fr)" }}
+              gridTemplateColumns="repeat(3, 1fr)"
               gap={4}
               marginTop={4}
             >
