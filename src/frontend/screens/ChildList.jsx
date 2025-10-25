@@ -76,9 +76,11 @@ function ChildList() {
               const updatedChildrenData = await Promise.all(
                 children[0].map(async (child) => {
                   const balance = await getBalance(child.id);
+                  const currentGoal = await actor?.getCurrentGoal(child.id);
                   return {
                     ...child,
                     balance: parseInt(balance),
+                    hasGoal: parseInt(currentGoal) > 0,
                   };
                 }),
               );
@@ -95,9 +97,11 @@ function ChildList() {
         const updatedChildrenData = await Promise.all(
           Object.values(val).map(async (child) => {
             const balance = await getBalance(child.id);
+            const currentGoal = await actor?.getCurrentGoal(child.id);
             return {
               ...child,
               balance: parseInt(balance),
+              hasGoal: parseInt(currentGoal) > 0,
             };
           }),
         );
@@ -357,7 +361,7 @@ function ChildList() {
                   fontWeight="bold" 
                   color="white"
                 >
-                  3
+                  {children?.length || 0}
                 </Text>
                 <Text 
                   fontSize="sm" 
@@ -379,7 +383,7 @@ function ChildList() {
                   fontWeight="bold" 
                   color="white"
                 >
-                  1864
+                  {children?.reduce((total, child) => total + (child.balance || 0), 0) || 0}
                 </Text>
                 <Text 
                   fontSize="sm" 
@@ -401,7 +405,7 @@ function ChildList() {
                   fontWeight="bold" 
                   color="white"
                 >
-                  3
+                  {children?.filter(child => child.hasGoal).length || 0}
                 </Text>
                 <Text 
                   fontSize="sm" 
