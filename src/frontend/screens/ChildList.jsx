@@ -23,7 +23,7 @@ import strings from "../utils/constants";
 import { useNavigate } from "react-router-dom";
 
 function ChildList() {
-  const { actor, isAuthenticated } = useAuth();
+  const { actor, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   // Migration context removed - users directed to V1 to upgrade
   const {
@@ -242,22 +242,25 @@ function ChildList() {
               <Text fontSize="lg" fontWeight="semibold">
                 Add a child to get started
               </Text>
-              <Text fontSize="sm" color="whiteAlpha.800">
+              <Text fontSize="sm" color="blue.700">
                 Tap the + icon above to create your first child profile
               </Text>
               <Box my={4} width="100px" height="1px" bg="whiteAlpha.400" />
               <VStack spacing={3}>
-                <Text fontSize="sm" color="whiteAlpha.700">
+                <Text fontSize="sm" color="blue.700">
                   Already added children but they're not displaying?
                 </Text>
-                <Text fontSize="xs" color="whiteAlpha.600" maxWidth="280px">
-                  You need to upgrade from DooCoins V1 to transfer your data
+                <Text fontSize="sm" color="blue.700" maxWidth="280px">
+                  Upgrade from DooCoins V1 to transfer your data, log in to V1, then return here.
                 </Text>
-                <Link
-                  as={Button}
+                <Button
+                  as="a"
                   href="https://fube5-gqaaa-aaaah-qdbfa-cai.icp0.io"
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => {
+                    logout();
+                  }}
                   variant="outline"
                   size="sm"
                   colorScheme="blue"
@@ -270,7 +273,7 @@ function ChildList() {
                   }}
                 >
                   Go to V1 to upgrade
-                </Link>
+                </Button>
               </VStack>
             </VStack>
           </Box>
