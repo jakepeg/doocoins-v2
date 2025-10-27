@@ -1,21 +1,11 @@
 import * as React from "react";
 import { get, set } from "idb-keyval";
 import { useAuth } from "../use-auth-client";
-import ChildTask from "../components/Tasks/ChildTask";
+import TaskItem from "../components/Tasks/TaskItem";
 import EditDialog from "../components/Dialogs/EditDialog";
 import modelStyles from "../components/popup/confirmation_popup.module.css";
 import DeleteDialog from "../components/Dialogs/DeleteDialog";
 import AddActionDialog from "../components/Tasks/AddActionDialog";
-import {
-  SwipeableList,
-  Type as ListType,
-  SwipeAction,
-  TrailingActions,
-  SwipeableListItem,
-} from "react-swipeable-list";
-import { ReactComponent as ApproveIcon } from "../assets/images/tick.svg";
-import { ReactComponent as EditIcon } from "../assets/images/pencil.svg";
-import { ReactComponent as DeleteIcon } from "../assets/images/delete.svg";
 import {
   Skeleton,
   Stack,
@@ -29,7 +19,6 @@ import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import AddItemToListCallout from "../components/Callouts/AddItemToListCallout";
 import strings from "../utils/constants";
-import TaskListCalloutWrapper from "../components/Tasks/TaskListCalloutWrapper";
 
 const Tasks = () => {
   const { actor } = useAuth();
@@ -58,7 +47,6 @@ const Tasks = () => {
     approve: false,
   });
   const [transactions, setTransactions] = React.useState([]);
-  const [startSwiping, setStartSwiping] = React.useState(false);
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -426,89 +414,26 @@ const Tasks = () => {
     });
   }
 
-  const trailingActions = React.useCallback(
-    ({ task }) => (
-      <TrailingActions>
-        <SwipeAction
-          onClick={() => handleTogglePopup(true, task, "approve")}
-          className="approve"
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <ApproveIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Approve
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-        <SwipeAction
-          className="edit"
-          onClick={() => handleTogglePopup(true, task, "edit")}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <EditIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Edit
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-        <SwipeAction
-          className="delete"
-          onClick={() => handleTogglePopup(true, task, "delete")}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <DeleteIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Delete
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-      </TrailingActions>
-    ),
-    []
-  );
-
-  const onSwipeStart = () => {
-    setStartSwiping(true);
-  };
-
   const TaskList = React.useMemo(() => {
     return (
       <>
         {tasks?.length ? (
           <div className="example">
-            <ul className="child-list" style={{ position: "relative" }}>
-              <SwipeableList
-                threshold={0.25}
-                type={ListType.IOS}
-                fullSwipe={false}
-              >
-                {tasks.map((task) => (
-                  <SwipeableListItem
-                    leadingActions={null}
-                    trailingActions={trailingActions({ task })}
-                    key={task.id}
-                    onSwipeStart={onSwipeStart}
-                  >
-                    <ChildTask key={task.id} task={task} />
-                  </SwipeableListItem>
-                ))}
-              </SwipeableList>
-              <TaskListCalloutWrapper
-                tasks={tasks}
-                startSwiping={startSwiping}
-              />
+            <ul className="list-wrapper">
+              {tasks.map((task) => (
+                <li key={task.id} style={{ listStyle: "none" }}>
+                  <TaskItem
+                    task={task}
+                    handleTogglePopup={handleTogglePopup}
+                  />
+                </li>
+              ))}
             </ul>
           </div>
         ) : null}
       </>
     );
-  }, [tasks, startSwiping]);
+  }, [tasks]);
 
   const isModalOpen =
     showPopup.delete ||

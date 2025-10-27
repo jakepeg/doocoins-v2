@@ -1,21 +1,8 @@
 import * as React from "react";
 import { get, set } from "idb-keyval";
 import Balance from "../components/Balance";
-import dc from "../assets/images/dc.svg";
-import { ReactComponent as DotArrow } from "../assets/images/dotarrow.svg";
 import { useAuth } from "../use-auth-client";
 import modelStyles from "../components/popup/confirmation_popup.module.css";
-import {
-  SwipeableList,
-  Type as ListType,
-  SwipeAction,
-  TrailingActions,
-  SwipeableListItem,
-} from "react-swipeable-list";
-import { ReactComponent as ApproveIcon } from "../assets/images/tick.svg";
-import { ReactComponent as GoalIcon } from "../assets/images/goal.svg";
-import { ReactComponent as EditIcon } from "../assets/images/pencil.svg";
-import { ReactComponent as DeleteIcon } from "../assets/images/delete.svg";
 import {
   Skeleton,
   Stack,
@@ -33,8 +20,8 @@ import RemoveGoalDialog from "../components/Dialogs/RemoveGoalDialog";
 import strings, { noGoalEntity } from "../utils/constants";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
-import SwipeListCallout from "../components/Callouts/SwipeListCallout";
 import AddRewardCalloutWrapper from "../components/Rewards/AddRewardCalloutWrapper";
+import RewardItem from "../components/Rewards/RewardItem";
 
 const Rewards = () => {
   const { actor } = useAuth();
@@ -446,88 +433,6 @@ const Rewards = () => {
     if (child) getRewards(child);
   }, [actor, child]);
 
-  const trailingActions = React.useCallback(
-    ({ reward }) => (
-      <TrailingActions>
-        {child.balance >= reward.value ? (
-          <SwipeAction
-            onClick={() => handleTogglePopup(true, reward, "claim")}
-            className="approve"
-          >
-            <div className="action-btn ">
-              <div className="ItemColumnCentered">
-                <ApproveIcon width="22px" height="22px" />
-                <Text fontSize={"xs"} color={"#fff"}>
-                  Claim
-                </Text>
-              </div>
-            </div>
-          </SwipeAction>
-        ) : (
-          <>
-            {reward.active ? (
-              <SwipeAction
-                onClick={() => handleTogglePopup(true, reward, "remove_goal")}
-                className="claim-option"
-              >
-                <div className="action-btn ">
-                  <div className="ItemColumnCentered">
-                    <GoalIcon width="22px" height="22px" />
-                    <Text fontSize={"xs"} color={"#fff"}>
-                      Remove
-                    </Text>
-                  </div>
-                </div>
-              </SwipeAction>
-            ) : (
-              <SwipeAction
-                onClick={() => handleTogglePopup(true, reward, "goal")}
-                className="claim-option"
-              >
-                <div className="action-btn ">
-                  <div className="ItemColumnCentered">
-                    <GoalIcon width="22px" height="22px" />
-                    <Text fontSize={"xs"} color={"#fff"}>
-                      Goal
-                    </Text>
-                  </div>
-                </div>
-              </SwipeAction>
-            )}
-          </>
-        )}
-
-        <SwipeAction
-          className="edit"
-          onClick={() => handleTogglePopup(true, reward, "edit")}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <EditIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Edit
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-        <SwipeAction
-          className="delete"
-          onClick={() => handleTogglePopup(true, reward, "delete")}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <DeleteIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Delete
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-      </TrailingActions>
-    ),
-    [child]
-  );
-
   const handleCloseDeletePopup = () => {
     setShowPopup((prevState) => ({ ...prevState, ["delete"]: false }));
   };
@@ -596,59 +501,26 @@ const Rewards = () => {
     }
   };
 
-  const onSwipeStart = () => {
-    if (isOpen) {
-      onClose();
-      handleUpdateCalloutState([strings.CALLOUT_REWARDS_LIST], false);
-    }
-  };
-
   const RewardList = React.useMemo(() => {
     return (
       <>
         {rewards?.length ? (
           <div className="example">
             <ul className="list-wrapper">
-              <SwipeableList
-                threshold={0.25}
-                type={ListType.IOS}
-                fullSwipe={false}
-              >
-                {rewards.map((reward) => (
-                  <SwipeableListItem
-                    leadingActions={null}
-                    trailingActions={trailingActions({ reward })}
-                    key={reward.id}
-                    onSwipeStart={onSwipeStart}
-                  >
-                    <div className="list-item" key={parseInt(reward.id)}>
-                      <div>{reward.name}</div>
-                      <div className="item-reward-value">
-                        <img
-                          src={dc}
-                          className="dc-img-small"
-                          alt="DooCoins symbol"
-                        />
-                        {parseInt(reward.value)}
-                        <DotArrow className="dot-arrow" height="14px" />
-                      </div>
-                    </div>
-                  </SwipeableListItem>
-                ))}
-              </SwipeableList>
-              {isOpen && rewards.length === 1 && (
-                <SwipeListCallout
-                  isOpen={isOpen}
-                  onClose={onClose}
-                  itemKey={strings.CALLOUT_REWARDS_LIST}
-                />
-              )}
+              {rewards.map((reward) => (
+                <li key={reward.id} style={{ listStyle: "none" }}>
+                  <RewardItem
+                    reward={reward}
+                    handleTogglePopup={handleTogglePopup}
+                  />
+                </li>
+              ))}
             </ul>
           </div>
         ) : null}
       </>
     );
-  }, [rewards, isOpen]);
+  }, [rewards]);
 
   const isModalOpen =
     showPopup.delete ||

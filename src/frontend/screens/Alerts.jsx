@@ -4,17 +4,7 @@ import { ChildContext } from "../contexts/ChildContext";
 import { del, get, set } from "idb-keyval";
 import { useToast, Text, Skeleton, Stack, Box } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
-import {
-  SwipeableList,
-  Type as ListType,
-  SwipeAction,
-  TrailingActions,
-  SwipeableListItem,
-} from "react-swipeable-list";
-import { ReactComponent as ApproveIcon } from "../assets/images/tick.svg";
-import { ReactComponent as DeleteIcon } from "../assets/images/delete.svg";
-import { ReactComponent as CloseIcon } from "../assets/images/close.svg";
-import RequestAlert from "../../frontend_kids/components/Tasks/RequestAlert";
+import RequestItem from "../components/Requests/RequestItem";
 import useHasRewards from "../hooks/useHasRewards";
 
 const Alerts = () => {
@@ -456,96 +446,78 @@ const Alerts = () => {
     }
   };
 
-  const trailingActions = React.useCallback(
-    ({ task, reward }) => (
-      <TrailingActions>
-        <SwipeAction
-          onClick={() => approveRequest({ task, reward })}
-          className="approve"
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <ApproveIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Approve
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-        <SwipeAction
-          className="delete"
-          onClick={() => {
-            if (task) {
-              setList((prevState) => ({
-                ...prevState,
-                tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
-              }));
-            } else if (reward) {
-              setList((prevState) => ({
-                ...prevState,
-                rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.strId),
-              }));
-            }
-            rejectRequest({ task, reward });
-          }}
-        >
-          <div className="action-btn ">
-            <div className="ItemColumnCentered">
-              <CloseIcon width="22px" height="22px" />
-              <Text fontSize={"xs"} color={"#fff"}>
-                Decline
-              </Text>
-            </div>
-          </div>
-        </SwipeAction>
-      </TrailingActions>
-    ),
-    []
-  );
-
-  const onSwipeStart = () => {};
-
   const AlertsList = React.useMemo(() => {
     return (
       <>
         {list.tasks?.length || list.rewards?.length ? (
           <div className="example">
-            <ul className="child-list" style={{ position: "relative" }}>
-              <SwipeableList
-                threshold={0.25}
-                type={ListType.IOS}
-                fullSwipe={false}
-              >
-                {list.rewards.map((reward, idx) => (
-                  <SwipeableListItem
-                    leadingActions={null}
-                    trailingActions={trailingActions({
-                      reward: {
+            <ul className="list-wrapper">
+              {list.rewards.map((reward, idx) => (
+                <li key={reward.id || idx} style={{ listStyle: "none" }}>
+                  <RequestItem
+                    request={{
+                      ...reward,
+                      value: parseInt(reward.value),
+                      id: parseInt(reward.reward || reward.id),
+                      strId: reward.id,
+                    }}
+                    type="reward"
+                    onApprove={() => approveRequest({ reward: {
+                      ...reward,
+                      value: parseInt(reward.value),
+                      id: parseInt(reward.reward || reward.id),
+                      strId: reward.id,
+                    }})}
+                    onDecline={() => {
+                      setList((prevState) => ({
+                        ...prevState,
+                        rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.id),
+                      }));
+                      rejectRequest({ reward: {
                         ...reward,
                         value: parseInt(reward.value),
                         id: parseInt(reward.reward || reward.id),
                         strId: reward.id,
-                      },
-                    })}
-                    key={idx}
-                    onSwipeStart={onSwipeStart}
-                  >
-                    <RequestAlert key={reward.id} req={reward} />
-                  </SwipeableListItem>
-                ))}
-                {list.tasks.map((task, idx) => (
-                  <SwipeableListItem
-                    leadingActions={null}
-                    trailingActions={trailingActions({
-                      task: { ...task, value: parseInt(task.value) },
-                    })}
-                    key={idx}
-                    onSwipeStart={onSwipeStart}
-                  >
-                    <RequestAlert key={task.id} req={task} />
-                  </SwipeableListItem>
-                ))}
-              </SwipeableList>
+                      }});
+                    }}
+                    onDelete={() => {
+                      setList((prevState) => ({
+                        ...prevState,
+                        rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.id),
+                      }));
+                      rejectRequest({ reward: {
+                        ...reward,
+                        value: parseInt(reward.value),
+                        id: parseInt(reward.reward || reward.id),
+                        strId: reward.id,
+                      }});
+                    }}
+                  />
+                </li>
+              ))}
+              {list.tasks.map((task, idx) => (
+                <li key={task.id || idx} style={{ listStyle: "none" }}>
+                  <RequestItem
+                    request={{ ...task, value: parseInt(task.value) }}
+                    type="task"
+                    onApprove={() => approveRequest({ task: { ...task, value: parseInt(task.value) }})}
+                    onDecline={() => {
+                      setList((prevState) => ({
+                        ...prevState,
+                        tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
+                      }));
+                      rejectRequest({ task: { ...task, value: parseInt(task.value) }});
+                    }}
+                    onDelete={() => {
+                      setList((prevState) => ({
+                        ...prevState,
+                        tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
+                      }));
+                      rejectRequest({ task: { ...task, value: parseInt(task.value) }});
+                    }}
+                  />
+                </li>
+              ))}
             </ul>
           </div>
         ) : null}
