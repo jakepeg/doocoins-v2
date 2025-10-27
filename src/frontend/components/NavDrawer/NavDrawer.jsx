@@ -30,7 +30,12 @@ function NavDrawer() {
         display={"flex"}
         flexDirection={"row"}
         justifyContent={"space-between"}
-        style={{ zIndex: 100, position: "relative" }}
+        position="fixed"
+        top={0}
+        left={0}
+        right={0}
+        zIndex={100}
+        backgroundColor="#0B334D"
         px={4}
         pt={0}
         pb={3}

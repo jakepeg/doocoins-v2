@@ -50,6 +50,7 @@ function ProtectedRoute({ children }) {
         flexDirection="column"
         flex="1"
         overflow="visible"
+        paddingTop="48px"
       >
         {showMobileLayout && !isChildListRoute && (
           <Balance childName={child?.name} childBalance={child?.balance} />

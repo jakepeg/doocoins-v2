@@ -423,8 +423,8 @@ function ChildList() {
         </Box>
 
         <div className={`child-list-wrapper`} style={{ position: "relative" }}>
-          <h2 className="title-button dark">
-            <span>My Children</span>
+          <h2 style={{ marginBottom: "20px" }} className="title-button dark ">
+            <span>Children</span>
             <span
               className="plus-sign"
               role="button"

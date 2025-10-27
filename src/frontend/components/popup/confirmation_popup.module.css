@@ -5,7 +5,7 @@
   left: 50%;
   bottom: 0;
   width: 95%;
-  background-color: #f1f1f1;
+  background-color: #ffffff;
   transform: translateY(100%) scale(1) translateX(-50%);
   transition: transform 0.3s ease-in-out;
   z-index: var(--highest-index);
