@@ -146,7 +146,7 @@ const Wallet = () => {
     <>
       <div className="light-panel transactions">
         <h2 className="title-button dark">
-          <span>Transactions</span>
+          <span className="transaction-tile">Transactions</span>
         </h2>
         {isLoading.transactions ? (
           <>
@@ -176,10 +176,10 @@ const Wallet = () => {
                     key={parseInt(transaction.id)}
                   >
                     <div>
+                      {transaction.name}
                       <span className="date">
                         {humanReadableDate(transaction.completedDate)}
                       </span>
-                      {transaction.name}
                     </div>
                     <div>
                       {transaction.transactionType === `GOAL_DEBIT` ? (
