@@ -149,51 +149,52 @@ const Wallet = () => {
           <span className="transaction-tile">Transactions</span>
         </h2>
         {isLoading.transactions ? (
-          <>
-            <Stack gap={"20px"} margin={"0 0 20px 0"}>
-              <Box display="flex" flexDirection={"column"} gap={1}>
+          <Stack gap={"20px"} margin={"0 0 20px 0"}>
+            {[1,2,3].map((i) => (
+              <Box key={i} backgroundColor="white" borderRadius="md" padding={4} marginBottom={3} display="flex" justifyContent="space-between" alignItems="center" width="100%" boxSizing="border-box">
                 <Skeleton height="20px" width={"15%"} />
                 <Skeleton height="20px" />
               </Box>
-              <Box display="flex" flexDirection={"column"} gap={1}>
-                <Skeleton height="20px" width={"15%"} />
-                <Skeleton height="20px" />
-              </Box>
-              <Box display="flex" flexDirection={"column"} gap={1}>
-                <Skeleton height="20px" width={"15%"} />
-                <Skeleton height="20px" />
-              </Box>
-            </Stack>
-          </>
+            ))}
+          </Stack>
         ) : (
           <>
             {transactions.length > 0 ? (
               <>
                 {sortTransactionsByDate().map((transaction) => (
-                  <div
-                    className="list-item"
+                  <Box
+                    backgroundColor="white"
+                    borderRadius="md"
+                    padding={4}
+                    marginBottom={3}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    width="100%"
+                    boxSizing="border-box"
                     role="button"
                     key={parseInt(transaction.id)}
                   >
-                    <div>
-                      {transaction.name}
-                      <span className="date">
+                    <Box>
+                      <span style={{ fontSize: '22px', color: '#0B334D', fontWeight: 600 }}>
+                        {transaction.name}
+                      </span>
+                      <span className="date" style={{ marginLeft: 8, color: '#888', fontSize: '0.95em' }}>
                         {humanReadableDate(transaction.completedDate)}
                       </span>
-                    </div>
-                    <div>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={2}>
                       {transaction.transactionType === `GOAL_DEBIT` ? (
-                        <span>-</span>
+                        <span style={{ color: '#E53E3E', fontWeight: 600, fontSize: '22px' }}>-</span>
                       ) : null}
-
                       <img
                         src={dc}
-                        className="dc-img-small pushdown"
                         alt="DooCoins symbol"
+                        style={{ width: 20, height: 20, marginRight: -8, marginTop: -3, verticalAlign: 'middle' }}
                       />
-                      {parseInt(transaction.value)}
-                    </div>
-                  </div>
+                      <span style={{ fontWeight: 600, fontSize: '22px', color: '#0B334D' }}>{parseInt(transaction.value)}</span>
+                    </Box>
+                  </Box>
                 ))}
               </>
             ) : null}
