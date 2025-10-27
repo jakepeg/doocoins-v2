@@ -207,11 +207,7 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
   width: 41px;
 }
 
-@media only screen and (max-width: 720px){
-  .dc-img-big {
-    width: 24px !important;
-  }
-}
+
 
 .dc-img-small {
   display: inline-block;
@@ -234,6 +230,15 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
   color: #ffffff;
   margin-top: -30px;
   margin-bottom: -30px;
+}
+
+@media only screen and (max-width: 420px){
+  .dc-img-big {
+    width: 24px !important;
+  }
+  .balance {
+  font-size: 38px !important;
+}
 }
 
 .action-button {

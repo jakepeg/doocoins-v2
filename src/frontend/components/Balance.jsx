@@ -287,7 +287,7 @@ const Balance = () => {
           <Box
             sx={{
               background: "transparent",
-              zIndex: 999,
+              zIndex: 10,
               minWidth: isAbleToClaim && "25%",
               minHeight: isAbleToClaim && { base: "70%", sm: "80%" },
               transform: isAbleToClaim && { base: `translateX(-4vw)` },
@@ -303,26 +303,26 @@ const Balance = () => {
                   flexDirection={"column"}
                   alignItems={"center"}
                   sx={{
-                    width: { base: 100, sm: 200, md: 280 },
-                    height: { base: 160, sm: 200, md: 280 },
-                    maxHeight: "320px",
+                    width: { base: 160, md: 200 },
+                    height: { base: 160, md: 200 },
+                    // maxHeight: "260px",
+                    // width: 220,
+                    // height: 220,
                   }}
                 >
                   <CircularProgressbar
                     value={percentage}
-                    // width= {"70%"}
                     text={`${percentage}%`}
                     background
                     backgroundPadding={6}
                     strokeWidth={5}
                     styles={buildStyles({
                       strokeLinecap: "butt",
-                      // backgroundColor: "#0B334D",
                       backgroundColor: "transparent",
                       textColor: "#fff",
                       pathColor: "#00A4D7",
                       trailColor: "transparent",
-                      textSize: "1.2em",
+                      textSize: "1em",
                     })}
                   />
                   <p
@@ -330,7 +330,7 @@ const Balance = () => {
                       color: "#fff",
                       marginTop: "0px",
                       textAlign: "center",
-                      fontSize: "1em",
+                      fontSize: "1.4em",
                       lineHeight: "1em",
                     }}
                   >
