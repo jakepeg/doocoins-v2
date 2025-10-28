@@ -7,12 +7,14 @@ import Balance from "./components/Balance";
 import React from "react";
 import { ChildContext } from "./contexts/ChildContext";
 import useIsMobileLayout from "./hooks/useIsMobileLayout";
+import { Capacitor } from "@capacitor/core";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated, isLoading } = useAuth();
   const { child } = React.useContext(ChildContext);
   const showMobileLayout = useIsMobileLayout();
   const location = useLocation();
+  const isNative = Capacitor.isNativePlatform();
   
   // ChildList screen should be fully dark blue, others should have light background
   const isChildListRoute = location.pathname === "/" || location.pathname === "/invite";
@@ -20,6 +22,12 @@ function ProtectedRoute({ children }) {
   if (!isLoading && !isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  // On native iOS, account for safe area + nav bar height
+  // NavDrawer is ~48px tall + safe-area-inset-top
+  const contentPaddingTop = isNative 
+    ? "calc(env(safe-area-inset-top, 0px) + 48px)" 
+    : "48px";
 
   return (
     <Box
@@ -50,7 +58,7 @@ function ProtectedRoute({ children }) {
         flexDirection="column"
         flex="1"
         overflow="visible"
-        paddingTop="48px"
+        paddingTop={contentPaddingTop}
       >
         {showMobileLayout && !isChildListRoute && (
           <Balance childName={child?.name} childBalance={child?.balance} />

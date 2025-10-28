@@ -1,10 +1,21 @@
 import * as React from "react";
 import dc from "../assets/images/dc-thin-white.svg";
-import GoalIcon from "../assets/images/card-header/cc-claim.svg";
-import NoGoalIcon from "../assets/images/card-header/cc-nogoal.svg";
 import PlainGoalBackground from "../assets/images/card-header/cc.svg";
 import styles from "../assets/css/golabal.module.css";
-import { Box, useToast } from "@chakra-ui/react";
+import {
+  Box,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalCloseButton,
+  VStack,
+  HStack,
+  Text,
+  Spinner,
+} from "@chakra-ui/react";
 import { get, set } from "idb-keyval";
 import { ChildContext } from "../contexts/ChildContext";
 import { useAuth } from "../use-auth-client";
@@ -29,6 +40,8 @@ const Balance = () => {
   } = React.useContext(ChildContext);
   const { actor } = useAuth();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isGoalPickerOpen, setIsGoalPickerOpen] = React.useState(false);
+  const [availableRewards, setAvailableRewards] = React.useState([]);
   const balance = child?.balance || 0;
   const navigate = useNavigate();
   const toast = useToast();
@@ -243,6 +256,53 @@ const Balance = () => {
   ).toFixed(0);
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
 
+  const handleOpenGoalPicker = async () => {
+    // Refresh the reward list to ensure active state is current
+    await getReward({ revokeStateUpdate: true });
+    const rewards = await get("rewardList");
+    // Include all rewards (both active and inactive) when changing goals
+    setAvailableRewards(rewards || []);
+    setIsGoalPickerOpen(true);
+  };
+
+  const handleSelectGoal = async (rewardId) => {
+    setIsLoading(true);
+    setIsGoalPickerOpen(false);
+    try {
+      const result = await actor?.currentGoal(child?.id, parseInt(rewardId));
+      if ("ok" in result) {
+        const selectedReward = availableRewards.find(
+          (r) => parseInt(r.id) === parseInt(rewardId)
+        );
+        await getReward({ rewardId, revokeStateUpdate: false });
+        toast({
+          title: `Goal set: ${selectedReward?.name}`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          title: "Failed to set goal",
+          description: result.err,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error setting goal:", error);
+      toast({
+        title: "Failed to set goal",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleGoalClick = () => {
     if (isAbleToClaim) {
       handleClaimGoal();
@@ -253,20 +313,12 @@ const Balance = () => {
     <>
       <header
         style={{
-          backgroundImage: `url(${
-            !goal?.hasGoal
-              ? NoGoalIcon
-              : isAbleToClaim
-              ? GoalIcon
-              : goal?.hasGoal
-              ? PlainGoalBackground
-              : null
-          })`,
-          borderRadius: '12px',
-          overflow: 'hidden',
-          WebkitBorderRadius: '12px',
+          backgroundImage: `url(${PlainGoalBackground})`,
+          borderRadius: "12px",
+          overflow: "hidden",
+          WebkitBorderRadius: "12px",
         }}
-        className={`${styles.hero}`} //${props.isModalOpen}
+        className={`${styles.hero}`}
       >
         <Box
           display={"flex"}
@@ -284,84 +336,295 @@ const Balance = () => {
               </Box>
             )}
           </Box>
+
+          {/* Goal Area - right side, shows one of three states */}
           <Box
             sx={{
-              background: "transparent",
+              position: "relative",
               zIndex: 10,
-              minWidth: isAbleToClaim && "25%",
-              minHeight: isAbleToClaim && { base: "70%", sm: "80%" },
-              transform: isAbleToClaim && { base: `translateX(-4vw)` },
-              cursor: isAbleToClaim && "pointer",
+              pr: { base: "20px", md: "40px", lg: "60px" },
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: { base: "auto", md: "160px" },
             }}
-            onClick={handleGoalClick}
           >
-            {goal?.hasGoal && !isAbleToClaim ? (
-              <>
-                <Box
-                  display={"flex"}
-                  className={styles.circular_progress}
-                  flexDirection={"column"}
-                  alignItems={"center"}
-                  sx={{
-                    width: { base: 160, md: 200 },
-                    height: { base: 160, md: 200 },
-                    // maxHeight: "260px",
-                    // width: 220,
-                    // height: 220,
-                  }}
-                >
-                  <CircularProgressbar
-                    value={percentage}
-                    text={`${percentage}%`}
-                    background
-                    backgroundPadding={6}
-                    strokeWidth={5}
-                    styles={buildStyles({
-                      strokeLinecap: "butt",
-                      backgroundColor: "transparent",
-                      textColor: "#fff",
-                      pathColor: "#00A4D7",
-                      trailColor: "transparent",
-                      textSize: "1em",
-                    })}
-                  />
-                  <p
-                    style={{
-                      color: "#fff",
-                      marginTop: "0px",
-                      textAlign: "center",
-                      fontSize: "1.4em",
-                      lineHeight: "1em",
-                    }}
-                  >
-                    {goal.name}
-                  </p>
-                </Box>
-              </>
-            ) : null}
-            {goal?.hasGoal && isAbleToClaim && (
+            {/* State 1: Set Goal Button (no goal) */}
+            {!goal?.hasGoal && (
               <Box
+                as="button"
+                onClick={handleOpenGoalPicker}
+                disabled={isLoading}
                 sx={{
+                  background: "rgba(255,255,255,0.15)",
+                  borderRadius: "999px",
+                  padding: "12px 20px",
                   color: "#fff",
-                  marginTop: "0px",
+                  fontWeight: 600,
+                  fontSize: "16px",
+                  minWidth: "120px",
                   textAlign: "center",
-                  fontSize: "1em",
-                  lineHeight: "1em",
-                  position: "absolute",
-                  bottom: { base: "-0%", sm: "-0%" },
-                  transform: "translateX(-5%) translateY(6px)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "120%",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  cursor: isLoading ? "not-allowed" : "pointer",
+                  opacity: isLoading ? 0.6 : 1,
+                  transition: "all 0.2s",
+                  _hover: {
+                    background: "rgba(255,255,255,0.25)",
+                    transform: "scale(1.02)",
+                  },
+                  _active: {
+                    transform: "scale(0.98)",
+                  },
                 }}
               >
-                {goal.name}
+                {isLoading ? <Spinner size="sm" /> : "Set a Goal"}
+              </Box>
+            )}
+
+            {/* State 2: Progress Circle (has goal, not enough balance) */}
+            {goal?.hasGoal && !isAbleToClaim && (
+              <Box
+                display={"flex"}
+                className={styles.circular_progress}
+                flexDirection={"column"}
+                alignItems={"center"}
+                sx={{
+                  width: { base: 160, md: 200 },
+                  height: { base: 160, md: 200 },
+                }}
+              >
+                <CircularProgressbar
+                  value={percentage}
+                  text={`${percentage}%`}
+                  background
+                  backgroundPadding={6}
+                  strokeWidth={5}
+                  styles={buildStyles({
+                    strokeLinecap: "butt",
+                    backgroundColor: "transparent",
+                    textColor: "#fff",
+                    pathColor: "#00A4D7",
+                    trailColor: "transparent",
+                    textSize: "1em",
+                  })}
+                />
+                <HStack
+                  spacing={1}
+                  justify="center"
+                  mt={0}
+                  cursor="pointer"
+                  onClick={handleOpenGoalPicker}
+                  _hover={{
+                    opacity: 0.8,
+                  }}
+                >
+                  <Box
+                    as="svg"
+                    width="18px"
+                    height="18px"
+                    viewBox="0 0 24 24"
+                    fill="#fff"
+                    color="#fff"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      fill="currentColor"
+                    />
+                  </Box>
+                  <Text
+                    color="#fff"
+                    fontSize="1.4em"
+                    lineHeight="1em"
+                    fontWeight="500"
+                  >
+                    {goal.name}
+                  </Text>
+                </HStack>
+              </Box>
+            )}
+
+            {/* State 3: Claim Button (has goal, enough balance) */}
+            {goal?.hasGoal && isAbleToClaim && (
+              <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                gap={2}
+              >
+                <Box
+                  as="button"
+                  onClick={handleClaimGoal}
+                  disabled={isLoading}
+                  sx={{
+                    background: "rgba(255,255,255,0.15)",
+                    borderRadius: "999px",
+                    padding: "12px 20px",
+                    color: "#fff",
+                    fontWeight: 600,
+                    fontSize: "16px",
+                    minWidth: "120px",
+                    textAlign: "center",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    cursor: isLoading ? "not-allowed" : "pointer",
+                    opacity: isLoading ? 0.6 : 1,
+                    transition: "all 0.2s",
+                    _hover: {
+                      background: "rgba(255,255,255,0.25)",
+                      transform: "scale(1.02)",
+                    },
+                    _active: {
+                      transform: "scale(0.98)",
+                    },
+                  }}
+                >
+                  {isLoading ? <Spinner size="sm" /> : "Claim Goal"}
+                </Box>
+                <HStack
+                  spacing={1}
+                  justify="center"
+                  mt={0}
+                >
+                  <Box
+                    as="svg"
+                    width="18px"
+                    height="18px"
+                    viewBox="0 0 24 24"
+                    fill="#fff"
+                    color="#fff"
+                  >
+                    <path
+                      d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                      fill="currentColor"
+                    />
+                  </Box>
+                  <Text
+                    color="#fff"
+                    fontSize="1.4em"
+                    lineHeight="1em"
+                    fontWeight="500"
+                  >
+                    {goal.name}
+                  </Text>
+                </HStack>
               </Box>
             )}
           </Box>
         </Box>
       </header>
+
+      {/* Goal Picker Modal */}
+      <Modal
+        isOpen={isGoalPickerOpen}
+        onClose={() => setIsGoalPickerOpen(false)}
+        isCentered
+      >
+        <ModalOverlay bg="blackAlpha.600" backdropFilter="blur(4px)" />
+        <ModalContent
+          mx={4}
+          borderRadius="16px"
+          maxW="400px"
+          bg="white"
+          overflow="hidden"
+          boxShadow="none"
+          shadow="none"
+        >
+          <ModalHeader
+            color="black"
+            fontSize="20px"
+            fontWeight="700"
+            py={4}
+            textShadow="none"
+            boxShadow="none"
+            shadow="none"
+          >
+            Choose a Goal
+          </ModalHeader>
+          <ModalCloseButton color="black" />
+          <ModalBody py={4} px={4}>
+            {availableRewards.length === 0 ? (
+              <Box textAlign="center" py={6}>
+                <Text fontSize="16px" color="gray.600" mb={4}>
+                  No rewards available yet
+                </Text>
+                <Text fontSize="14px" color="gray.500">
+                  Go to the Rewards screen to create some!
+                </Text>
+              </Box>
+            ) : (
+              <VStack spacing={3} align="stretch">
+                {availableRewards.map((reward) => (
+                  <Box
+                    key={reward.id}
+                    p={4}
+                    borderRadius="12px"
+                    bg="gray.50"
+                    cursor="pointer"
+                    transition="all 0.2s"
+                    border="2px solid transparent"
+                    _hover={{
+                      bg: "blue.50",
+                      borderColor: "#00A4D7",
+                      transform: "translateX(4px)",
+                    }}
+                    _active={{
+                      transform: "scale(0.98)",
+                    }}
+                    onClick={() => handleSelectGoal(reward.id)}
+                  >
+                    <HStack justify="space-between" align="center">
+                      <VStack align="start" spacing={1} flex={1}>
+                        <HStack spacing={2}>
+                          {reward.active && (
+                            <Box
+                              as="svg"
+                              width="16px"
+                              height="16px"
+                              viewBox="0 0 24 24"
+                              fill="#00A4D7"
+                              color="#00A4D7"
+                            >
+                              <path
+                                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                fill="currentColor"
+                              />
+                            </Box>
+                          )}
+                          <Text fontWeight="600" fontSize="16px" color="gray.800">
+                            {reward.name}
+                          </Text>
+                        </HStack>
+                        <HStack spacing={1} align="center" pl={reward.active ? "24px" : "0"}>
+                          <Text fontSize="14px" color="gray.600" fontWeight="500">
+                            {reward.value} DooCoins
+                          </Text>
+                        </HStack>
+                      </VStack>
+                      <Box
+                        as="svg"
+                        width="24px"
+                        height="24px"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        color="gray.400"
+                      >
+                        <path
+                          d="M9 18l6-6-6-6"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </Box>
+                    </HStack>
+                  </Box>
+                ))}
+              </VStack>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </>
   );
 };

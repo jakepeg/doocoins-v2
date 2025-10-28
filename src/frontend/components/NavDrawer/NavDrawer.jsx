@@ -16,13 +16,15 @@ import LogoIcon from "../../assets/images/logo.svg";
 import { useAuth } from "../../use-auth-client";
 import useIsMobileLayout from "../../hooks/useIsMobileLayout";
 import useClearContextState from "../../hooks/useClearContextState";
+import { Capacitor } from "@capacitor/core";
 
 function NavDrawer() {
   const { logout } = useAuth();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const btnRef = React.useRef();
   const showMobileLayout = useIsMobileLayout();
-  const clearContextState = useClearContextState()
+  const clearContextState = useClearContextState();
+  const isNative = Capacitor.isNativePlatform();
 
   return (
     <>
@@ -37,7 +39,7 @@ function NavDrawer() {
         zIndex={100}
         backgroundColor="#0B334D"
         px={4}
-        pt={0}
+        pt={isNative ? "env(safe-area-inset-top, 0px)" : 0}
         pb={3}
       >
         <NavLink to="/">
