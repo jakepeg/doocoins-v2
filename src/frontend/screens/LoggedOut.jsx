@@ -6,8 +6,14 @@ import ICBadge from "../assets/images/ic-badge.svg";
 import ShareIcon from "../assets/images/share-icon.svg";
 import logo from "../assets/images/logo.svg";
 import useClearContextState from "../hooks/useClearContextState";
+import { Capacitor } from "@capacitor/core";
 
 function checkForIOS() {
+  // Don't show PWA install prompt on native app
+  if (Capacitor.isNativePlatform()) {
+    return false;
+  }
+
   // already installed
   if (navigator.standalone) {
     return false;

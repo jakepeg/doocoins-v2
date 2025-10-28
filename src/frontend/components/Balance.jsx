@@ -45,6 +45,7 @@ const Balance = () => {
   const balance = child?.balance || 0;
   const navigate = useNavigate();
   const toast = useToast();
+  const isNative = Capacitor.isNativePlatform();
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -317,6 +318,8 @@ const Balance = () => {
           borderRadius: "12px",
           overflow: "hidden",
           WebkitBorderRadius: "12px",
+          // Add top margin on native to create small gap below nav
+          marginTop: isNative ? "calc(env(safe-area-inset-top, 0px) + 56px)" : undefined,
         }}
         className={`${styles.hero}`}
       >
