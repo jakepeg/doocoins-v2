@@ -179,7 +179,7 @@ const Wallet = () => {
                       <span style={{ fontSize: '22px', color: '#0B334D', fontWeight: 600 }}>
                         {transaction.name}
                       </span>
-                      <span className="date" style={{ marginLeft: 8, color: '#888', fontSize: '0.95em' }}>
+                      <span className="date">
                         {humanReadableDate(transaction.completedDate)}
                       </span>
                     </Box>

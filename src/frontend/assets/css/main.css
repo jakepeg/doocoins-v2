@@ -428,6 +428,12 @@ input:-ms-input-placeholder {/* IE 10+ */
 }
 
 .date {
+  font-size: 16px;
+  color: #0B334D;
+  display: block;
+}
+
+/* .date {
   width: 100%;
   display: block;
   font-size: 16px;
@@ -435,7 +441,7 @@ input:-ms-input-placeholder {/* IE 10+ */
   color: #999;
   margin-bottom: -5px;
   margin-top: 5px;
-}
+} */
 
 .pushdown {
   margin-top: 32px;
