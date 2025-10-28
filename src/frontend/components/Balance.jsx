@@ -318,8 +318,8 @@ const Balance = () => {
           borderRadius: "12px",
           overflow: "hidden",
           WebkitBorderRadius: "12px",
-          // Add top margin on native to create small gap below nav
-          marginTop: isNative ? "calc(env(safe-area-inset-top, 0px) + 56px)" : undefined,
+          // Add small top margin on native (10px gap below nav)
+          marginTop: isNative ? "10px" : undefined,
         }}
         className={`${styles.hero}`}
       >
