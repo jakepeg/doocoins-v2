@@ -146,7 +146,7 @@ const Wallet = () => {
     <>
       <div className="light-panel transactions">
         <h2 className="title-button dark">
-          <span className="transaction-tile">Transactions</span>
+          <span className="transaction-tile">Recent Activity</span>
         </h2>
         {isLoading.transactions ? (
           <Stack gap={"20px"} margin={"0 0 20px 0"}>
