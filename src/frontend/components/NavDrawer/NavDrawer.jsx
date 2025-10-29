@@ -84,7 +84,7 @@ function NavDrawer() {
                 color="#0B334D"
                 fontWeight={600}
               >
-                <NavLink to="/">My Children</NavLink>
+                <NavLink to="/">Dashboard</NavLink>
               </Text>
               <Text
                 onClick={onClose}
