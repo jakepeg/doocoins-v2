@@ -1,4 +1,3 @@
-echo "
 # DFX
 .dfx/
 canister_ids.json
@@ -16,4 +15,8 @@ node_modules/
 
 # IDE
 .vscode/
-.idea/" >> .gitignore
+.idea/
+
+# macOS
+.DS_Store
+**/.DS_Store
