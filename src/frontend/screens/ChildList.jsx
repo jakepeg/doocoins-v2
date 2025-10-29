@@ -6,6 +6,7 @@ import modelStyles from "../components/popup/confirmation_popup.module.css";
 import AddChildDialog from "../components/ChildList/AddChildDialog";
 import DeleteDialog from "../components/Dialogs/DeleteDialog";
 import EditDialog from "../components/Dialogs/EditDialog";
+import { Capacitor } from "@capacitor/core";
 // Swipe interactions replaced by popup actions menu
 import { 
   Skeleton, 
@@ -25,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 function ChildList() {
   const { actor, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const isNative = Capacitor.isNativePlatform();
   // Migration context removed - users directed to V1 to upgrade
   const {
     isNewToSystem: { childList },

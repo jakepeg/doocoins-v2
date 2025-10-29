@@ -23,11 +23,9 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
-  // On native iOS, account for safe area + nav bar height (no extra padding, tight to nav)
+  // On native iOS, nav already handles safe area, just need nav height
   // On web, add padding for the fixed nav
-  const contentPaddingTop = isNative 
-    ? "calc(env(safe-area-inset-top, 0px) + 48px)" 
-    : "48px";
+  const contentPaddingTop = "48px";
 
   return (
     <Box
@@ -59,12 +57,6 @@ function ProtectedRoute({ children }) {
         flex="1"
         overflow="visible"
         paddingTop={contentPaddingTop}
-        sx={{
-          // On native, remove padding-top so content is tight to nav
-          ...(isNative && {
-            paddingTop: "0 !important",
-          })
-        }}
       >
         {showMobileLayout && !isChildListRoute && (
           <Balance childName={child?.name} childBalance={child?.balance} />
