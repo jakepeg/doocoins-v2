@@ -413,6 +413,7 @@ const Balance = () => {
                 <HStack
                   spacing={1}
                   justify="center"
+                  align="flex-start"
                   mt={0}
                   cursor="pointer"
                   onClick={handleOpenGoalPicker}
@@ -435,9 +436,10 @@ const Balance = () => {
                   </Box>
                   <Text
                     color="#fff"
-                    fontSize="1.4em"
-                    lineHeight="1em"
+                    fontSize="1.1em"
+                    lineHeight="1.1em"
                     fontWeight="500"
+                    textAlign="center"
                   >
                     {goal.name}
                   </Text>
@@ -471,6 +473,7 @@ const Balance = () => {
                     cursor: isLoading ? "not-allowed" : "pointer",
                     opacity: isLoading ? 0.6 : 1,
                     transition: "all 0.2s",
+                    marginBottom: "10px",
                     _hover: {
                       background: "rgba(255,255,255,0.25)",
                       transform: "scale(1.02)",
@@ -485,7 +488,13 @@ const Balance = () => {
                 <HStack
                   spacing={1}
                   justify="center"
+                  align="flex-start"
                   mt={0}
+                  cursor="pointer"
+                  onClick={handleOpenGoalPicker}
+                  _hover={{
+                    opacity: 0.8,
+                  }}
                 >
                   <Box
                     as="svg"
@@ -502,9 +511,10 @@ const Balance = () => {
                   </Box>
                   <Text
                     color="#fff"
-                    fontSize="1.4em"
-                    lineHeight="1em"
+                    fontSize="1.1em"
+                    lineHeight="1.1em"
                     fontWeight="500"
+                    textAlign="center"
                   >
                     {goal.name}
                   </Text>

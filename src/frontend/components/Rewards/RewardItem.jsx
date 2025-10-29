@@ -91,10 +91,27 @@ const RewardItem = ({ reward, handleTogglePopup }) => {
       boxSizing="border-box"
     >
       <VStack align="start" spacing={1} flex={1}>
-        <Text fontSize="22px" color="#0B334D" fontWeight="semibold">
-          {reward.name}
-        </Text>
-        <Text fontSize="16px" color="#0B334D">
+        <Box display="flex" alignItems="center" gap={2}>
+          {reward.active && (
+            <Box
+              as="svg"
+              width="16px"
+              height="16px"
+              viewBox="0 0 24 24"
+              fill="#00A4D7"
+              color="#00A4D7"
+            >
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                fill="currentColor"
+              />
+            </Box>
+          )}
+          <Text fontSize="22px" color="#0B334D" fontWeight="semibold">
+            {reward.name}
+          </Text>
+        </Box>
+        <Text fontSize="16px" color="#0B334D" pl={reward.active ? "24px" : "0"}>
           {parseInt(reward.value)} DooCoins
         </Text>
       </VStack>
