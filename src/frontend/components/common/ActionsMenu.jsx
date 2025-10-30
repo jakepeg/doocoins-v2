@@ -28,17 +28,26 @@ const KebabIcon = (props) => (
  * - ariaLabel?: string (trigger)
  * - placement?: Chakra placement, default 'bottom-end'
  * - size?: Chakra IconButton size, default 'sm'
+ * - iconColor?: string (color for the kebab icon)
  */
-const ActionsMenu = ({ actions = [], ariaLabel = "More options", placement = "bottom-end", size = "md" }) => {
+const ActionsMenu = ({ 
+  actions = [], 
+  ariaLabel = "More options", 
+  placement = "bottom-end", 
+  size = "md",
+  iconColor = "inherit"
+}) => {
   return (
     <Menu placement={placement} computePositionOnMount>
       <MenuButton
         as={IconButton}
         aria-label={ariaLabel}
-  icon={<KebabIcon boxSize="1.5em" />}
+        icon={<KebabIcon boxSize="1.5em" />}
         variant="ghost"
         size={size}
         fontSize={{ base: "xl", md: "lg" }}
+        color={iconColor}
+        _hover={{ bg: "whiteAlpha.200" }}
         onClick={(e) => e.stopPropagation()}
       />
       <Portal>
