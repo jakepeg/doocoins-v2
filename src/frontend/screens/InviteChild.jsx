@@ -1,9 +1,18 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import LoadingSpinner from "../components/LoadingSpinner";
-import { Box, Button, Text, Image } from "@chakra-ui/react";
+import { Box, Button, Text, Image, IconButton, Icon, Spinner } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
 import qrChildImage from "../assets/images/qr-child.png";
+
+// Inline back arrow icon
+const BackArrowIcon = (props) => (
+  <Icon viewBox="0 0 24 24" {...props}>
+    <path
+      fill="currentColor"
+      d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"
+    />
+  </Icon>
+);
 
 const InviteChild = () => {
   const { actor } = useAuth();
@@ -48,7 +57,16 @@ const InviteChild = () => {
   }
 
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Spinner size="xl" color="#0B334D" thickness="4px" />
+      </Box>
+    );
   }
 
   return (
@@ -62,18 +80,29 @@ const InviteChild = () => {
           flexDirection="column"
           justifyContent={"center"}
         >
-          <Text fontSize="3xl" color="#fff">
-            Invite {child.name}
-          </Text>
-          <Text fontSize="xl" color="#fff">
+          <Box display="flex" alignItems="center" gap="12px">
+            <IconButton
+              icon={<BackArrowIcon boxSize="1.5em" />}
+              onClick={() => navigate("/")}
+              aria-label="Back to child list"
+              variant="ghost"
+              color="#0B334D"
+              _hover={{ bg: "rgba(11, 51, 77, 0.1)" }}
+              size="lg"
+            />
+            <Text fontSize="3xl" color="#0B334D" fontWeight="600">
+              Invite {child.name}
+            </Text>
+          </Box>
+          <Text fontSize="xl" color="#0B334D">
             Get {child.name} on board with DooCoins Kids!
           </Text>
 
-          <Text fontSize="xl" color="#fff">
+          <Text fontSize="xl" color="#0B334D">
             If the app is already installed, then skip to step 4
           </Text>
 
-          <Box as="ol" ml="20px" color="#fff">
+          <Box as="ol" ml="20px" color="#0B334D">
             <Box as="li" fontSize="xl" mb="20px">
               Scan the QR code below using your child's device camera
               <Box mt="10px">
@@ -82,6 +111,8 @@ const InviteChild = () => {
                   alt="QR code for DooCoins Kids app" 
                   maxWidth="200px" 
                   height="auto"
+                  border="1px solid #0B334D"
+                  borderRadius="8px"
                 />
               </Box>
             </Box>
@@ -103,13 +134,13 @@ const InviteChild = () => {
           >
             {magicCode.map((code) => {
               return (
-                <Text key={code} fontSize="3xl" color="#fff">
+                <Text key={code} fontSize="3xl" color="#0B334D" fontWeight="600">
                   {code}
                 </Text>
               );
             })}
           </Box>
-          <Text fontSize="xl" color="#fff" align="center">
+          <Text fontSize="xl" color="#0B334D" align="center">
             The code expires after 1 hour
           </Text>
         </Box>
