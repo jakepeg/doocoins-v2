@@ -12,13 +12,11 @@ import {
   Skeleton, 
   Stack, 
   Text, 
-  useDisclosure,
   Box,
   VStack,
   Button,
   Link
 } from "@chakra-ui/react";
-import AddItemToListCallout from "../components/Callouts/AddItemToListCallout";
 import { ChildContext } from "../contexts/ChildContext";
 import strings from "../utils/constants";
 import { useNavigate } from "react-router-dom";
@@ -29,12 +27,9 @@ function ChildList() {
   const isNative = Capacitor.isNativePlatform();
   // Migration context removed - users directed to V1 to upgrade
   const {
-    isNewToSystem: { childList },
-    handleUpdateCalloutState,
     setGoal,
     setChild,
   } = React.useContext(ChildContext);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [children, setChildren] = React.useState(null);
   const [openItemId, setOpenItemId] = React.useState(null);
   const [showPopup, setShowPopup] = React.useState({
@@ -44,12 +39,6 @@ function ChildList() {
   });
   const [selectedChild, setSelectedChild] = React.useState(null);
   const [loader, setLoader] = React.useState({ init: true, singles: false });
-
-  React.useEffect(() => {
-    if (childList) {
-      onOpen();
-    }
-  }, [childList]);
 
   React.useEffect(() => {
     if (actor && isAuthenticated) {
@@ -195,8 +184,6 @@ function ChildList() {
       ...prevState,
       ["add_child"]: !prevState.add_child,
     }));
-    onClose();
-    handleUpdateCalloutState([strings.CALLOUTS_CHILD_LIST], false);
   };
 
   const handleSubmit = async (childName) => {
@@ -428,23 +415,11 @@ function ChildList() {
           <h2 style={{ marginBottom: "20px" }} className="title-button dark ">
             <span>Children</span>
             <span
-              className="plus-sign"
               role="button"
               onClick={handleToggleAddChildPopup}
+              className="plus-sign"
             />
           </h2>
-          {isOpen && (
-            <AddItemToListCallout
-              TextDescription={
-                <>
-                  How do you doo?! <br /> Tap the + icon to add a child
-                </>
-              }
-              itemKey={strings.CALLOUTS_CHILD_LIST}
-              isOpen={isOpen && !loader.init && !children?.length}
-              onClose={onClose}
-            />
-          )}
         </div>
         {loader.init ? (
           <Stack margin={"0 20px 20px 20px"}>

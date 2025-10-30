@@ -10,27 +10,21 @@ import {
   Skeleton,
   Stack,
   Text,
-  useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 import ApproveDialog from "../components/Dialogs/ApproveDialog";
 import { useNavigate } from "react-router-dom";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AddItemToListCallout from "../components/Callouts/AddItemToListCallout";
-import strings from "../utils/constants";
 
 const Tasks = () => {
   const { actor } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [tasks, setTasks] = React.useState([]);
   const {
     child,
     setChild,
-    isNewToSystem,
-    handleUpdateCalloutState,
     blockingChildUpdate,
     setBlockingChildUpdate,
   } = React.useContext(ChildContext);
@@ -53,12 +47,6 @@ const Tasks = () => {
       // getChildren({ revokeStateUpdate: false });
     }
   }, []);
-
-  React.useEffect(() => {
-    if (isNewToSystem[strings.CALLOUTS_TASKS]) {
-      onOpen();
-    }
-  }, [isNewToSystem[strings.CALLOUTS_TASKS]]);
 
   React.useEffect(() => {
     if (child) {
@@ -191,8 +179,6 @@ const Tasks = () => {
       ...prevState,
       ["add_task"]: !prevState.add_task,
     }));
-    onClose();
-    handleUpdateCalloutState([strings.CALLOUTS_TASKS], false);
   };
 
   const handleSubmitTask = (taskName, value) => {
@@ -502,19 +488,6 @@ const Tasks = () => {
               className="plus-sign"
             />
           </h2>
-          {isOpen && (
-            <AddItemToListCallout
-              TextDescription={
-                <>
-                  Ready to set tasks for {child?.name}? <br />
-                  Tap the + icon to get started!
-                </>
-              }
-              itemKey={strings.CALLOUTS_TASKS}
-              isOpen={isOpen && !loader.init && !tasks?.length}
-              onClose={onClose}
-            />
-          )}
         </div>
         {loader.init ? (
           <Stack margin={"0 20px 20px 20px"}>

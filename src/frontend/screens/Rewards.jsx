@@ -7,7 +7,6 @@ import {
   Skeleton,
   Stack,
   Text,
-  useDisclosure,
   useToast,
 } from "@chakra-ui/react";
 import DeleteDialog from "../components/Dialogs/DeleteDialog";
@@ -20,7 +19,6 @@ import RemoveGoalDialog from "../components/Dialogs/RemoveGoalDialog";
 import strings, { noGoalEntity } from "../utils/constants";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
-import AddRewardCalloutWrapper from "../components/Rewards/AddRewardCalloutWrapper";
 import RewardItem from "../components/Rewards/RewardItem";
 
 const Rewards = () => {
@@ -28,9 +26,8 @@ const Rewards = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const [rewards, setRewards] = React.useState([]);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentGoal, setCurrentGoal] = React.useState(null);
-  const { child, setChild, setGoal, isNewToSystem, handleUpdateCalloutState, blockingChildUpdate, setBlockingChildUpdate } =
+  const { child, setChild, setGoal, blockingChildUpdate, setBlockingChildUpdate } =
     React.useContext(ChildContext);
   const [transactions, setTransactions] = React.useState([]);
   const [loader, setLoader] = React.useState({
@@ -38,7 +35,6 @@ const Rewards = () => {
     singles: false,
     child: !child ? true : false,
   });
-  const [addClicked, setAddClicked] = React.useState(false)
   const [selectedReward, setSelectedReward] = React.useState(null);
   const [showPopup, setShowPopup] = React.useState({
     delete: false,
@@ -48,12 +44,6 @@ const Rewards = () => {
     add_reward: false,
     remove_goal: false,
   });
-
-  React.useEffect(() => {
-    if (isNewToSystem[strings.CALLOUT_REWARDS_LIST]) {
-      onOpen();
-    }
-  }, [isNewToSystem[strings.CALLOUT_REWARDS_LIST]]);
 
   React.useEffect(() => {
     if(!blockingChildUpdate) {
@@ -442,7 +432,6 @@ const Rewards = () => {
   };
 
   const handleToggleAddRewardPopup = () => {
-    setAddClicked(true)
     setShowPopup((prevState) => ({
       ...prevState,
       ["add_reward"]: !prevState.add_reward,
@@ -622,7 +611,6 @@ const Rewards = () => {
               className="plus-sign"
             />
           </h2>
-          <AddRewardCalloutWrapper addClicked={addClicked} loader={loader} rewards={rewards} />
         </div>
         {loader.init ? (
           <Stack margin={"0 20px 20px 20px"}>
