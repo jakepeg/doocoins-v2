@@ -6,6 +6,7 @@ import { useAuth } from "../use-auth-client";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Skeleton, Stack } from "@chakra-ui/react";
 import { ChildContext } from "../contexts/ChildContext";
+import EmptyStateMessage from "../components/EmptyStateMessage";
 
 const Wallet = () => {
   const { actor, store } = useAuth();
@@ -185,7 +186,11 @@ const Wallet = () => {
                   </div>
                 ))}
               </>
-            ) : null}
+            ) : (
+              <EmptyStateMessage>
+                {`No transactions yet. <br /> Get busy and start earning, ${child?.name}!`}
+              </EmptyStateMessage>
+            )}
           </>
         )}
       </div>

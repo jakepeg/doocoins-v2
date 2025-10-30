@@ -20,6 +20,7 @@ import strings, { noGoalEntity } from "../utils/constants";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import RewardItem from "../components/Rewards/RewardItem";
+import EmptyStateMessage from "../components/EmptyStateMessage";
 
 const Rewards = () => {
   const { actor } = useAuth();
@@ -506,10 +507,14 @@ const Rewards = () => {
               ))}
             </ul>
           </div>
-        ) : null}
+        ) : (
+          <EmptyStateMessage>
+            {`Rewards are how children spend DooCoins. A reward can be an allowance, like pocket money or screen time, or a treat such as watching a movie or getting a new toy. <br /><br /> Ready to set rewards for ${child?.name}? <br /> Tap the + icon to get started!`}
+          </EmptyStateMessage>
+        )}
       </>
     );
-  }, [rewards]);
+  }, [rewards, child?.name]);
 
   const isModalOpen =
     showPopup.delete ||

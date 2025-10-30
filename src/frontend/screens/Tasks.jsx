@@ -16,6 +16,7 @@ import ApproveDialog from "../components/Dialogs/ApproveDialog";
 import { useNavigate } from "react-router-dom";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
+import EmptyStateMessage from "../components/EmptyStateMessage";
 
 const Tasks = () => {
   const { actor } = useAuth();
@@ -416,10 +417,14 @@ const Tasks = () => {
               ))}
             </ul>
           </div>
-        ) : null}
+        ) : (
+          <EmptyStateMessage>
+            {`Tasks are how children earn DooCoins. A task can be a chore, like tidying a bedroom, an achievement such as getting an A in a math test, or recognition for good behaviour. <br /><br /> Ready to set tasks for ${child?.name}? <br /> Tap the + icon to get started!`}
+          </EmptyStateMessage>
+        )}
       </>
     );
-  }, [tasks]);
+  }, [tasks, child?.name]);
 
   const isModalOpen =
     showPopup.delete ||

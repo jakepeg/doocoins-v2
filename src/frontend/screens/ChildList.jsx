@@ -7,6 +7,7 @@ import AddChildDialog from "../components/ChildList/AddChildDialog";
 import DeleteDialog from "../components/Dialogs/DeleteDialog";
 import EditDialog from "../components/Dialogs/EditDialog";
 import { Capacitor } from "@capacitor/core";
+import EmptyStateMessage from "../components/EmptyStateMessage";
 // Swipe interactions replaced by popup actions menu
 import { 
   Skeleton, 
@@ -228,12 +229,9 @@ function ChildList() {
           // Empty state with V1 upgrade instructions
           <Box p={6} textAlign="center" color="white">
             <VStack spacing={4}>
-              <Text fontSize="lg" fontWeight="semibold">
-                Add a child to get started
-              </Text>
-              <Text fontSize="sm" color="blue.700">
-                Tap the + icon above to create your first child profile
-              </Text>
+              <EmptyStateMessage>
+                {"How do you Doo? <br /> Tap the + icon to add a child."}
+              </EmptyStateMessage>
               <Box my={4} width="100px" height="1px" bg="whiteAlpha.400" />
               <VStack spacing={3}>
                 <Text fontSize="sm" color="blue.700">
