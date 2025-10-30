@@ -20,7 +20,7 @@ const EmptyStateMessage = ({ children, ...props }) => {
         fontSize="lg"
         color="#0B334D"
         lineHeight="1.6"
-        fontWeight="600"
+        fontWeight="500"
         dangerouslySetInnerHTML={{ __html: children }}
       />
     </Box>

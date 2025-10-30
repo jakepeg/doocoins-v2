@@ -419,7 +419,7 @@ const Tasks = () => {
           </div>
         ) : (
           <EmptyStateMessage>
-            {`Tasks are how children earn DooCoins. A task can be a chore, like tidying a bedroom, an achievement such as getting an A in a math test, or recognition for good behaviour. <br /><br /> Ready to set tasks for ${child?.name}? <br /> Tap the + icon to get started!`}
+            {`Tasks are how children earn DooCoins. A task can be a chore, like tidying a bedroom, an achievement such as getting an A in a math test, good behaviour, or an allowance like pocket money. <br /><br /> Ready to set tasks for ${child?.name}? <br /> Tap the + icon to get started!`}
           </EmptyStateMessage>
         )}
       </>

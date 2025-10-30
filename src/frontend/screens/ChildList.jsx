@@ -191,14 +191,42 @@ function ChildList() {
     if (childName) {
       handleToggleAddChildPopup();
       const child_object = { name: childName };
-      let me = await actor.whoami();
+      
+      // Optimistically add child to UI immediately
+      const tempChild = {
+        ...child_object,
+        id: children?.length ? children[children.length - 1].id + 1 : 0,
+        balance: 0,
+        hasGoal: false,
+        isLocal: true, // Flag to indicate this is temporary
+      };
+      
+      setChildren((prevState) => {
+        const newChildren = [...(prevState || []), tempChild];
+        return newChildren;
+      });
+      
       setLoader((prevState) => ({ ...prevState, singles: true }));
+      
+      let me = await actor.whoami();
       actor?.addChild(child_object).then((returnedAddChild) => {
         if ("ok" in returnedAddChild) {
           updateChildList(returnedAddChild);
         } else {
           console.error(returnedAddChild.err);
+          // Revert optimistic update on error
+          setChildren((prevState) => 
+            prevState.filter(child => child.id !== tempChild.id)
+          );
+          setLoader((prevState) => ({ ...prevState, singles: false }));
         }
+      }).catch((error) => {
+        console.error(error);
+        // Revert optimistic update on error
+        setChildren((prevState) => 
+          prevState.filter(child => child.id !== tempChild.id)
+        );
+        setLoader((prevState) => ({ ...prevState, singles: false }));
       });
     }
   };
