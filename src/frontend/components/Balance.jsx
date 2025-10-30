@@ -402,13 +402,6 @@ const Balance = ({ handleTogglePopup }) => {
                 icon: <PencilIcon />,
                 onClick: () => handleTogglePopup?.(true, child, "edit"),
               },
-              {
-                id: "delete",
-                label: "Delete child",
-                isDestructive: true,
-                icon: <TrashIcon color="#E53E3E" />,
-                onClick: () => handleTogglePopup?.(true, child, "delete"),
-              },
             ]}
             ariaLabel="Child actions menu"
             iconColor="white"

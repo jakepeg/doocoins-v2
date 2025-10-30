@@ -14,14 +14,14 @@
 }
 
 .name {
-  font-size: 30px;
+  font-size: 36px;
   margin-top: -10px;
   font-weight: 300;
   color: #ffffff;
 }
 
 .balance {
-  font-size: 48px;
+  font-size: 54px;
   font-weight: 400;
   letter-spacing: -3px;
   color: #ffffff;
@@ -31,7 +31,7 @@
 
 @media only screen and (min-width: 768px) {
   .balance {
-    font-size: 58px;
+    font-size: 64px;
     letter-spacing: -4px;
   }
 }

@@ -65,12 +65,12 @@ const ActionsMenu = ({
                   isDisabled={action.isDisabled}
                   color={action.isDestructive ? "red.500" : undefined}
                   _hover={action.isDestructive ? { bg: "red.50" } : undefined}
-                  py={{ base: "12px", md: "10px" }}
-                  fontSize={{ base: "md", md: "sm" }}
+                  py={{ base: "14px", md: "12px" }}
+                  fontSize={{ base: "lg", md: "md" }}
                 >
                   <HStack spacing={3} align="center">
                     {action.icon}
-                    <Text fontSize="md">{action.label}</Text>
+                    <Text fontSize="lg">{action.label}</Text>
                   </HStack>
                 </MenuItem>
               );
