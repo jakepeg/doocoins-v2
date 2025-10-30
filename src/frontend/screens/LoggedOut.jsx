@@ -76,12 +76,13 @@ function LoggedOut() {
         className="container"
         display="flex"
         flexDirection="column"
-        justifyContent="center"
+        justifyContent="flex-start"
         alignItems="center"
         minHeight="100vh"
         backgroundColor="#0B334D"
+        pt="100px"
       >
-        <img className="logo" src={logo} alt="DooCoins" style={{ width: '200px', marginBottom: '2rem' }} />
+        <img className="logo" src={logo} alt="DooCoins" style={{ width: '140px', marginBottom: '2rem' }} />
         <Text fontSize="xl" color="#fff">
           Completing sign in...
         </Text>
