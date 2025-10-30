@@ -289,9 +289,6 @@ type InternetIdentityInit = record {
     is_production : opt bool;
     // Configuration for dummy authentication used in e2e tests.
     dummy_auth : opt opt DummyAuthConfig;
-    // Feature flags
-    feature_flag_continue_from_another_device : opt bool;
-    feature_flag_enable_generic_open_id_fe : opt bool;
 };
 
 type ChallengeKey = text;
@@ -325,6 +322,8 @@ type IdentityAnchorInfo = record {
     openid_credentials : opt vec OpenIdCredential;
     // The name of the Internet Identity
     name : opt text;
+    // The timestamp at which the anchor was created
+    created_at : opt Timestamp;
 };
 
 type AnchorCredentials = record {
@@ -517,6 +516,7 @@ type AuthnMethodConfirmationCode = record {
 
 type AuthnMethodSessionInfo = record {
     name : opt text;
+    created_at : opt Timestamp;
 };
 
 type RegistrationId = text;
@@ -573,6 +573,8 @@ type IdentityInfo = record {
     // Authentication method independent metadata
     metadata : MetadataMapV2;
     name : opt text;
+    // The timestamp at which the anchor was created
+    created_at : opt Timestamp;
 };
 
 type IdentityInfoError = variant {

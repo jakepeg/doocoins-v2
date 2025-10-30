@@ -343,7 +343,7 @@ const Balance = () => {
             sx={{
               position: "relative",
               zIndex: 10,
-              pr: { base: "20px", md: "40px", lg: "60px" },
+              pr: { base: "5px", md: "40px", lg: "60px" },
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -407,7 +407,7 @@ const Balance = () => {
                     textColor: "#fff",
                     pathColor: "#00A4D7",
                     trailColor: "transparent",
-                    textSize: "1em",
+                    textSize: "24px",
                   })}
                 />
                 <HStack
