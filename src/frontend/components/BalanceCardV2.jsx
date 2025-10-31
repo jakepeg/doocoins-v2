@@ -126,6 +126,7 @@ const BalanceCardV2 = ({
             letterSpacing: "-0.5px",
             textAlign: "left",
             marginTop: "20px",
+            fontSize: "30px",
           }}
           title={child?.name}
         >
@@ -151,7 +152,7 @@ const BalanceCardV2 = ({
               sx={{
                 display: "inline-block",
                 transform: "translateY(-10px)",
-                width: { base: "33px", md: "44px" },
+                width: "33px",
                 height: "auto",
               }}
             />
@@ -160,7 +161,7 @@ const BalanceCardV2 = ({
               className={styles.balance}
               sx={{
                 marginLeft: "-3px",
-                fontSize: { base: "56px", md: "72px" },
+                fontSize: "56px",
               }}
             >
               {child?.balance}
@@ -168,9 +169,48 @@ const BalanceCardV2 = ({
           </Box>
         )}
 
-        {/* Goal Section */}
-        {goal?.hasGoal ? (
-          <Box mt={isAbleToClaim ? "-28px" : 0}>
+        {/* Button - Always shown (Set Goal or Claim Goal) */}
+        <Box textAlign="center" mt={-7} mb={2}>
+          <Box
+            as="button"
+            onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
+            disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
+            sx={{
+              background: "rgba(255,255,255,0.2)",
+              borderRadius: "999px",
+              padding: "12px 24px",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "16px",
+              minWidth: "140px",
+              textAlign: "center",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+              border: "2px solid rgba(255,255,255,0.3)",
+              cursor: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
+              opacity: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? 0.4 : 1,
+              transition: "all 0.2s",
+              _hover: {
+                background: (goal?.hasGoal && !isAbleToClaim) ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.3)",
+                transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(1.05)",
+              },
+              _active: {
+                transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(0.98)",
+              },
+            }}
+          >
+            {isLoading ? (
+              <Spinner size="sm" />
+            ) : goal?.hasGoal ? (
+              "Claim Goal"
+            ) : (
+              "Set a Goal"
+            )}
+          </Box>
+        </Box>
+
+        {/* Goal Section - Only shown if goal exists */}
+        {goal?.hasGoal && (
+          <Box>
             {/* Goal info with star */}
             <Box 
               display="flex" 
@@ -221,74 +261,6 @@ const BalanceCardV2 = ({
                   },
                 }}
               />
-            </Box>
-
-            {/* Claim button if able */}
-            {isAbleToClaim && (
-              <Box textAlign="center" mt={3}>
-                <Box
-                  as="button"
-                  onClick={handleClaimGoal}
-                  disabled={isLoading}
-                  sx={{
-                    background: "rgba(255,255,255,0.2)",
-                    borderRadius: "999px",
-                    padding: "12px 24px",
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "16px",
-                    minWidth: "140px",
-                    textAlign: "center",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                    border: "2px solid rgba(255,255,255,0.3)",
-                    cursor: isLoading ? "not-allowed" : "pointer",
-                    opacity: isLoading ? 0.6 : 1,
-                    transition: "all 0.2s",
-                    _hover: {
-                      background: "rgba(255,255,255,0.3)",
-                      transform: "scale(1.05)",
-                    },
-                    _active: {
-                      transform: "scale(0.98)",
-                    },
-                  }}
-                >
-                  {isLoading ? <Spinner size="sm" /> : "Claim Goal"}
-                </Box>
-              </Box>
-            )}
-          </Box>
-        ) : (
-          /* Set Goal Button */
-          <Box textAlign="center" mt="-20px">
-            <Box
-              as="button"
-              onClick={handleOpenGoalPicker}
-              disabled={isLoading}
-              sx={{
-                background: "rgba(255,255,255,0.2)",
-                borderRadius: "999px",
-                padding: "12px 24px",
-                color: "#fff",
-                fontWeight: 600,
-                fontSize: "16px",
-                minWidth: "140px",
-                textAlign: "center",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                border: "2px solid rgba(255,255,255,0.3)",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                opacity: isLoading ? 0.6 : 1,
-                transition: "all 0.2s",
-                _hover: {
-                  background: "rgba(255,255,255,0.3)",
-                  transform: "scale(1.05)",
-                },
-                _active: {
-                  transform: "scale(0.98)",
-                },
-              }}
-            >
-              {isLoading ? <Spinner size="sm" /> : "Set a Goal"}
             </Box>
           </Box>
         )}
