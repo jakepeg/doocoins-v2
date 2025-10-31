@@ -107,12 +107,12 @@ const BalanceCardV2 = ({
       <Box
         display="flex"
         flexDirection="column"
-        gap={2}
+        gap={1}
         sx={{
           paddingTop: "20px",
           paddingLeft: "10px",
           paddingRight: "10px",
-          paddingBottom: "16px",
+          paddingBottom: "20px",
         }}
       >
         {/* Name - Top */}
@@ -170,9 +170,19 @@ const BalanceCardV2 = ({
 
         {/* Goal Section */}
         {goal?.hasGoal ? (
-          <Box>
+          <Box mt={isAbleToClaim ? "-28px" : 0}>
             {/* Goal info with star */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box 
+              display="flex" 
+              justifyContent="space-between" 
+              alignItems="center" 
+              mb={2}
+              cursor="pointer"
+              onClick={handleOpenGoalPicker}
+              _hover={{
+                opacity: 0.8,
+              }}
+            >
               <HStack spacing={2} align="center">
                 <Box
                   as="svg"
@@ -197,22 +207,25 @@ const BalanceCardV2 = ({
             </Box>
 
             {/* Linear Progress Bar */}
-            <Progress
-              value={percentage}
-              size="lg"
-              colorScheme="cyan"
-              borderRadius="full"
-              bg="rgba(255,255,255,0.2)"
-              sx={{
-                "& > div": {
-                  backgroundColor: "#00D4FF",
-                },
-              }}
-            />
+            <Box mt={3}>
+              <Progress
+                value={percentage}
+                size="lg"
+                height="12px"
+                colorScheme="cyan"
+                borderRadius="full"
+                bg="rgba(255,255,255,0.2)"
+                sx={{
+                  "& > div": {
+                    backgroundColor: "#00D4FF",
+                  },
+                }}
+              />
+            </Box>
 
             {/* Claim button if able */}
             {isAbleToClaim && (
-              <Box textAlign="center" mt={4}>
+              <Box textAlign="center" mt={3}>
                 <Box
                   as="button"
                   onClick={handleClaimGoal}
