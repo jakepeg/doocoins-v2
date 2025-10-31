@@ -55,6 +55,8 @@ const BalanceCardV2 = ({
         overflow: "hidden",
         WebkitBorderRadius: "12px",
         position: "relative",
+        paddingLeft: "10px",
+        paddingRight: "10px",
       }}
       className={`${styles.hero}`}
     >
@@ -65,6 +67,15 @@ const BalanceCardV2 = ({
         right="12px"
         zIndex={1000}
         onClick={(e) => e.stopPropagation()}
+        sx={{
+          backgroundColor: "rgba(255, 255, 255, 0.3)",
+          borderRadius: "50%",
+          width: "36px",
+          height: "36px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
         <ActionsMenu
           actions={[
@@ -88,7 +99,7 @@ const BalanceCardV2 = ({
             },
           ]}
           ariaLabel="Child actions menu"
-          iconColor="white"
+          iconColor="black"
         />
       </Box>
 
@@ -96,8 +107,13 @@ const BalanceCardV2 = ({
       <Box
         display="flex"
         flexDirection="column"
-        gap={4}
-        p={4}
+        gap={2}
+        sx={{
+          paddingTop: "20px",
+          paddingLeft: "10px",
+          paddingRight: "10px",
+          paddingBottom: "16px",
+        }}
       >
         {/* Name - Top */}
         <Box 
@@ -109,6 +125,7 @@ const BalanceCardV2 = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
+            marginTop: "20px",
           }}
           title={child?.name}
         >
@@ -123,7 +140,7 @@ const BalanceCardV2 = ({
               alignItems: "baseline",
               gap: "0px",
               whiteSpace: "nowrap",
-              justifyContent: "center",
+              justifyContent: "flex-start",
             }}
           >
             <Box 
@@ -133,8 +150,9 @@ const BalanceCardV2 = ({
               alt="DooCoins symbol"
               sx={{
                 display: "inline-block",
-                verticalAlign: "baseline",
-                marginBottom: "2px",
+                transform: "translateY(-10px)",
+                width: { base: "33px", md: "44px" },
+                height: "auto",
               }}
             />
             <Box 
@@ -154,24 +172,29 @@ const BalanceCardV2 = ({
         {goal?.hasGoal ? (
           <Box>
             {/* Goal info with star */}
-            <HStack spacing={2} justify="center" mb={2}>
-              <Box
-                as="svg"
-                width="18px"
-                height="18px"
-                viewBox="0 0 24 24"
-                fill="#fff"
-                color="#fff"
-              >
-                <path
-                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                  fill="currentColor"
-                />
-              </Box>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <HStack spacing={2} align="center">
+                <Box
+                  as="svg"
+                  width="18px"
+                  height="18px"
+                  viewBox="0 0 24 24"
+                  fill="#fff"
+                  color="#fff"
+                >
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                    fill="currentColor"
+                  />
+                </Box>
+                <Text color="#fff" fontSize="16px" fontWeight="500">
+                  Goal: {goal.name}
+                </Text>
+              </HStack>
               <Text color="#fff" fontSize="16px" fontWeight="500">
-                Goal {percentage}%: {goal.name}
+                {percentage}%
               </Text>
-            </HStack>
+            </Box>
 
             {/* Linear Progress Bar */}
             <Progress
@@ -224,7 +247,7 @@ const BalanceCardV2 = ({
           </Box>
         ) : (
           /* Set Goal Button */
-          <Box textAlign="center" mt={2}>
+          <Box textAlign="center" mt="-20px">
             <Box
               as="button"
               onClick={handleOpenGoalPicker}
