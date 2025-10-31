@@ -429,15 +429,43 @@ const Balance = ({ handleTogglePopup }) => {
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
+                letterSpacing: "-0.5px",
               }}
               title={child?.name}
             >
               {child?.name}
             </Box>
             {child?.balance >= 0 && (
-              <Box className={styles.balance}>
-                <img src={dc} className="dc-img-big" alt="DooCoins symbol" />
-                {child?.balance}
+              <Box 
+                className={styles.balance}
+                sx={{
+                  display: "flex",
+                  alignItems: "baseline",
+                  gap: "0px",
+                  whiteSpace: "nowrap",
+                  transform: "none !important",
+                }}
+              >
+                <Box 
+                  as="img" 
+                  src={dc} 
+                  className="dc-img-big" 
+                  alt="DooCoins symbol"
+                  sx={{
+                    display: "inline-block",
+                    verticalAlign: "baseline",
+                    marginBottom: "2px",
+                  }}
+                />
+                <Box 
+                  as="span"
+                  sx={{
+                    marginLeft: "-3px",
+                    fontSize: { base: "47px", md: "63px" },
+                  }}
+                >
+                  {child?.balance}
+                </Box>
               </Box>
             )}
           </Box>
