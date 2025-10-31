@@ -415,8 +415,25 @@ const Balance = ({ handleTogglePopup }) => {
           alignItems={"center"}
           height={"100%"}
         >
-          <Box display={"flex"} flexDirection={"column"} gap={0}>
-            <Box className={styles.name}>{child?.name}</Box>
+          <Box 
+            display={"flex"} 
+            flexDirection={"column"} 
+            gap={0}
+            flex="1"
+            minWidth="0"
+          >
+            <Box 
+              className={styles.name}
+              sx={{
+                maxWidth: { base: "180px", md: "280px", lg: "320px" },
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+              title={child?.name}
+            >
+              {child?.name}
+            </Box>
             {child?.balance >= 0 && (
               <Box className={styles.balance}>
                 <img src={dc} className="dc-img-big" alt="DooCoins symbol" />

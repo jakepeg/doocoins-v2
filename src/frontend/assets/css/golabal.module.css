@@ -29,6 +29,15 @@
   transform: translateY(-10px);
 }
 
+@media only screen and (max-width: 767px) {
+  .name {
+    font-size: 30px;
+  }
+  .balance {
+    font-size: 48px;
+  }
+}
+
 @media only screen and (min-width: 768px) {
   .balance {
     font-size: 64px;
