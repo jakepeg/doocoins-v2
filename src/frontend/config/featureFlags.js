@@ -3,5 +3,5 @@
  */
 export const FEATURE_FLAGS = {
   // Balance card design version: 'v1' (circular progress) | 'v2' (linear progress)
-  balanceCardDesign: 'v1',
+  balanceCardDesign: 'v2',
 };
