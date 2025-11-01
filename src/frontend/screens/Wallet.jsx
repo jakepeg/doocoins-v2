@@ -180,7 +180,7 @@ const Wallet = () => {
                       <img
                         src={dc}
                         alt="DooCoins symbol"
-                        style={{ width: 20, height: 20, marginRight: -8, marginTop: -3, verticalAlign: 'middle' }}
+                        style={{ width: 20, height: 20, marginRight: -8, marginTop: -4, verticalAlign: 'middle' }}
                       />
                       <span style={{ fontWeight: 600, fontSize: '22px', color: '#0B334D' }}>{parseInt(transaction.value)}</span>
                     </Box>

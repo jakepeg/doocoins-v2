@@ -9,6 +9,7 @@ import {
   Progress,
 } from "@chakra-ui/react";
 import ActionsMenu from "./common/ActionsMenu";
+import { ActiveBackground } from "./BalanceCardBackgrounds";
 
 // Inline icons for the actions menu
 const ShareIcon = (props) => (
@@ -49,29 +50,32 @@ const BalanceCardV2 = ({
   return (
     <header
       style={{
-        // TODO: Update background for V2 design
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
         borderRadius: "12px",
         overflow: "hidden",
         WebkitBorderRadius: "12px",
         position: "relative",
         paddingLeft: "10px",
         paddingRight: "10px",
+        minHeight: "275px",
+        maxHeight: "275px",
       }}
       className={`${styles.hero}`}
     >
+      {/* Background SVG */}
+      <ActiveBackground />
+
       {/* Actions Menu - Top Right */}
       <Box
         position="absolute"
         top="12px"
         right="12px"
-        zIndex={1000}
+        zIndex={10}
         onClick={(e) => e.stopPropagation()}
         sx={{
           backgroundColor: "rgba(255, 255, 255, 0.3)",
           borderRadius: "50%",
-          width: "36px",
-          height: "36px",
+          width: "30px",
+          height: "30px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -113,6 +117,8 @@ const BalanceCardV2 = ({
           paddingLeft: "10px",
           paddingRight: "10px",
           paddingBottom: "20px",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         {/* Name - Top */}
@@ -125,7 +131,7 @@ const BalanceCardV2 = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: "20px",
+            marginTop: "10px",
             fontSize: "30px",
           }}
           title={child?.name}
@@ -142,6 +148,7 @@ const BalanceCardV2 = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
+              marginTop: "-10px",
             }}
           >
             <Box 
@@ -170,7 +177,7 @@ const BalanceCardV2 = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) */}
-        <Box textAlign="center" mt={-7} mb={2}>
+        <Box textAlign="center" mt={goal?.hasGoal ? -2 : 3} mb={2}>
           <Box
             as="button"
             onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
