@@ -10,10 +10,12 @@ import { createActor, canisterId } from "../../declarations/backend";
 export default function AuthRelay() {
   const [error, setError] = useState(null);
   const [retLink, setRetLink] = useState(null);
+  const [status, setStatus] = useState('starting'); // 'starting', 'authenticating', 'storing', 'redirecting', 'complete'
 
   useEffect(() => {
     (async () => {
       try {
+        setStatus('starting');
         const url = new URL(window.location.href);
         const nonce = url.searchParams.get("nonce");
         const mobilePublicKeyHex = url.searchParams.get("publicKey");
@@ -36,6 +38,7 @@ export default function AuthRelay() {
         const intermediatePublicKey = intermediateIdentity.getPublicKey();
 
         // STEP 2: Authenticate with II using the intermediate key
+        setStatus('authenticating');
         const client = await AuthClient.create({
           idleOptions: { disableDefaultIdleCallback: true, disableIdle: true },
           identity: intermediateIdentity,
@@ -113,6 +116,11 @@ export default function AuthRelay() {
           .join("");
         const expiresAt = BigInt(Date.now() + 2 * 60 * 1000) * BigInt(1_000_000); // 2 minutes
         
+        // STEP 6: Store the delegation chain and wait for confirmation
+        setStatus('storing');
+        const finalUrl = `${ret}#code=${encodeURIComponent(code)}&nonce=${encodeURIComponent(nonce)}`;
+        setRetLink(finalUrl);
+        
         try {
           // IMPORTANT: Use DelegationChain.toJSON() to get proper format
           const chainToStore = DelegationChain.fromDelegations(
@@ -121,15 +129,22 @@ export default function AuthRelay() {
           );
           const chainJson = JSON.stringify(chainToStore.toJSON());
           const bytes = new TextEncoder().encode(chainJson);
+          
+          console.log('[relay] Storing delegation chain...');
           await actor.putAuthBlob(code, nonce, bytes, expiresAt);
+          console.log('[relay] Delegation chain stored successfully');
+          
+          // Add a small delay to ensure the backend write is fully committed
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
         } catch (e) {
           console.error("[relay] Failed to store delegation chain:", e);
           throw e;
         }
 
         // STEP 7: Redirect back using URI fragment (not GET param to avoid leaking to server)
-        const finalUrl = `${ret}#code=${encodeURIComponent(code)}&nonce=${encodeURIComponent(nonce)}`;
-        setRetLink(finalUrl);
+        setStatus('redirecting');
+        console.log('[relay] Redirecting back to app...');
         window.location.replace(finalUrl);
         
       } catch (e) {
@@ -179,7 +194,12 @@ export default function AuthRelay() {
           padding: 16,
           marginBottom: 16
         }}>
-          <p style={{ margin: 0 }}>⏳ Completing sign-in with Internet Identity...</p>
+          <p style={{ margin: 0 }}>
+            {status === 'starting' && '⏳ Starting authentication...'}
+            {status === 'authenticating' && '⏳ Completing sign-in with Internet Identity...'}
+            {status === 'storing' && '💾 Securing your session...'}
+            {status === 'redirecting' && '✅ Success! Redirecting back to app...'}
+          </p>
           <p style={{ margin: '8px 0 0 0', fontSize: 14, color: '#666' }}>
             This page will automatically redirect you back to the app.
           </p>
@@ -189,20 +209,30 @@ export default function AuthRelay() {
       {retLink && (
         <div style={{ marginTop: 20 }}>
           <p style={{ marginBottom: 8, color: '#666' }}>If nothing happens:</p>
-          <a 
-            href={retLink} 
+          <button
+            onClick={() => window.location.replace(retLink)}
+            disabled={status !== 'redirecting' && !error}
             style={{ 
               display: 'inline-block',
-              background: '#0a84ff',
+              background: (status === 'redirecting' || error) ? '#0a84ff' : '#999',
               color: 'white',
               padding: '12px 24px',
               borderRadius: 8,
               textDecoration: 'none',
-              fontWeight: 600
+              fontWeight: 600,
+              border: 'none',
+              cursor: (status === 'redirecting' || error) ? 'pointer' : 'not-allowed',
+              fontSize: 16,
+              opacity: (status === 'redirecting' || error) ? 1 : 0.6,
             }}
           >
             Return to app →
-          </a>
+          </button>
+          {status !== 'redirecting' && !error && (
+            <p style={{ marginTop: 8, fontSize: 12, color: '#999' }}>
+              Please wait while we complete the authentication...
+            </p>
+          )}
         </div>
       )}
       
