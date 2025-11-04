@@ -20,6 +20,7 @@ import { noGoalEntity } from "../utils/constants";
 import { FEATURE_FLAGS } from "../config/featureFlags";
 import BalanceCardV1 from "./BalanceCardV1";
 import BalanceCardV2 from "./BalanceCardV2";
+import { Capacitor } from "@capacitor/core";
 
 const Balance = ({ handleTogglePopup }) => {
   const {
@@ -29,6 +30,7 @@ const Balance = ({ handleTogglePopup }) => {
     setGoal,
     getBalance,
     handleUnsetGoal,
+    handleUpdateTransactions,
     setBlockingChildUpdate,
     blockingChildUpdate,
     transactions,
@@ -123,12 +125,7 @@ const Balance = ({ handleTogglePopup }) => {
     }
   }, [child?.id]);
 
-  const handleUpdateTransactions = (transactions) => {
-    setTransactions(transactions);
-    set("transactionList", transactions);
-  };
-
-  function handleClaimGoal() {
+  async function handleClaimGoal() {
     const reward_id = goal.id;
     let dateNum = Math.floor(Date.now() / 1000);
     let date = dateNum.toString();
@@ -140,7 +137,7 @@ const Balance = ({ handleTogglePopup }) => {
       name: goal.name,
       transactionType: "GOAL_DEBIT",
     };
-    handleUpdateTransactions([new_transactions, ...transactions]);
+    await handleUpdateTransactions([new_transactions, ...transactions]);
 
     setChild((prevState) => ({
       ...prevState,
@@ -159,6 +156,7 @@ const Balance = ({ handleTogglePopup }) => {
             isClosable: true,
           });
           getReward({ rewardId: reward_id, revokeStateUpdate: true });
+          
           actor?.getChildren().then(async (returnedChilren) => {
             const children = Object.values(returnedChilren);
             const updatedChildrenData = await Promise.all(

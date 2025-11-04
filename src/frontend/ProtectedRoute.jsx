@@ -62,7 +62,7 @@ function ProtectedRoute({ children }) {
     handleCloseDeletePopup();
     const child_object = { id: childID, name: childName, archived: true };
     actor?.updateChild(childID, child_object).then((response) => {
-      // Navigate back to child list after deleting
+      // Force full page reload to properly clear state after deletion
       window.location.href = "/";
     });
   };

@@ -17,6 +17,7 @@ const Alerts = () => {
     getBalance,
     transactions,
     setTransactions,
+    handleUpdateTransactions,
     setBlockingChildUpdate,
     list,
     setList,
@@ -197,11 +198,6 @@ const Alerts = () => {
     });
   };
 
-  const handleUpdateTransactions = (transactions) => {
-    setTransactions(transactions);
-    set("transactionList", transactions);
-  };
-
   const approveRequest = async ({ task, reward }) => {
     // setLoading(true);
     let dateNum = Math.floor(Date.now() / 1000);
@@ -228,8 +224,7 @@ const Alerts = () => {
         ...prevState,
         balance: prevState.balance + task.value,
       }));
-      set("transactionList", [new_transactions, ...transactions]);
-      setTransactions([new_transactions, ...transactions]);
+      await handleUpdateTransactions([new_transactions, ...transactions]);
       // API call approveTask
       setBlockingChildUpdate(true);
 
@@ -248,7 +243,7 @@ const Alerts = () => {
       try {
         await actor
           .approveTask(task.childId, parseInt(task.taskId), date)
-          .then((returnedApproveTask) => {
+          .then(async (returnedApproveTask) => {
             if ("ok" in returnedApproveTask) {
               actor?.getChildren().then(async (returnedChilren) => {
                 if ("ok" in returnedChilren) {
@@ -285,12 +280,11 @@ const Alerts = () => {
               const filteredTransactions = transactions.filter(
                 (transaction) => transaction.id !== new_transactions.id
               );
-              setTransactions(filteredTransactions);
+              await handleUpdateTransactions(filteredTransactions);
               setChild((prevState) => ({
                 ...prevState,
                 balance: prevState.balance - task.value,
               }));
-              set("transactionList", filteredTransactions);
               console.error(returnedApproveTask.err);
               setBlockingChildUpdate(false);
               toast({

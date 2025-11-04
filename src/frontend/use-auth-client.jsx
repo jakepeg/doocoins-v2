@@ -525,11 +525,14 @@ export const AuthProvider = ({ children }) => {
     }
     
     // Standard non-broker login (for web or if broker fails)
+    // Use windowOpenerFeatures to keep popup open and prevent full page redirect
     authClient.login({
       identityProvider,
       onSuccess: handleLoginSuccess,
       onError: handleLoginError,
       maxTimeToLive: THIRTY_DAYS_IN_NANOSECONDS,
+      // Keep popup open during auth to prevent PWA context loss
+      windowOpenerFeatures: "toolbar=0,location=0,menubar=0,width=500,height=600,left=100,top=100",
     });
   }, [authClient, identityProvider, handleLoginSuccess, handleLoginError, isLocal, createActorWithIdentity]);
 

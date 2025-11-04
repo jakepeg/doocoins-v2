@@ -57,6 +57,11 @@ export default function ChildProvider({ children }) {
     set("childGoal", noGoalEntity);
   };
 
+  const handleUpdateTransactions = async (newTransactions) => {
+    setTransactions(newTransactions);
+    await set("transactionList", newTransactions);
+  };
+
   const values = React.useCallback(() => {
     return {
       child,
@@ -65,6 +70,7 @@ export default function ChildProvider({ children }) {
       setGoal,
       getBalance,
       handleUnsetGoal,
+      handleUpdateTransactions,
       isNewToSystem,
       handleUpdateCalloutState,
       setBlockingChildUpdate,
@@ -81,6 +87,7 @@ export default function ChildProvider({ children }) {
     setGoal,
     getBalance,
     handleUnsetGoal,
+    handleUpdateTransactions,
     isNewToSystem,
     handleUpdateCalloutState,
     blockingChildUpdate,

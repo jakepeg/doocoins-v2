@@ -95,15 +95,18 @@ const Wallet = () => {
               }))
             );
         } else {
-          setTransactions(
-            val?.map((transaction) => {
-              return {
-                ...transaction,
-                id: parseInt(transaction.id),
-                value: parseInt(transaction.value),
-              };
-            })
-          );
+          // Only update from storage if context transactions are empty
+          if (!transactions || transactions.length === 0) {
+            setTransactions(
+              val?.map((transaction) => {
+                return {
+                  ...transaction,
+                  id: parseInt(transaction.id),
+                  value: parseInt(transaction.value),
+                };
+              })
+            );
+          }
           setIsLoading((prevState) => ({
             ...prevState,
             transactions: false,
@@ -115,7 +118,10 @@ const Wallet = () => {
   }
 
   React.useEffect(() => {
-    if (child) getTransactions(child);
+    // Only fetch transactions if context is empty (first load)
+    if (child && (!transactions || transactions.length === 0)) {
+      getTransactions(child);
+    }
   }, [actor, child]);
 
   const sortTransactionsByDate = React.useCallback(() => {

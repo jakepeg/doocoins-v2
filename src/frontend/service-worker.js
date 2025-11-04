@@ -1,5 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
+// Service Worker Version: 2024-11-04-v2 (PWA auth fix)
 // This service worker can be customized!
 // See https://developers.google.com/web/tools/workbox/modules
 // for the list of available Workbox modules, or add any other
