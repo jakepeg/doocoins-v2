@@ -213,16 +213,6 @@ export const AuthProvider = ({ children }) => {
     
     window.addEventListener('broker:auth-complete', handleBrokerAuth);
     
-    // UNCONDITIONAL ALERT - MUST SHOW
-    alert('AUTH HOOK LOADED! isNative=' + isNative);
-    
-    // IMMEDIATE ALERT BEFORE ANY ASYNC CODE
-    if (isNative) {
-      const hasDel = localStorage.getItem('ic-auth-delegation');
-      const hasId = localStorage.getItem('ic-auth-identity');
-      alert(`IMMEDIATE CHECK:\nDelegation: ${hasDel ? 'YES' : 'NO'}\nIdentity: ${hasId ? 'YES' : 'NO'}`);
-    }
-    
     (async () => {
       try {
         setLoginStatus("initializing");
@@ -405,13 +395,6 @@ export const AuthProvider = ({ children }) => {
             console.log('[auth] 🔄 Re-backing up restored identity to Keychain...');
             const delegationString = localStorage.getItem('ic-auth-delegation');
             const identityJson = await storageAdapter.get('identity');
-            console.log('[auth] Re-backup data check:', { 
-              hasDelegation: !!delegationString,
-              delegationLength: delegationString?.length,
-              hasIdentity: !!identityJson,
-              identityType: typeof identityJson,
-              isArray: Array.isArray(identityJson)
-            });
             if (delegationString && identityJson) {
               // Identity needs to be stringified to match what we backed up on fresh login
               const identityString = JSON.stringify(identityJson);
@@ -419,7 +402,7 @@ export const AuthProvider = ({ children }) => {
                 delegation: delegationString,
                 identity: identityString
               });
-              console.log('[auth] ✅ Re-backup complete - delegation:', delegationString.substring(0, 50) + '...', 'identity:', identityString.substring(0, 50) + '...');
+              console.log('[auth] ✅ Re-backup complete');
             } else {
               console.log('[auth] ⚠️ Re-backup skipped - missing data');
             }

@@ -589,7 +589,6 @@ extension AppDelegate {
                 var success = true
                 
                 if let delegation = dict["delegation"] as? String {
-                    NSLog("[auth-storage] 📝 Delegation preview: \(delegation.prefix(100))...")
                     if saveToKeychain(key: "ic-auth-delegation", value: delegation) {
                         NSLog("[auth-storage] ✅ Backed up delegation to Keychain (\(delegation.count) chars)")
                     } else {
@@ -601,7 +600,6 @@ extension AppDelegate {
                 }
                 
                 if let identity = dict["identity"] as? String {
-                    NSLog("[auth-storage] 📝 Identity preview: \(identity.prefix(100))...")
                     if saveToKeychain(key: "ic-auth-identity", value: identity) {
                         NSLog("[auth-storage] ✅ Backed up identity to Keychain (\(identity.count) chars)")
                     } else {
@@ -637,9 +635,6 @@ extension AppDelegate {
                 
                 NSLog("[auth-restore] 💾 Found auth data in Keychain, restoring to localStorage...")
                 NSLog("[auth-restore] Delegation: \(delegation.count) chars, Identity: \(identity.count) chars")
-                NSLog("[auth-restore] 📝 Delegation preview: \(delegation.prefix(100))...")
-                NSLog("[auth-restore] 📝 Identity preview: \(identity.prefix(200))...")
-                NSLog("[auth-restore] 📝 Identity full: \(identity)")
                 
                 // Properly escape strings for JavaScript
                 // The strings are already JSON, we just need to escape them for embedding in JS
