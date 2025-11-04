@@ -81,14 +81,24 @@
         // Create DelegationIdentity
         const delegationIdentity = DelegationIdentity.fromDelegation(sessionIdentity, delegationChain);
         
-        // Dispatch custom event with the delegation identity
-        // The AuthProvider can listen for this and update its state
+        // Dispatch custom event with BOTH the delegation identity AND session identity
+        // The session identity needs to be persisted for AuthClient to reload the delegation
         window.dispatchEvent(new CustomEvent('broker:auth-complete', {
-          detail: { identity: delegationIdentity }
+          detail: { 
+            identity: delegationIdentity,
+            sessionIdentity: sessionIdentity, // Include session key for persistence
+            delegationChain: delegationChain  // Include chain for persistence
+          }
         }));
         
-        // Clean up temporary session key
+        // Clean up temporary session key (will be stored by auth handler)
         localStorage.removeItem('broker_session_key');
+        
+        // CRITICAL: Clear the URL hash to prevent re-triggering on app restart (iOS bug)
+        // iOS preserves URL hash across app restarts, causing broker flow to auto-start
+        window.location.hash = '';
+        console.log('[broker] URL hash cleared to prevent re-trigger');
+        
         window.__brokerProcessing = false;
         
       } catch (err) {

@@ -19,6 +19,42 @@ const THIRTY_DAYS_IN_NANOSECONDS = BigInt(30 * 24 * 3_600_000_000_000);
 const LOCAL_CANISTER_ID = "uxrrr-q7777-77774-qaaaq-cai";
 const PRODUCTION_CANISTER_ID = "f5cpb-qyaaa-aaaah-qdbeq-cai";
 
+// LocalStorage-based storage adapter for iOS where IndexedDB can be unreliable
+class LocalStorageAdapter {
+  constructor(keyPrefix = 'ic-') {
+    this.keyPrefix = keyPrefix;
+  }
+
+  async get(key) {
+    try {
+      const item = localStorage.getItem(this.keyPrefix + key);
+      console.log(`[LocalStorageAdapter] GET ${this.keyPrefix + key}:`, item ? 'found' : 'not found');
+      return item ? JSON.parse(item) : null;
+    } catch (e) {
+      console.error('[storage] localStorage get failed:', e);
+      return null;
+    }
+  }
+
+  async set(key, value) {
+    try {
+      localStorage.setItem(this.keyPrefix + key, JSON.stringify(value));
+      console.log(`[LocalStorageAdapter] SET ${this.keyPrefix + key}: success`);
+    } catch (e) {
+      console.error('[storage] localStorage set failed:', e);
+    }
+  }
+
+  async remove(key) {
+    try {
+      localStorage.removeItem(this.keyPrefix + key);
+      console.log(`[LocalStorageAdapter] REMOVE ${this.keyPrefix + key}: success`);
+    } catch (e) {
+      console.error('[storage] localStorage remove failed:', e);
+    }
+  }
+}
+
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -107,17 +143,66 @@ export const AuthProvider = ({ children }) => {
     
     // Listen for broker auth completion
     const handleBrokerAuth = async (event) => {
-      const { identity: delegationIdentity } = event.detail;
+      const { identity: delegationIdentity, sessionIdentity, delegationChain } = event.detail;
       
       if (!delegationIdentity) {
         console.error('[auth] No identity in broker event');
         return;
       }
       
-      console.log('[auth] Broker auth complete, creating actor');
+      console.log('[auth] Broker auth complete, persisting to storage');
       console.log('[auth] Identity principal:', delegationIdentity.getPrincipal().toText());
-      console.log('[auth] Creating actor with canisterId:', canisterId);
-      console.log('[auth] Using host:', isLocal ? "http://localhost:4943" : "https://icp-api.io");
+      
+      // 🔥 CRITICAL FIX: Store the delegation so it persists across app restarts!
+      // We need to store both the delegation chain AND the session identity
+      if (delegationIdentity instanceof DelegationIdentity && isNative && sessionIdentity) {
+        try {
+          // Use our LocalStorageAdapter directly (same one AuthClient uses)
+          const storage = new LocalStorageAdapter('ic-auth-');
+          
+          console.log('[auth] Attempting to store delegation and session identity...');
+          console.log('[auth] Delegation chain delegations count:', delegationChain.delegations.length);
+          
+          // CRITICAL: AuthClient expects delegation to be stored as a STRING
+          // Our LocalStorageAdapter does JSON.parse() on get(), so we need to store
+          // the delegation as a JSON string (which gets stringified again by adapter)
+          // Result: double-stringified, so after parse it's still a string
+          const delegationChainJson = JSON.stringify(delegationChain.toJSON());
+          
+          // Store directly to localStorage to avoid double-stringifying
+          localStorage.setItem('ic-auth-delegation', delegationChainJson);
+          console.log('[auth] ✅ Delegation chain persisted as STRING to localStorage');
+          
+          // Store the session identity (the Ed25519 key pair) as JSON object
+          const identityJson = JSON.stringify(sessionIdentity.toJSON());
+          await storage.set('identity', sessionIdentity.toJSON());
+          console.log('[auth] ✅ Session identity persisted to storage');
+          
+          // BACKUP TO iOS KEYCHAIN (native storage that persists across app terminations)
+          if (isNative && window?.webkit?.messageHandlers?.authStorage) {
+            console.log('[auth] 📦 Backing up auth data to iOS Keychain...');
+            try {
+              window.webkit.messageHandlers.authStorage.postMessage({
+                delegation: delegationChainJson,
+                identity: identityJson
+              });
+              console.log('[auth] ✅ Auth data backed up to iOS Keychain');
+            } catch (err) {
+              console.error('[auth] ⚠️ Failed to backup to Keychain:', err);
+            }
+          }
+          
+          // Verify it was stored
+          const verifyDelegation = localStorage.getItem('ic-auth-delegation');
+          const verifyIdentity = await storage.get('identity');
+          console.log('[auth] Verify delegation stored:', !!verifyDelegation);
+          console.log('[auth] Verify identity stored:', !!verifyIdentity);
+          console.log('[auth] Delegation is string:', typeof verifyDelegation === 'string');
+        } catch (err) {
+          console.error('[auth] Failed to persist delegation:', err);
+          console.error('[auth] Error details:', err.message, err.stack);
+        }
+      }
       
       setIdentity(delegationIdentity);
       const newActor = await createActorWithIdentity(delegationIdentity);
@@ -128,10 +213,166 @@ export const AuthProvider = ({ children }) => {
     
     window.addEventListener('broker:auth-complete', handleBrokerAuth);
     
+    // UNCONDITIONAL ALERT - MUST SHOW
+    alert('AUTH HOOK LOADED! isNative=' + isNative);
+    
+    // IMMEDIATE ALERT BEFORE ANY ASYNC CODE
+    if (isNative) {
+      const hasDel = localStorage.getItem('ic-auth-delegation');
+      const hasId = localStorage.getItem('ic-auth-identity');
+      alert(`IMMEDIATE CHECK:\nDelegation: ${hasDel ? 'YES' : 'NO'}\nIdentity: ${hasId ? 'YES' : 'NO'}`);
+    }
+    
     (async () => {
       try {
         setLoginStatus("initializing");
         
+        console.log('[auth] Initializing AuthClient...');
+        console.log('[auth] 🚀🚀🚀 APP STARTED - useAuthClient initializing 🚀🚀🚀');
+        console.log('[auth] Build timestamp:', new Date().toISOString());
+        
+        // TEMP DEBUG: Show what's in localStorage at startup
+        const lsKeys = Object.keys(localStorage);
+        const hasDelegation = localStorage.getItem('ic-auth-delegation');
+        const hasIdentity = localStorage.getItem('ic-auth-identity');
+        
+        // ALWAYS show alert on native to see what's happening
+        if (isNative) {
+          const msg = `STARTUP DEBUG:\nDelegation: ${hasDelegation ? `EXISTS (${hasDelegation.length} chars)` : 'MISSING'}\nIdentity: ${hasIdentity ? `EXISTS (${hasIdentity.length} chars)` : 'MISSING'}\nTotal keys: ${lsKeys.length}`;
+          console.log('[auth] ' + msg);
+          alert(msg);
+        }
+        console.log('[auth] isNative:', isNative);
+        console.log('[auth] Capacitor.isNativePlatform():', Capacitor.isNativePlatform());
+        
+        // � RESTORE FROM USERDEFAULTS if localStorage is missing auth data
+        // iOS clears WKWebView localStorage on app termination, but UserDefaults persists
+        if (isNative && window?.webkit?.messageHandlers?.authRestore) {
+          const hasDelegation = localStorage.getItem('ic-auth-delegation') !== null;
+          const hasIdentity = localStorage.getItem('ic-auth-identity') !== null;
+          
+          console.log('[auth] 🔍 Checking if restoration needed: delegation=' + hasDelegation + ', identity=' + hasIdentity);
+          
+          if (!hasDelegation || !hasIdentity) {
+            console.log('[auth] 📦 Requesting auth data restoration from UserDefaults...');
+            // This is synchronous - Swift will immediately inject the data
+            window.webkit.messageHandlers.authRestore.postMessage({});
+            
+            // Give it a moment to inject, then check again
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const restoredDelegation = localStorage.getItem('ic-auth-delegation');
+            const restoredIdentity = localStorage.getItem('ic-auth-identity');
+            if (restoredDelegation && restoredIdentity) {
+              console.log('[auth] ✅ Auth data successfully restored from UserDefaults');
+            } else {
+              console.log('[auth] ℹ️ No auth data available in UserDefaults');
+            }
+          } else {
+            console.log('[auth] ✅ localStorage already has auth data');
+          }
+        }
+        
+        // �🔍 DEBUG: Check what's actually in localStorage on startup
+        if (isNative) {
+          const allKeys = Object.keys(localStorage);
+          console.log('[auth] 🔍 All localStorage keys on startup:', allKeys);
+          const authKeys = allKeys.filter(k => k.startsWith('ic-auth-'));
+          console.log('[auth] 🔍 Auth-related keys:', authKeys);
+          authKeys.forEach(key => {
+            const value = localStorage.getItem(key);
+            console.log(`[auth] 🔍 ${key}: ${value ? 'EXISTS (length: ' + value.length + ')' : 'NULL'}`);
+          });
+        }
+        
+        // ✅ CLEAR STALE BROKER CALLBACK URLs on app launch
+        // iOS sometimes re-delivers old deep links when app restarts
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const hasCode = hashParams.has("code");
+        const hasNonce = hashParams.has("nonce");
+        const brokerNonce = localStorage.getItem("broker_nonce");
+        
+        // If URL has broker params BUT no matching nonce in storage, it's stale
+        if ((hasCode || hasNonce) && !brokerNonce) {
+          console.warn("[auth] ⚠️ Clearing stale broker callback URL from previous session");
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        
+        // Use localStorage-based storage for native iOS to avoid IndexedDB issues
+        const storageAdapter = isNative ? new LocalStorageAdapter('ic-auth-') : undefined;
+        console.log('[auth] Using storage adapter:', !!storageAdapter);
+        
+        // 🔥 CRITICAL FIX: Check for broker-stored delegation BEFORE creating AuthClient
+        // The broker pattern bypasses AuthClient's normal flow, so we need to manually
+        // check for and restore the delegation on iOS
+        let brokerStoredIdentity = null;
+        if (isNative) {
+          try {
+            const delegationString = localStorage.getItem('ic-auth-delegation');
+            const identityJson = await storageAdapter.get('identity');
+            
+            if (delegationString && identityJson) {
+              console.log('[auth] 🔄 Found broker-stored delegation, reconstructing identity...');
+              console.log('[auth] delegationString type:', typeof delegationString);
+              console.log('[auth] identityJson type:', typeof identityJson);
+              console.log('[auth] identityJson is array:', Array.isArray(identityJson));
+              console.log('[auth] identityJson array length:', identityJson?.length);
+              
+              const { Ed25519KeyIdentity, DelegationChain, DelegationIdentity } = await import('@dfinity/identity');
+              
+              // Ed25519KeyIdentity.toJSON() returns a plain array [publicKeyHex, privateKeyHex]
+              // fromJSON() expects either:
+              // 1. The array directly: ["pub...", "priv..."]
+              // 2. A JSON string of the array: '["pub...", "priv..."]'
+              // Since identityJson is already the array, fromJSON should work...
+              // BUT the error suggests it's trying to JSON.parse something that's not a string
+              // Let's try converting to JSON string first
+              const identityJsonString = Array.isArray(identityJson) ? JSON.stringify(identityJson) : identityJson;
+              console.log('[auth] Calling Ed25519KeyIdentity.fromJSON with:', typeof identityJsonString);
+              const sessionIdentity = Ed25519KeyIdentity.fromJSON(identityJsonString);
+              
+              // Reconstruct the delegation chain
+              const chainData = JSON.parse(delegationString);
+              const delegationChain = DelegationChain.fromJSON(chainData);
+              
+              // Check if delegation is still valid (not expired)
+              const now = Date.now();
+              const delegations = delegationChain.delegations;
+              const isExpired = delegations.some(d => {
+                const expiry = Number(d.delegation.expiration) / 1_000_000; // Convert nanoseconds to milliseconds
+                return expiry < now;
+              });
+              
+              if (!isExpired) {
+                // Create DelegationIdentity
+                brokerStoredIdentity = DelegationIdentity.fromDelegation(sessionIdentity, delegationChain);
+                console.log('[auth] ✅ Successfully restored identity from broker storage');
+                console.log('[auth] Restored principal:', brokerStoredIdentity.getPrincipal().toText());
+                console.log('[auth] Delegation expiry:', delegations.map(d => new Date(Number(d.delegation.expiration) / 1_000_000).toISOString()));
+              } else {
+                console.log('[auth] ⚠️ Stored delegation expired, clearing...');
+                console.log('[auth] Now:', new Date(now).toISOString());
+                console.log('[auth] Expiry times:', delegations.map(d => new Date(Number(d.delegation.expiration) / 1_000_000).toISOString()));
+                localStorage.removeItem('ic-auth-delegation');
+                await storageAdapter.remove('identity');
+                
+                // ALSO CLEAR KEYCHAIN
+                if (isNative && window?.webkit?.messageHandlers?.authClear) {
+                  console.log('[auth] Clearing expired auth from Keychain...');
+                  window.webkit.messageHandlers.authClear.postMessage({});
+                }
+              }
+            }
+          } catch (err) {
+            console.error('[auth] Failed to restore broker delegation:', err);
+            console.error('[auth] Error message:', err?.message);
+            console.error('[auth] Error stack:', err?.stack);
+          }
+        }
+        
+        // DON'T pass storage adapter to AuthClient on iOS - it will overwrite our identity
+        // with CryptoKey format that doesn't serialize properly
+        // We manage storage manually through Keychain backup/restore
         const client = await AuthClient.create({
           idleOptions: {
             disableDefaultIdleCallback: true,
@@ -142,8 +383,65 @@ export const AuthProvider = ({ children }) => {
         if (cancelled) return;
         setAuthClient(client);
         
+        // If we have a broker-stored identity, use it directly
+        if (brokerStoredIdentity) {
+          console.log('[auth] Using broker-restored identity');
+          console.log('[auth] Setting identity...');
+          setIdentity(brokerStoredIdentity);
+          console.log('[auth] Creating actor...');
+          const newActor = await createActorWithIdentity(brokerStoredIdentity);
+          setActor(newActor);
+          console.log('[auth] Setting loginStatus to success...');
+          setLoginStatus("success");
+          console.log('[auth] ✅ All state set - should be authenticated now');
+          
+          // Give React time to propagate state changes
+          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log('[auth] State propagation delay complete');
+          
+          // RE-BACKUP to Keychain AFTER state has settled
+          // This ensures subsequent restarts have valid data
+          if (isNative && window?.webkit?.messageHandlers?.authStorage) {
+            console.log('[auth] 🔄 Re-backing up restored identity to Keychain...');
+            const delegationString = localStorage.getItem('ic-auth-delegation');
+            const identityJson = await storageAdapter.get('identity');
+            console.log('[auth] Re-backup data check:', { 
+              hasDelegation: !!delegationString,
+              delegationLength: delegationString?.length,
+              hasIdentity: !!identityJson,
+              identityType: typeof identityJson,
+              isArray: Array.isArray(identityJson)
+            });
+            if (delegationString && identityJson) {
+              // Identity needs to be stringified to match what we backed up on fresh login
+              const identityString = JSON.stringify(identityJson);
+              window.webkit.messageHandlers.authStorage.postMessage({
+                delegation: delegationString,
+                identity: identityString
+              });
+              console.log('[auth] ✅ Re-backup complete - delegation:', delegationString.substring(0, 50) + '...', 'identity:', identityString.substring(0, 50) + '...');
+            } else {
+              console.log('[auth] ⚠️ Re-backup skipped - missing data');
+            }
+          }
+          
+          return;
+        }
+        
         const isAuthenticated = await client.isAuthenticated();
+        console.log('[auth] Initial isAuthenticated check:', isAuthenticated);
+        console.log('[auth] brokerStoredIdentity exists:', !!brokerStoredIdentity);
         if (cancelled) return;
+        
+        // If we have broker identity but somehow didn't return early, use it now
+        if (brokerStoredIdentity && !isAuthenticated) {
+          console.log('[auth] ⚠️ Broker identity exists but wasnt used - using it now');
+          setIdentity(brokerStoredIdentity);
+          const newActor = await createActorWithIdentity(brokerStoredIdentity);
+          setActor(newActor);
+          setLoginStatus("success");
+          return;
+        }
         
         if (isAuthenticated) {
           const loadedIdentity = client.getIdentity();
@@ -183,6 +481,9 @@ export const AuthProvider = ({ children }) => {
   }, [createActorWithIdentity]);
 
   const login = useCallback(async () => {
+    // DEBUG: Trace who's calling login() to find auto-trigger source
+    console.log('[auth] 🔍 login() called from:', new Error().stack);
+    
     if (!authClient) {
       setLoginStatus("loginError");
       setLoginError(new Error("AuthClient is not initialized yet"));
@@ -401,43 +702,25 @@ export const AuthProvider = ({ children }) => {
               console.log('[broker] successfully imported identity');
               
               // CRITICAL: Persist the delegation to AuthClient's storage so it survives app reloads
+              // BUT: Don't recreate AuthClient as it will overwrite our identity with CryptoKey format
               try {
                 const delegation = importedIdentity.getDelegation();
                 const delegationJSON = delegation.toJSON();
-                await set('delegation', delegationJSON);
-                console.log('[broker] delegation persisted to idb-keyval');
                 
-                // Recreate AuthClient to pick up the persisted delegation
-                if (authClient) {
-                  const newClient = await AuthClient.create({
-                    idleOptions: { disableDefaultIdleCallback: true, disableIdle: true },
-                  });
-                  setAuthClient(newClient);
-                  console.log('[broker] AuthClient recreated');
-                  
-                  const isAuth = await newClient.isAuthenticated();
-                  console.log('[broker] new AuthClient isAuthenticated:', isAuth);
-                  
-                  if (isAuth) {
-                    const clientIdentity = newClient.getIdentity();
-                    setIdentity(clientIdentity);
-                    const newActor = await createActorWithIdentity(clientIdentity);
-                    setActor(newActor);
-                    setLoginStatus('success');
-                    console.log('[broker] login complete - using AuthClient identity');
-                  } else {
-                    console.warn('[broker] AuthClient still not authenticated, using manual identity');
-                    setIdentity(importedIdentity);
-                    const newActor = await createActorWithIdentity(importedIdentity);
-                    setActor(newActor);
-                    setLoginStatus('success');
-                  }
-                } else {
-                  setIdentity(importedIdentity);
-                  const newActor = await createActorWithIdentity(importedIdentity);
-                  setActor(newActor);
-                  setLoginStatus('success');
+                // For iOS, use both idb-keyval AND localStorage as fallback
+                await set('delegation', delegationJSON);
+                if (isNative) {
+                  localStorage.setItem('ic-auth-delegation', JSON.stringify(delegationJSON));
                 }
+                console.log('[broker] delegation persisted to storage');
+                
+                // DON'T recreate AuthClient - use the identity directly
+                // This prevents AuthClient from storing CryptoKey format which doesn't serialize
+                setIdentity(importedIdentity);
+                const newActor = await createActorWithIdentity(importedIdentity);
+                setActor(newActor);
+                setLoginStatus('success');
+                console.log('[broker] login complete - using imported identity directly');
               } catch (e) {
                 console.warn('[broker] failed to persist delegation', e);
                 // Still try to use the identity even if persistence failed
@@ -559,6 +842,12 @@ export const AuthProvider = ({ children }) => {
       del("taskList");
       del("transactionList");
       del("nfidDelegationChain");
+      
+      // Clear Keychain backup on native
+      if (isNative && window?.webkit?.messageHandlers?.authClear) {
+        console.log('[auth] Clearing Keychain backup...');
+        window.webkit.messageHandlers.authClear.postMessage({});
+      }
     } catch (error) {
       setLoginStatus("loginError");
       setLoginError(error instanceof Error ? error : new Error("Logout failed"));
@@ -568,6 +857,7 @@ export const AuthProvider = ({ children }) => {
   const authValue = useMemo(() => {
     const isAuthenticated = loginStatus === "success" && !!identity;
     const isLoading = loginStatus === "initializing" || loginStatus === "logging-in";
+    console.log('[auth] 🔍 useMemo recomputing:', { loginStatus, hasIdentity: !!identity, isAuthenticated, isLoading });
     
     return {
       isAuthenticated,

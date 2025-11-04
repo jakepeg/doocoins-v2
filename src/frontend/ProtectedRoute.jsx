@@ -67,7 +67,25 @@ function ProtectedRoute({ children }) {
     });
   };
   
-  if (!isLoading && !isAuthenticated) {
+  // 🔥 FIX: Show loading screen while checking auth status
+  // This prevents premature redirect to /login which was auto-triggering broker flow
+  if (isLoading) {
+    return (
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="center"
+        minHeight="100vh"
+        backgroundColor="#0B334D"
+      >
+        <Box textAlign="center" color="white">
+          <div>Loading...</div>
+        </Box>
+      </Box>
+    );
+  }
+  
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
