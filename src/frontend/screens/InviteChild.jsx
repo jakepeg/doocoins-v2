@@ -76,7 +76,7 @@ const InviteChild = () => {
           mx={"20px"}
           mt={"40px"}
           display="flex"
-          gap={"16px"}
+          gap={"12px"}
           flexDirection="column"
           justifyContent={"center"}
         >
@@ -90,39 +90,39 @@ const InviteChild = () => {
               _hover={{ bg: "rgba(11, 51, 77, 0.1)" }}
               size="lg"
             />
-            <Text fontSize="3xl" color="#0B334D" fontWeight="600">
+            <Text fontSize="22px" color="#0B334D" fontWeight="600">
               Invite {child.name}
             </Text>
           </Box>
-          <Text fontSize="xl" color="#0B334D">
+          <Text fontSize="lg" color="#0B334D">
             Get {child.name} on board with DooCoins Kids!
           </Text>
 
-          <Text fontSize="xl" color="#0B334D">
+          <Text fontSize="lg" color="#0B334D">
             If the app is already installed, then skip to step 4
           </Text>
 
           <Box as="ol" ml="20px" color="#0B334D">
-            <Box as="li" fontSize="xl" mb="20px">
+            <Box as="li" fontSize="lg" mb="16px">
               Scan the QR code below using your child's device camera
-              <Box mt="10px">
+              <Box mt="8px" display="flex" justifyContent="center">
                 <Image 
                   src={qrChildImage} 
                   alt="QR code for DooCoins Kids app" 
-                  maxWidth="200px" 
+                  maxWidth="150px" 
                   height="auto"
                   border="1px solid #0B334D"
                   borderRadius="8px"
                 />
               </Box>
             </Box>
-            <Box as="li" fontSize="xl">
+            <Box as="li" fontSize="lg" mb="8px">
             Follow the instructions to install the app 
             </Box>
-            <Box as="li" fontSize="xl">
+            <Box as="li" fontSize="lg" mb="8px">
             Launch the app by clicking the DooCoins icon on the home screen
             </Box>
-            <Box as="li" fontSize="xl">
+            <Box as="li" fontSize="lg">
               Enter the magic code:
             </Box>
           </Box>
@@ -140,7 +140,7 @@ const InviteChild = () => {
               );
             })}
           </Box>
-          <Text fontSize="xl" color="#0B334D" align="center">
+          <Text fontSize="lg" color="#0B334D" align="center">
             The code expires after 1 hour
           </Text>
         </Box>
