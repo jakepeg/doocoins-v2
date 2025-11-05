@@ -148,7 +148,7 @@ const BalanceCardV2 = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
-              marginTop: "-10px",
+              marginTop: { base: "-15px", md: "-10px" },
             }}
           >
             <Box 
@@ -177,7 +177,7 @@ const BalanceCardV2 = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) */}
-        <Box textAlign="center" mt={goal?.hasGoal ? -2 : 3} mb={2}>
+        <Box textAlign="center" mt={goal?.hasGoal ? { base: -3, md: -2 } : { base: -1, md: 1 }} mb={2}>
           <Box
             as="button"
             onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
