@@ -73,12 +73,12 @@ function LoggedOut() {
   if (isBrokerCallback || brokerProcessing) {
     return (
       <Box
-        className="container"
         display="flex"
         flexDirection="column"
         justifyContent="flex-start"
         alignItems="center"
         minHeight="100vh"
+        width="100%"
         backgroundColor="#0B334D"
         pt="100px"
       >
@@ -92,13 +92,14 @@ function LoggedOut() {
 
   return (
     <Box
-      className="container"
       display="flex"
       flexDirection="column"
       justifyContent={"space-between"}
       alignItems={"center"}
       gap={6}
       py={8}
+      width="100%"
+      minHeight="100vh"
       backgroundColor={"#0B334D"}
     >
       <Box
