@@ -6,6 +6,7 @@ import { useToast, Text, Skeleton, Stack, Box } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
 import RequestItem from "../components/Requests/RequestItem";
 import useHasRewards from "../hooks/useHasRewards";
+import EmptyStateMessage from "../components/EmptyStateMessage";
 
 const Alerts = () => {
   const [loading, setLoading] = useState(true);
@@ -517,9 +518,9 @@ const Alerts = () => {
         ) : null}
 
         {!list.tasks?.length && !list.rewards?.length && (
-          <Text color="gray.800" align="left" pl={5} fontSize="sm">
+          <EmptyStateMessage>
             There are no pending requests.
-          </Text>
+          </EmptyStateMessage>
         )}
       </>
     );
