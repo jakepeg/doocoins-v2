@@ -33,8 +33,11 @@ function NavDrawer() {
         alignItems={"center"}
         backgroundColor="#0B334D"
         style={{ 
-          zIndex: 9, 
-          position: "relative",
+          zIndex: 999, 
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
         }}
         width="100%"
         px={showMobileLayout ? 3.5 : 4}

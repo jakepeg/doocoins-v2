@@ -22,35 +22,35 @@ function ProtectedRoute({ children }) {
     <>
       <NavDrawer />
       <Box
-        className="container"
-        backgroundColor={!showMobileLayout && "#0B334D"}
-        gap={0}
+        width="100%"
+        backgroundColor="#DFF3FF"
+        minHeight="100vh"
+        paddingTop="70px"
+        paddingBottom={showMobileLayout ? "80px" : "0"}
       >
-        <PullToRefresh
-          onRefresh={async () => {
-            const data = await refetchContent({ refetch: true });
-            return data
-          }}
-          className="text-center"
+        <Box
+          className="container"
+          margin="0 auto"
         >
-          <Box
-            sx={
-              showMobileLayout && {
-                backgroundColor: "#F0F7FC",
-                display: "flex",
-                flexDirection: "column",
-              }
-            }
-            px={"5px"}
+          <PullToRefresh
+            onRefresh={async () => {
+              const data = await refetchContent({ refetch: true });
+              return data
+            }}
+            className="text-center"
           >
-            {showMobileLayout && (
-              <Balance childName={child?.name} childBalance={child?.balance} />
-            )}
-          </Box>
-          {children}
-        </PullToRefresh>
-        {showMobileLayout && <BottomTabNav />}
+            <Box
+              px={"5px"}
+            >
+              {showMobileLayout && (
+                <Balance childName={child?.name} childBalance={child?.balance} />
+              )}
+            </Box>
+            {children}
+          </PullToRefresh>
+        </Box>
       </Box>
+      {showMobileLayout && <BottomTabNav />}
     </>
   );
 }
