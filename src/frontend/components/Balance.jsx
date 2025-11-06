@@ -272,12 +272,14 @@ const Balance = ({ handleTogglePopup }) => {
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
 
   const handleOpenGoalPicker = async () => {
-    // Refresh the reward list to ensure active state is current
-    await getReward({ revokeStateUpdate: true });
-    const rewards = await get("rewardList");
-    // Include all rewards (both active and inactive) when changing goals
-    setAvailableRewards(rewards || []);
+    // Open modal immediately
     setIsGoalPickerOpen(true);
+    
+    // Load from localStorage first for instant display
+    const cachedRewards = await get("rewardList");
+    if (cachedRewards) {
+      setAvailableRewards(cachedRewards);
+    }
   };
 
   const handleSelectGoal = async (rewardId) => {
@@ -289,7 +291,28 @@ const Balance = ({ handleTogglePopup }) => {
         const selectedReward = availableRewards.find(
           (r) => parseInt(r.id) === parseInt(rewardId)
         );
-        await getReward({ rewardId, revokeStateUpdate: false });
+        
+        // Update the rewardList in localStorage with new active states
+        const updatedRewards = availableRewards.map((reward) => ({
+          ...reward,
+          active: parseInt(reward.id) === parseInt(rewardId),
+        }));
+        await set("rewardList", updatedRewards);
+        setAvailableRewards(updatedRewards);
+        
+        // Update the goal in context and localStorage
+        const newGoal = {
+          hasGoal: true,
+          value: parseInt(selectedReward.value),
+          name: selectedReward.name,
+          id: parseInt(selectedReward.id),
+        };
+        await set("childGoal", newGoal);
+        setGoal(newGoal);
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('rewardListUpdated'));
+        
         toast({
           title: `Goal set: ${selectedReward?.name}`,
           status: "success",
