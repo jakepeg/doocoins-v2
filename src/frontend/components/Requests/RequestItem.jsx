@@ -35,10 +35,10 @@ const RequestItem = ({ request, onApprove, onDecline, onDelete, type = "task" })
       boxSizing="border-box"
     >
       <VStack align="start" spacing={1} flex={1}>
-        <Text fontSize="22px" color="#0B334D" fontWeight="semibold">
+        <Text textStyle="largeLightDark">
           {request.name}
         </Text>
-        <Text fontSize="16px" color="#0B334D">
+        <Text textStyle="smallLightDark">
           {parseInt(request.value)} DooCoins
         </Text>
       </VStack>

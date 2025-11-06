@@ -107,11 +107,11 @@ const RewardItem = ({ reward, handleTogglePopup }) => {
               />
             </Box>
           )}
-          <Text fontSize="22px" color="#0B334D" fontWeight="semibold">
+          <Text textStyle="largeLightDark">
             {reward.name}
           </Text>
         </Box>
-        <Text fontSize="16px" color="#0B334D" pl={reward.active ? "24px" : "0"}>
+        <Text textStyle="smallLightDark" pl={reward.active ? "24px" : "0"}>
           {parseInt(reward.value)} DooCoins
         </Text>
       </VStack>

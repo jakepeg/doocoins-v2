@@ -122,8 +122,8 @@ const BalanceCardV2 = ({
         }}
       >
         {/* Name - Top */}
-        <Box 
-          className={styles.name}
+        <Text 
+          textStyle="largeLightWhite"
           sx={{
             maxWidth: "100%",
             overflow: "hidden",
@@ -132,12 +132,11 @@ const BalanceCardV2 = ({
             letterSpacing: "-0.5px",
             textAlign: "left",
             marginTop: "10px",
-            fontSize: "30px",
           }}
           title={child?.name}
         >
           {child?.name}
-        </Box>
+        </Text>
 
         {/* Balance - Large in center */}
         {child?.balance >= 0 && (
@@ -187,8 +186,8 @@ const BalanceCardV2 = ({
               borderRadius: "999px",
               padding: "12px 24px",
               color: "#fff",
-              fontWeight: 600,
-              fontSize: "16px",
+              fontWeight: 700,
+              fontSize: "18px",
               minWidth: "140px",
               textAlign: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
@@ -244,11 +243,11 @@ const BalanceCardV2 = ({
                     fill="currentColor"
                   />
                 </Box>
-                <Text color="#fff" fontSize="16px" fontWeight="500">
+                <Text textStyle="smallLightWhite">
                   Goal: {goal.name}
                 </Text>
               </HStack>
-              <Text color="#fff" fontSize="16px" fontWeight="500">
+              <Text textStyle="smallHeavyWhite">
                 {percentage}%
               </Text>
             </Box>

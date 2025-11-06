@@ -4,7 +4,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import dc from "../assets/images/dc.svg";
 import { useAuth } from "../use-auth-client";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Skeleton, Stack } from "@chakra-ui/react";
+import { Box, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { ChildContext } from "../contexts/ChildContext";
 import EmptyStateMessage from "../components/EmptyStateMessage";
 
@@ -140,10 +140,13 @@ const Wallet = () => {
 
   return (
     <>
-      <div className="light-panel transactions">
-        <h2 className="title-button dark">
-          <span className="transaction-tile">Recent Activity</span>
-        </h2>
+      <div className="light-panel">
+        <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
+          <h2 className="title-button">
+            <Text as="span" textStyle="smallHeavyDark">Recent Activity</Text>
+          </h2>
+        </div>
+        <div className="example">
         {isLoading.transactions ? (
           <Stack gap={"20px"} margin={"0 0 20px 0"}>
             {[1,2,3].map((i) => (
@@ -172,23 +175,23 @@ const Wallet = () => {
                     key={parseInt(transaction.id)}
                   >
                     <Box>
-                      <span style={{ fontSize: '22px', color: '#0B334D', fontWeight: 600 }}>
+                      <Text textStyle="largeLightDark">
                         {transaction.name}
-                      </span>
-                      <span className="date">
+                      </Text>
+                      <Text textStyle="smallLightDark">
                         {humanReadableDate(transaction.completedDate)}
-                      </span>
+                      </Text>
                     </Box>
                     <Box display="flex" alignItems="center" gap={2}>
                       {transaction.transactionType === `GOAL_DEBIT` ? (
-                        <span style={{ color: '#E53E3E', fontWeight: 600, fontSize: '22px' }}>-</span>
+                        <Text textStyle="largeLightDark" color="#E53E3E">-</Text>
                       ) : null}
                       <img
                         src={dc}
                         alt="DooCoins symbol"
                         style={{ width: 20, height: 20, marginRight: -8, marginTop: -4, verticalAlign: 'middle' }}
                       />
-                      <span style={{ fontWeight: 600, fontSize: '22px', color: '#0B334D' }}>{parseInt(transaction.value)}</span>
+                      <Text textStyle="largeLightDark">{parseInt(transaction.value)}</Text>
                     </Box>
                   </Box>
                 ))}
@@ -200,6 +203,7 @@ const Wallet = () => {
             )}
           </>
         )}
+        </div>
       </div>
     </>
   );

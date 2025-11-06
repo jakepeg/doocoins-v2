@@ -547,8 +547,8 @@ const Alerts = () => {
   return (
     <div className={`light-panel`}>
       <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
-        <h2 className="title-button dark alerts-title">
-          <span>Reqests</span>{" "}
+        <h2 className="title-button">
+          <Text as="span" textStyle="smallHeavyDark">Requests</Text>
         </h2>
       </div>
 

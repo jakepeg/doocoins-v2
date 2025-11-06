@@ -42,6 +42,7 @@ function BottomTabNav() {
           height={"auto"}
           margin={"0 auto"}
           backgroundColor={"#0B334D"}
+          paddingTop={"10px"}
           // backgroundColor={"#ffffff"}
         >
           <CustomTabs />
@@ -116,7 +117,9 @@ function CustomTabs() {
           minWidth: "320px",
           margin: "0 auto",
           backgroundColor: "#0B334D",
-          paddingBottom: "10px",
+          paddingBottom: "max(10px, env(safe-area-inset-bottom, 0px))",
+          paddingLeft: "20px",
+          paddingRight: "20px",
         }}
       >
         <CustomTab icon={WalletIcon} href="/wallet" />

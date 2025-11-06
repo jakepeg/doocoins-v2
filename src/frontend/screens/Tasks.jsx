@@ -485,8 +485,8 @@ const Tasks = () => {
           className={`panel-header-wrapper`}
           style={{ position: "relative" }}
         >
-          <h2 className="title-button dark">
-            <span>Tasks</span>
+          <h2 className="title-button">
+            <Text as="span" textStyle="smallHeavyDark">Tasks</Text>
             <span
               role="button"
               onClick={handleToggleAddTaskPopup}

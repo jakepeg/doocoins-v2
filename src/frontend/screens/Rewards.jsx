@@ -608,8 +608,8 @@ const Rewards = () => {
         } light-panel`}
       >
         <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
-          <h2 className="title-button dark">
-            <span>Rewards</span>{" "}
+          <h2 className="title-button">
+            <Text as="span" textStyle="smallHeavyDark">Rewards</Text>
             <span
               role="button"
               onClick={handleToggleAddRewardPopup}

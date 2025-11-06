@@ -346,16 +346,12 @@ function ChildList() {
             paddingX={4}
           >
             <Text 
-              fontSize="2xl" 
-              fontWeight="bold" 
-              color="white"
+              textStyle="largeHeavyWhite"
             >
               Doo Dashboard
             </Text>
             <Text 
-              fontSize="md" 
-              color="white"
-              opacity={0.8}
+              textStyle="smallLightWhite"
               marginTop={1}
             >
               Manage your children's accounts
@@ -375,15 +371,12 @@ function ChildList() {
                 borderRadius="md"
               >
                 <Text 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="white"
+                  textStyle="largeHeavyWhite"
                 >
                   {children?.length || 0}
                 </Text>
                 <Text 
-                  fontSize="sm" 
-                  color="white"
+                  textStyle="smallLightWhite"
                   marginTop={1}
                 >
                   Children
@@ -397,15 +390,12 @@ function ChildList() {
                 borderRadius="md"
               >
                 <Text 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="white"
+                  textStyle="largeHeavyWhite"
                 >
                   {children?.reduce((total, child) => total + (child.balance || 0), 0) || 0}
                 </Text>
                 <Text 
-                  fontSize="sm" 
-                  color="white"
+                  textStyle="smallLightWhite"
                   marginTop={1}
                 >
                   Total DooCoins
@@ -419,15 +409,12 @@ function ChildList() {
                 borderRadius="md"
               >
                 <Text 
-                  fontSize="3xl" 
-                  fontWeight="bold" 
-                  color="white"
+                  textStyle="largeHeavyWhite"
                 >
                   {children?.filter(child => child.hasGoal).length || 0}
                 </Text>
                 <Text 
-                  fontSize="sm" 
-                  color="white"
+                  textStyle="smallLightWhite"
                   marginTop={1}
                 >
                   Active Goals
@@ -438,8 +425,8 @@ function ChildList() {
         </Box>
 
         <div className={`child-list-wrapper`} style={{ position: "relative" }}>
-          <h2 style={{ marginBottom: "20px" }} className="title-button dark ">
-            <span>Children</span>
+          <h2 style={{ marginBottom: "20px" }} className="title-button">
+            <Text as="span" textStyle="smallHeavyDark">Children</Text>
             <span
               role="button"
               onClick={handleToggleAddChildPopup}

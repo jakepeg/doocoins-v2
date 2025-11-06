@@ -35,10 +35,10 @@ const TaskItem = ({ task, handleTogglePopup }) => {
       boxSizing="border-box"
     >
       <VStack align="start" spacing={1} flex={1}>
-        <Text fontSize="22px" color="#0B334D" fontWeight="semibold">
+        <Text textStyle="largeLightDark">
           {task.name}
         </Text>
-        <Text fontSize="16px" color="#0B334D">
+        <Text textStyle="smallLightDark">
           {parseInt(task.value)} DooCoins
         </Text>
       </VStack>

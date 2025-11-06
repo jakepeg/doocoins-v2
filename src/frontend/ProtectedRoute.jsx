@@ -28,6 +28,24 @@ function ProtectedRoute({ children }) {
   // ChildList screen should be fully dark blue, others should have light background
   const isChildListRoute = location.pathname === "/" || location.pathname === "/invite";
   
+  // Update body class and theme-color when authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      document.body.classList.add('authenticated');
+      // Update theme-color meta tag for mobile browsers
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', '#DFF3FF');
+      }
+    } else {
+      document.body.classList.remove('authenticated');
+      const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', '#0B334D');
+      }
+    }
+  }, [isAuthenticated]);
+  
   const handleTogglePopup = (isOpen, childData, popup) => {
     setSelectedChild(childData);
     setShowPopup((prevState) => ({ ...prevState, [popup]: isOpen }));

@@ -98,10 +98,10 @@ const ChildItem = ({ child, handleTogglePopup }) => {
       boxSizing="border-box"
     >
       <VStack align="start" spacing={1}>
-        <Text fontSize="26px" color="#0B334D" fontWeight="semibold">
+        <Text textStyle="largeLightDark">
           {child.name}
         </Text>
-        <Text fontSize="18px" color="#0B334D">
+        <Text textStyle="smallLightDark">
           {child.balance} DooCoins
         </Text>
       </VStack>

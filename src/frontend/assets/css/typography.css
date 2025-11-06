@@ -1,0 +1,86 @@
+/* Standardized Typography Styles for DooCoins v2
+ * 
+ * Font Sizes:
+ * - Small: 18px
+ * - Large: 24px
+ * 
+ * Colors:
+ * - White: #ffffff
+ * - Dark Blue: #0b334d
+ * 
+ * Weights:
+ * - Light: 400
+ * - Heavy: 700
+ */
+
+/* Small Light White */
+.text-small-light-white {
+  font-size: 18px;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* Small Heavy White */
+.text-small-heavy-white {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Small Light Dark */
+.text-small-light-dark {
+  font-size: 18px;
+  font-weight: 400;
+  color: #0b334d;
+}
+
+/* Small Heavy Dark */
+.text-small-heavy-dark {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b334d;
+}
+
+/* Large Light White */
+.text-large-light-white {
+  font-size: 24px;
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* Large Heavy White */
+.text-large-heavy-white {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Large Light Dark */
+.text-large-light-dark {
+  font-size: 24px;
+  font-weight: 400;
+  color: #0b334d;
+}
+
+/* Large Heavy Dark */
+.text-large-heavy-dark {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0b334d;
+}
+
+/* JavaScript/React Style Objects */
+/* 
+Export these as JS constants for inline styles:
+
+export const textStyles = {
+  smallLightWhite: { fontSize: '18px', fontWeight: 400, color: '#ffffff' },
+  smallHeavyWhite: { fontSize: '18px', fontWeight: 700, color: '#ffffff' },
+  smallLightDark: { fontSize: '18px', fontWeight: 400, color: '#0b334d' },
+  smallHeavyDark: { fontSize: '18px', fontWeight: 700, color: '#0b334d' },
+  largeLightWhite: { fontSize: '24px', fontWeight: 400, color: '#ffffff' },
+  largeHeavyWhite: { fontSize: '24px', fontWeight: 700, color: '#ffffff' },
+  largeLightDark: { fontSize: '24px', fontWeight: 400, color: '#0b334d' },
+  largeHeavyDark: { fontSize: '24px', fontWeight: 700, color: '#0b334d' },
+};
+*/

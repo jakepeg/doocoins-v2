@@ -1,7 +1,19 @@
+/* Standardized Typography Styles */
+@import './typography.css';
+
+html {
+  background: #0B334D !important;
+}
+
 body {
   font-family: sans-serif;
-  background: #DFF3FF!important;
-  /* background: #0B334D!important; */
+  background: #0B334D !important;
+  /* Will be overridden to #DFF3FF when logged in */
+}
+
+/* When authenticated, switch to light blue */
+body.authenticated {
+  background: #DFF3FF !important;
 }
 
 /* iOS Status Bar Background */
@@ -76,8 +88,8 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 
 .light-panel {
   background-color: transparent;
-  min-height: 95%;
-  /* min-height: calc(100vh - 50px); */
+  min-height: 100vh;
+  padding-bottom: 100px; /* Extra space for bottom nav */
 }
 
 .panel-header-wrapper {
