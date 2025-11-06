@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../use-auth-client';
 import { Principal } from '@dfinity/principal';
 import V2MigrationHelper from '../utils/v2-migration-helper';
+import MigrationStorage from '../utils/migration-storage';
 import {
   Box,
   Text,
@@ -21,106 +22,83 @@ export const MigrationContext = React.createContext();
 
 export const MigrationHandler = ({ children }) => {
   const { actor, identity, isAuthenticated, isLoading } = useAuth();
-  const [migrationState, setMigrationState] = useState('none'); // Start as 'none' instead of 'checking'
+  const [migrationState, setMigrationState] = useState('idle'); // 'idle' | 'migrating' | 'completed' | 'error'
   const [migrationError, setMigrationError] = useState(null);
   const [progress, setProgress] = useState('');
-  // Manual migration removed - users should go to V1 to upgrade
   const toast = useToast();
 
   useEffect(() => {
-    console.log('MigrationHandler useEffect triggered. Auth state:', {
-      isAuthenticated, 
-      hasActor: !!actor, 
-      hasIdentity: !!identity, 
-      isLoading
-    });
-
     const handleMigration = async () => {
-      // If not authenticated yet, check if there are pending migration parameters
+      // Wait for authentication to complete
       if (!isAuthenticated || !actor || !identity || isLoading) {
-        // Check for pending migration to inform the UI, but don't show migration screen yet
-        const pendingMigration = V2MigrationHelper.getPendingMigration();
-        if (pendingMigration && pendingMigration.shouldMigrate) {
-          console.log('Pending migration detected, waiting for authentication');
-          // Stay in 'none' state but let the app show normal login flow
-        } else {
-          console.log('No pending migration found');
-        }
         return;
       }
 
+      // OPTIMIZATION 1: Check persistent flag FIRST (no backend call needed)
+      if (MigrationStorage.isComplete()) {
+        // Migration already done - skip everything and proceed
+        setMigrationState('completed');
+        return;
+      }
+
+      // OPTIMIZATION 2: Quick check for any migration signals before backend call
+      const urlData = V2MigrationHelper.extractMigrationDataFromUrl();
+      const pendingData = V2MigrationHelper.getPendingMigration();
+      const hasLegacyData = localStorage.getItem('nfidPrincipal') && localStorage.getItem('needsMigration');
+      
+      // If no migration signals at all, skip backend check and proceed
+      if (!urlData.shouldMigrate && !pendingData && !hasLegacyData) {
+        setMigrationState('completed');
+        return;
+      }
+
+      // OPTIMIZATION 3: Only call backend if we have migration signals
       try {
-        // Now that user is authenticated, start the migration check
-        console.log('User authenticated, starting migration processing');
-        setMigrationState('checking');
-        setProgress('Checking migration status...');
-        
-        // First check if migration already completed
-        let migrationStatus;
-        try {
-          migrationStatus = await actor.getMigrationStatus();
-          console.log('Migration status from backend:', migrationStatus);
-          console.log('Migration status isLinked:', migrationStatus.isLinked);
-        } catch (err) {
-          console.warn('Failed to get migration status, assuming no migration needed:', err);
-          // If we can't check migration status, assume no migration and proceed
-          setMigrationState('completed');
-          return;
-        }
+        // Check backend migration status
+        const migrationStatus = await actor.getMigrationStatus();
         
         if (migrationStatus.isLinked) {
-          // Already migrated, proceed normally
-          console.log('Migration already completed - proceeding normally');
+          // Already migrated in backend - update local flag and proceed
+          if (migrationStatus.nfidPrincipal && migrationStatus.nfidPrincipal.length > 0) {
+            MigrationStorage.markComplete(migrationStatus.nfidPrincipal[0]);
+          }
           setMigrationState('completed');
           return;
-        } else {
-          console.log('Migration not completed yet - checking for pending migration');
         }
 
-        // Check for migration (URL parameters or pending from localStorage)
-        let migrationData = V2MigrationHelper.extractMigrationDataFromUrl();
-        console.log('URL migration data:', migrationData);
-        
-        // If no URL parameters, check for pending migration
-        if (!migrationData.shouldMigrate) {
-          migrationData = V2MigrationHelper.getPendingMigration();
-          console.log('Pending migration data:', migrationData);
-        }
+        // Process pending migration
+        let migrationData = urlData.shouldMigrate ? urlData : pendingData;
         
         if (migrationData && migrationData.shouldMigrate && migrationData.nfidPrincipal) {
-          console.log('Migration detected for NFID:', migrationData.nfidPrincipal);
-          
           // Validate NFID principal format
           let validatedNfidPrincipal;
           try {
             validatedNfidPrincipal = Principal.fromText(migrationData.nfidPrincipal);
           } catch (error) {
-            console.error('Invalid NFID principal:', migrationData.nfidPrincipal);
+            console.error('[migration] Invalid NFID principal:', migrationData.nfidPrincipal);
             V2MigrationHelper.clearPendingMigration();
             V2MigrationHelper.cleanUrlParameters();
-            setMigrationState('none');
+            setMigrationState('completed');
             return;
           }
 
           // Perform automatic migration
           setMigrationState('migrating');
-          setProgress('Migrating your data from NFID to Internet Identity...');
+          setProgress('Migrating your data...');
           
           const result = await actor.linkPrincipals(validatedNfidPrincipal, identity.getPrincipal());
           
           if ('ok' in result) {
             // Success - mark complete and clean up
-            localStorage.setItem('migrationCompleted', Date.now().toString());
-            localStorage.setItem('migratedFromNfid', migrationData.nfidPrincipal);
+            MigrationStorage.markComplete(migrationData.nfidPrincipal);
             V2MigrationHelper.clearPendingMigration();
             V2MigrationHelper.cleanUrlParameters();
             
-            setProgress('Migration successful! Loading your data...');
             setMigrationState('completed');
             
             toast({
               title: "Migration Successful!",
-              description: "Your data has been transferred from NFID to Internet Identity.",
+              description: "Your data has been transferred to Internet Identity.",
               status: "success",
               duration: 5000,
               isClosable: true,
@@ -128,21 +106,13 @@ export const MigrationHandler = ({ children }) => {
           } else {
             // Handle migration errors
             const errorMsg = result.err;
-            console.error('Migration failed:', errorMsg);
             
             if (errorMsg.includes('already linked') || errorMsg.includes('AlreadyLinked')) {
               // Already migrated - this is okay
+              MigrationStorage.markComplete(migrationData.nfidPrincipal);
               setMigrationState('completed');
               V2MigrationHelper.clearPendingMigration();
               V2MigrationHelper.cleanUrlParameters();
-              
-              toast({
-                title: "Already Migrated",
-                description: "Your NFID account was already linked to this Internet Identity.",
-                status: "info",
-                duration: 5000,
-                isClosable: true,
-              });
             } else {
               // Real error
               setMigrationError(errorMsg);
@@ -152,38 +122,32 @@ export const MigrationHandler = ({ children }) => {
             }
           }
           return;
-        } else {
-          // No migration detected
-          console.log('No migration detected. migrationData:', migrationData);
-          console.log('localStorage pendingMigration:', localStorage.getItem('pendingMigration'));
         }
 
-        // No URL migration - check legacy localStorage migration
-        const storedNfidPrincipal = localStorage.getItem('nfidPrincipal');
-        const needsMigration = localStorage.getItem('needsMigration');
-        
-        if (storedNfidPrincipal && needsMigration) {
-          // Legacy localStorage migration (fallback)
+        // Legacy localStorage migration (fallback)
+        if (hasLegacyData) {
+          const storedNfidPrincipal = localStorage.getItem('nfidPrincipal');
           let nfidPrincipal;
+          
           try {
             nfidPrincipal = Principal.fromText(storedNfidPrincipal);
           } catch (error) {
-            console.error('Invalid NFID principal format:', storedNfidPrincipal);
+            console.error('[migration] Invalid legacy NFID principal:', storedNfidPrincipal);
             localStorage.removeItem('nfidPrincipal');
             localStorage.removeItem('needsMigration');
-            setMigrationState('none');
+            setMigrationState('completed');
             return;
           }
 
           setMigrationState('migrating');
-          setProgress('Linking your Internet Identity to existing data...');
+          setProgress('Linking your Internet Identity...');
           
           const result = await actor.linkPrincipals(nfidPrincipal, identity.getPrincipal());
           
           if ('ok' in result) {
+            MigrationStorage.markComplete(storedNfidPrincipal);
             localStorage.removeItem('nfidPrincipal');
             localStorage.removeItem('needsMigration');
-            localStorage.setItem('migrationCompleted', Date.now().toString());
             
             setMigrationState('completed');
             toast({
@@ -196,6 +160,7 @@ export const MigrationHandler = ({ children }) => {
           } else {
             const errorMsg = result.err;
             if (errorMsg.includes('already linked')) {
+              MigrationStorage.markComplete(storedNfidPrincipal);
               localStorage.removeItem('nfidPrincipal');
               localStorage.removeItem('needsMigration');
               setMigrationState('completed');
@@ -207,11 +172,11 @@ export const MigrationHandler = ({ children }) => {
           return;
         }
 
-        // No migration needed - let app handle it contextually
-        setMigrationState('none');
+        // No migration needed
+        setMigrationState('completed');
         
       } catch (error) {
-        console.error('Migration error:', error);
+        console.error('[migration] Error:', error);
         setMigrationError(error.message || 'Unknown migration error');
         setMigrationState('error');
       }
@@ -220,22 +185,8 @@ export const MigrationHandler = ({ children }) => {
     handleMigration();
   }, [isAuthenticated, actor, identity, isLoading, toast]);
 
-  // Manual migration removed - users go to V1 frontend to upgrade
-
-  // Loading states
-  if (isLoading || migrationState === 'checking') {
-    return (
-      <Box minH="100vh" display="flex" alignItems="center" justifyContent="center" bg="gray.50">
-        <VStack spacing={4}>
-          <Spinner size="lg" color="blue.500" />
-          <Text color="gray.600">
-            {migrationState === 'checking' ? 'Checking for data migration...' : 'Loading...'}
-          </Text>
-        </VStack>
-      </Box>
-    );
-  }
-
+  // OPTIMIZATION 4: Don't show spinner for auth loading when migration is complete
+  // Only show migration-specific loading states
   if (migrationState === 'migrating') {
     return (
       <Box minH="100vh" display="flex" alignItems="center" justifyContent="center" bg="gray.50">
@@ -250,10 +201,9 @@ export const MigrationHandler = ({ children }) => {
           <Alert status="info" borderRadius="md">
             <AlertIcon />
             <Box>
-              <AlertTitle fontSize="sm">Please wait!</AlertTitle>
+              <AlertTitle fontSize="sm">Please wait</AlertTitle>
               <AlertDescription fontSize="sm">
-                Your existing data is being securely transferred to Internet Identity.
-                Please don't close this window.
+                Your data is being securely transferred. Don't close this window.
               </AlertDescription>
             </Box>
           </Alert>
@@ -277,7 +227,7 @@ export const MigrationHandler = ({ children }) => {
             <Button 
               colorScheme="red" 
               onClick={() => {
-                setMigrationState('none');
+                setMigrationState('idle');
                 setMigrationError(null);
               }}
             >
@@ -288,7 +238,8 @@ export const MigrationHandler = ({ children }) => {
               onClick={() => {
                 localStorage.removeItem('nfidPrincipal');
                 localStorage.removeItem('needsMigration');
-                setMigrationState('none');
+                V2MigrationHelper.clearPendingMigration();
+                setMigrationState('completed');
                 setMigrationError(null);
               }}
             >
@@ -300,16 +251,7 @@ export const MigrationHandler = ({ children }) => {
     );
   }
 
-  // Migration complete or not needed - show main app 
-  // No manual migration needed - users go to V1 to upgrade
-  const migrationContextValue = {
-    // Context simplified since manual migration is removed
-  };
-
-  return (
-    <MigrationContext.Provider value={migrationContextValue}>
-      {children}
-      {/* Manual migration modal removed - users directed to V1 frontend to upgrade */}
-    </MigrationContext.Provider>
-  );
+  // Migration complete or not needed - show main app immediately
+  // No context needed since manual migration is removed
+  return <>{children}</>;
 };

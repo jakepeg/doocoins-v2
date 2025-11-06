@@ -2,6 +2,8 @@
  * V2 Migration Helper - Use this in your V2 frontend to handle migration
  */
 
+import MigrationStorage from './migration-storage.js';
+
 export const V2MigrationHelper = {
   // Extract migration data from URL parameters (sent from V1)
   extractMigrationDataFromUrl() {
@@ -18,7 +20,6 @@ export const V2MigrationHelper = {
     // If migration parameters are detected, store them in localStorage 
     // to survive the authentication redirect flow
     if (migrationData.shouldMigrate) {
-      console.log('Migration parameters detected, storing for post-auth processing:', migrationData.nfidPrincipal);
       localStorage.setItem('pendingMigration', JSON.stringify({
         nfidPrincipal: migrationData.nfidPrincipal,
         timestamp: Date.now()
@@ -42,7 +43,6 @@ export const V2MigrationHelper = {
 
       // Check if migration data is too old
       if (now - data.timestamp > maxAge) {
-        console.log('Pending migration expired, removing');
         localStorage.removeItem('pendingMigration');
         return null;
       }
@@ -52,7 +52,7 @@ export const V2MigrationHelper = {
         nfidPrincipal: data.nfidPrincipal
       };
     } catch (error) {
-      console.error('Error reading pending migration:', error);
+      console.error('[migration] Error reading pending migration:', error);
       localStorage.removeItem('pendingMigration');
       return null;
     }
@@ -74,17 +74,14 @@ export const V2MigrationHelper = {
     }
     
     if (!migrationData || !migrationData.shouldMigrate || !migrationData.nfidPrincipal) {
-      console.log('No migration required');
       return { success: false, reason: 'No migration data found' };
     }
 
     if (!actor || !iiPrincipal) {
-      console.log('Actor or II principal not available');
       return { success: false, reason: 'Authentication not ready' };
     }
 
     const { nfidPrincipal } = migrationData;
-    console.log('Processing migration for NFID principal:', nfidPrincipal);
 
     try {
       // Call your existing backend migration function
@@ -94,25 +91,21 @@ export const V2MigrationHelper = {
       );
       
       if ('ok' in result) {
-        // Migration successful
-        localStorage.setItem('migrationCompleted', 'true');
-        localStorage.setItem('migratedFromNfid', nfidPrincipal);
-        localStorage.setItem('migrationDate', new Date().toISOString());
+        // Migration successful - use new cross-platform storage
+        MigrationStorage.markComplete(nfidPrincipal);
         
         // Clear pending migration and URL parameters
         this.clearPendingMigration();
         this.cleanUrlParameters();
         
-        console.log('Migration completed successfully');
         return { success: true, nfidPrincipal };
       } else {
         // Backend returned error
-        console.error('Backend migration failed:', result.err);
         return { success: false, reason: result.err, nfidPrincipal };
       }
       
     } catch (error) {
-      console.error('Migration failed:', error);
+      console.error('[migration] Failed:', error);
       return { success: false, reason: error.message, nfidPrincipal };
     }
   },
@@ -127,18 +120,17 @@ export const V2MigrationHelper = {
     window.history.replaceState({}, '', url.toString());
   },
 
-  // Check if user has already migrated
+  // Check if user has already migrated (uses new cross-platform storage)
   isMigrationCompleted() {
-    return localStorage.getItem('migrationCompleted') === 'true';
+    return MigrationStorage.isComplete();
   },
 
   // Get migration info for debugging
   getMigrationInfo() {
     return {
-      migrationCompleted: this.isMigrationCompleted(),
-      migratedFromNfid: localStorage.getItem('migratedFromNfid'),
-      migrationDate: localStorage.getItem('migrationDate'),
-      currentUrlParams: this.extractMigrationDataFromUrl()
+      ...MigrationStorage.getInfo(),
+      currentUrlParams: this.extractMigrationDataFromUrl(),
+      pendingMigration: this.getPendingMigration()
     };
   }
 };
