@@ -620,7 +620,7 @@ const Rewards = () => {
           </div>
         ) : (
           <EmptyStateMessage>
-            {`Rewards are how children spend DooCoins. A reward can be a treat, like watching a movie, getting a new toy, or enjoying extra screen time. <br /><br /> Ready to set rewards for ${child?.name}? <br /> Tap the + icon to get started!`}
+            {`Rewards are how children spend DooCoins. A reward can be a treat, like watching a movie, getting a new toy, or enjoying extra screen time. <br /><br /> Tap the + icon to set rewards for ${child?.name}.`}
           </EmptyStateMessage>
         )}
       </>
