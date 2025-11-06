@@ -113,7 +113,7 @@ function LoggedOut() {
       >
         <img className="logo" src={logo} alt="DooCoins" />
         <Text fontSize="3xl" color={"#fff"}>
-          DooCoins Parent v2
+          DooCoins Parent
         </Text>
         <Text fontSize="xl" color={"#fff"}>
           Kids Rewards dApp
@@ -143,7 +143,10 @@ function LoggedOut() {
           )}
         </Box>
       </Box>
-      <Box>
+      <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+        <Text fontSize="sm" color="#fff" fontWeight="light">
+          v{import.meta.env.VITE_APP_VERSION}
+        </Text>
         <img src={ICBadge} alt="Internet Computer" />
       </Box>
     </Box>

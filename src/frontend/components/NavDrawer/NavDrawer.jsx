@@ -76,7 +76,7 @@ function NavDrawer() {
         <DrawerOverlay />
         <DrawerContent>
           <DrawerCloseButton />
-          <DrawerBody>
+          <DrawerBody position="relative" pb={16}>
             <Stack style={{ marginTop: "32px" }} spacing={3}>
               <Text
                 onClick={onClose}
@@ -139,6 +139,16 @@ function NavDrawer() {
                 Discord <a href="https://discord.gg/UhzNDvbnPX">discord.gg/UhzNDvbnPX</a>
               </Text> */}
             </Stack>
+            <Text
+              position="absolute"
+              bottom={4}
+              left={6}
+              fontSize="sm"
+              color="#0B334D"
+              fontWeight={300}
+            >
+              v{import.meta.env.VITE_APP_VERSION}
+            </Text>
           </DrawerBody>
         </DrawerContent>
       </Drawer>

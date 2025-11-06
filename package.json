@@ -1,6 +1,6 @@
 {
   "name": "doocoins-v2",
-  "version": "2.0.0",
+  "version": "2.0.0.2",
   "description": "DooCoins V2 - Kids rewards app with Internet Identity and enhanced features",
   "keywords": [
     "doocoins",
@@ -10,8 +10,8 @@
     "motoko"
   ],
   "scripts": {
-    "build": "vite build --config vite.config.react.js",
-    "buildkids": "vite build --config vite.configkids.react.js",
+    "build": "NODE_ENV=production vite build --config vite.config.react.js",
+    "buildkids": "NODE_ENV=production vite build --config vite.configkids.react.js",
     "start": "vite serve --config vite.config.react.js --mode development",
     "startkids": "vite serve --config vite.configkids.react.js --mode development",
     "generate": "dfx generate backend"
