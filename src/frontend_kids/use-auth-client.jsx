@@ -1,10 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { canisterId, createActor } from "../declarations/backend";
 import { createStore, del, get } from "idb-keyval";
+import { HttpAgent } from "@dfinity/agent";
 
 const AuthContext = createContext();
 
 const store = createStore('db', 'kids');
+
+// Check if we're in local development
+const isLocal = process.env.NODE_ENV === "development" || 
+  window.location.hostname.includes("localhost") || 
+  window.location.hostname.includes("127.0.0.1");
 
 export const useAuthClient = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -13,23 +19,44 @@ export const useAuthClient = () => {
 
   useEffect(() => {
     setIsLoading(true)
-    const actor = createActor(canisterId);
-
-    setActor(actor);
-    get("selectedChild", store)
-      .then((data) => {
-        if (data) {
-          setIsAuthenticated(true);
-          return;
-        }
-        setIsAuthenticated(false);
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      })
-      .finally(() => {
-        setIsLoading(false);
+    
+    // Create agent and fetch root key for local development
+    const initActor = async () => {
+      const agent = new HttpAgent({
+        host: isLocal ? "http://localhost:4943" : "https://ic0.app",
       });
+      
+      // Fetch root key for local development
+      if (isLocal) {
+        try {
+          console.log('[kids-auth] Fetching root key for local development...');
+          await agent.fetchRootKey();
+          console.log('[kids-auth] Root key fetched successfully');
+        } catch (err) {
+          console.warn('[kids-auth] Failed to fetch root key:', err);
+        }
+      }
+      
+      const actor = createActor(canisterId, { agent });
+      setActor(actor);
+      
+      get("selectedChild", store)
+        .then((data) => {
+          if (data) {
+            setIsAuthenticated(true);
+            return;
+          }
+          setIsAuthenticated(false);
+        })
+        .catch(() => {
+          setIsAuthenticated(false);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    };
+    
+    initActor();
   }, []);
 
   const login = async (code) => {

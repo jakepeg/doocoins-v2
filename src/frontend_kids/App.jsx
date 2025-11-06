@@ -10,6 +10,7 @@ import Wallet from "./screens/Wallet";
 import NoMatch from "./screens/NoMatch";
 import ProtectedRoute from "./ProtectedRoute";
 import { ChakraProvider } from "@chakra-ui/react";
+import theme from "./theme";
 import About from "./screens/About";
 import Help from "./screens/Help";
 import ChildProvider from "./contexts/ChildContext";
@@ -81,7 +82,7 @@ function App() {
 
 export default () => (
   <AuthProvider>
-    <ChakraProvider>
+    <ChakraProvider theme={theme}>
       <App />
     </ChakraProvider>
   </AuthProvider>

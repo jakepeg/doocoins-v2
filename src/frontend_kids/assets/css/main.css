@@ -1,6 +1,16 @@
+html {
+  background: #0B334D !important;
+}
+
 body {
   font-family: sans-serif;
-  background: #000;
+  background: #0B334D !important;
+  /* Will be overridden to #DFF3FF when logged in */
+}
+
+/* When authenticated, switch to light blue */
+body.authenticated {
+  background: #DFF3FF !important;
 }
 
 .rstra-content-container, .rstra-container {
@@ -444,10 +454,31 @@ input:-ms-input-placeholder {/* IE 10+ */
 .magic-code-input {
   border: 2px solid #00A4D7 !important;
   background: #00a5d739 !important;
-  max-width: 38px;
-  color: #fff;
-  font-size: 14px;
+  width: 60px !important;
+  height: 60px !important;
+  color: #fff !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
   padding: 0 !important;
+  text-align: center !important;
+  border-radius: 8px !important;
+  outline: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
+.magic-code-input::-webkit-outer-spin-button,
+.magic-code-input::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  margin: 0 !important;
+}
+
+.magic-code-input:focus {
+  border-color: #00C4FF !important;
+  background: #00a5d74d !important;
+  box-shadow: 0 0 0 3px rgba(0, 164, 215, 0.2) !important;
 }
 
 @keyframes rotate {

@@ -1,4 +1,4 @@
-import { Box, Input } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import React, { useEffect, useRef, useState } from 'react';
 
 const MagicCode = ({ updateCode }) => {
@@ -58,7 +58,7 @@ const MagicCode = ({ updateCode }) => {
   return (
     <Box display='flex' gap='2' className='magic-code-input-container'>
       {inputs.map((input, index) => (
-        <Input
+        <input
           type='number'
           key={index}
           ref={inputRefs.current[index]}
@@ -66,10 +66,19 @@ const MagicCode = ({ updateCode }) => {
           onChange={(e) => handleChange(e.target.value, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
           maxLength={1}
-          isRequired
-          size='lg'
-          textAlign='center'
+          required
           className='magic-code-input'
+          style={{
+            width: '60px',
+            height: '60px',
+            fontSize: '24px',
+            textAlign: 'center',
+            border: '2px solid #00A4D7',
+            borderRadius: '8px',
+            background: '#00a5d739',
+            color: '#fff',
+            outline: 'none',
+          }}
         />
       ))}
     </Box>
