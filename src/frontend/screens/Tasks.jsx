@@ -155,6 +155,31 @@ const Tasks = () => {
     if (child) getTasks(child);
   }, [actor, child]);
 
+  // Add listener to refresh tasks when updated from other components
+  React.useEffect(() => {
+    const refreshTasksFromStorage = async () => {
+      const storedTasks = await get("taskList");
+      if (storedTasks && !loader.init) {
+        setTasks(
+          storedTasks.map((task) => ({
+            ...task,
+            id: parseInt(task.id),
+            value: parseInt(task.value),
+          }))
+        );
+      }
+    };
+
+    // Listen for custom event
+    window.addEventListener("tasksUpdated", refreshTasksFromStorage);
+    window.addEventListener("focus", refreshTasksFromStorage);
+
+    return () => {
+      window.removeEventListener("tasksUpdated", refreshTasksFromStorage);
+      window.removeEventListener("focus", refreshTasksFromStorage);
+    };
+  }, [loader.init]);
+
   const handleTogglePopup = (isOpen, task, popup) => {
     setSelectedTask(task);
     setShowPopup((prevState) => ({ ...prevState, [popup]: isOpen }));
@@ -182,28 +207,38 @@ const Tasks = () => {
     }));
   };
 
-  const handleSubmitTask = (taskName, value) => {
+  const handleSubmit = (taskName, value) => {
     if (taskName) {
       const task = {
         name: taskName,
         value: parseInt(value),
-        id: tasks?.[0]?.id ? (tasks?.[0]?.id + 1) : 1,
+        archived: false,
+        id: tasks?.[0]?.id + 1 || 1,
         isLocal: true,
       };
+      const newTasksList = [task, ...tasks];
+      setTasks(newTasksList);
+      set("taskList", newTasksList);
       handleToggleAddTaskPopup();
-      setTasks((prevState) => {
-        set("taskList", [task, ...prevState]);
-        return [task, ...prevState];
-      });
-      // setLoader((prevState) => ({ ...prevState, singles: true }));
+      
       actor
         .addTask(task, child.id)
         .then((response) => {
           if ("ok" in response) {
-            getTasks({
-              disableFullLoader: true,
-              callService: true,
-              revokeStateUpdate: true,
+            // Success - remove isLocal flag and get the real ID from backend
+            const returnedTask = Object.values(response)[0];
+            const updatedTasksList = tasks.map((t) =>
+              t.isLocal && t.name === taskName
+                ? { ...t, id: parseInt(returnedTask.id), isLocal: false }
+                : t
+            );
+            setTasks(updatedTasksList);
+            set("taskList", updatedTasksList);
+            toast({
+              title: "Task added successfully",
+              status: "success",
+              duration: 2000,
+              isClosable: true,
             });
           } else {
             removeErrorItem();
@@ -214,9 +249,7 @@ const Tasks = () => {
           removeErrorItem();
         });
     }
-  };
-
-  const removeErrorItem = () => {
+  };  const removeErrorItem = () => {
     if (tasks?.length) {
       toast({
         title: "An error occurred.",
@@ -244,7 +277,6 @@ const Tasks = () => {
     };
     handleCloseEditPopup();
     let prevTask;
-    // setLoader((prevState) => ({ ...prevState, init: true }));
     const updatedList = tasks.map((task) => {
       if (task.id === task_object.id) {
         prevTask = task;
@@ -258,19 +290,36 @@ const Tasks = () => {
 
     actor?.updateTask(child.id, taskID, task_object).then((response) => {
       if ("ok" in response) {
-        getTasks({
-          disableFullLoader: true,
-          callService: true,
-          revokeStateUpdate: true,
+        // Success - optimistic update is correct
+        toast({
+          title: "Task updated successfully",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
         });
       } else {
+        // Revert on error
         const updatedList = tasks.map((task) => {
           const updatedTask = task.id === task_object.id ? prevTask : task;
           return updatedTask;
         });
         setTasks(updatedList);
         set("taskList", updatedList);
+        toast({
+          title: "Failed to update task",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
       }
+    }).catch((error) => {
+      // Revert on error
+      const updatedList = tasks.map((task) => {
+        const updatedTask = task.id === task_object.id ? prevTask : task;
+        return updatedTask;
+      });
+      setTasks(updatedList);
+      set("taskList", updatedList);
     });
   }
 
@@ -286,18 +335,22 @@ const Tasks = () => {
     const finalTask = tasks.filter((task) => task.id !== taskID);
     setTasks(finalTask);
     set("taskList", finalTask);
-    // setLoader((prevState) => ({ ...prevState, init: true }));
+    
     actor?.updateTask(child.id, taskID, task_object).then((response) => {
       if ("ok" in response) {
-        getTasks({
-          disableFullLoader: true,
-          callService: true,
-          revokeStateUpdate: true,
+        // Success - optimistic update is correct
+        toast({
+          title: "Task deleted successfully",
+          status: "success",
+          duration: 2000,
+          isClosable: true,
         });
       } else {
+        // Revert on error
         setTasks((prevState) => {
-          set("taskList", [...prevState, task_object]);
-          return [...prevState, task_object];
+          const revertedList = [...prevState, task_object];
+          set("taskList", revertedList);
+          return revertedList;
         });
         toast({
           title: "An error occurred.",
@@ -307,6 +360,20 @@ const Tasks = () => {
           isClosable: true,
         });
       }
+    }).catch((error) => {
+      // Revert on error
+      setTasks((prevState) => {
+        const revertedList = [...prevState, task_object];
+        set("taskList", revertedList);
+        return revertedList;
+      });
+      toast({
+        title: "An error occurred.",
+        description: `Can't perform delete, please try again later.`,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
     });
   }
 
