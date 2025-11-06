@@ -12,7 +12,7 @@ import {
 import { Link as NavLink } from "react-router-dom";
 import React from "react";
 import ProfileIcon from "../../assets/images/profile-icon.svg";
-import LogoIcon from "../../assets/images/logo-dark.svg";
+import LogoIcon from "../../assets/images/logo.svg";
 import { useAuth } from "../../use-auth-client";
 import useIsMobileLayout from "../../hooks/useIsMobileLayout";
 import useClearContextState from "../../hooks/useClearContextState";
@@ -30,9 +30,17 @@ function NavDrawer() {
         display={"flex"}
         flexDirection={"row"}
         justifyContent={"space-between"}
-        style={{ zIndex: 9, position: "relative" }}
-        px={showMobileLayout && 3.5}
-        pt={showMobileLayout && 5}
+        alignItems={"center"}
+        backgroundColor="#0B334D"
+        style={{ 
+          zIndex: 9, 
+          position: "relative",
+        }}
+        width="100%"
+        px={showMobileLayout ? 3.5 : 4}
+        pt={showMobileLayout ? 5 : 4}
+        pb={showMobileLayout ? 3 : 3}
+        m={0}
       >
         <NavLink to="/">
           <img
@@ -41,8 +49,7 @@ function NavDrawer() {
             src={LogoIcon}
             style={{
               height: "34px",
-              marginLeft: showMobileLayout ? 0 : "10px",
-              marginTop: "10px",
+              filter: "brightness(0) invert(1)", // Make logo white
             }}
           />
         </NavLink>
@@ -54,8 +61,8 @@ function NavDrawer() {
           src={ProfileIcon}
           style={{
             height: "34px",
-            marginRight: showMobileLayout ? "5px" : "15px",
-            marginTop: "10px",
+            filter: "brightness(0) invert(1)", // Make profile icon white
+            cursor: "pointer",
           }}
         />
       </Stack>

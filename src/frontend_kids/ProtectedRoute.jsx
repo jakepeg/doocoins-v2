@@ -19,37 +19,39 @@ function ProtectedRoute({ children }) {
   }
 
   return (
-    <Box
-      className="container"
-      backgroundColor={!showMobileLayout && "#0B334D"}
-      gap={0}
-    >
-      <PullToRefresh
-        onRefresh={async () => {
-          const data = await refetchContent({ refetch: true });
-          return data
-        }}
-        className="text-center"
+    <>
+      <NavDrawer />
+      <Box
+        className="container"
+        backgroundColor={!showMobileLayout && "#0B334D"}
+        gap={0}
       >
-        <Box
-          sx={
-            showMobileLayout && {
-              backgroundColor: "#F0F7FC",
-              display: "flex",
-              flexDirection: "column",
-            }
-          }
-          px={"5px"}
+        <PullToRefresh
+          onRefresh={async () => {
+            const data = await refetchContent({ refetch: true });
+            return data
+          }}
+          className="text-center"
         >
-          <NavDrawer />
-          {showMobileLayout && (
-            <Balance childName={child?.name} childBalance={child?.balance} />
-          )}
-        </Box>
-        {children}
-      </PullToRefresh>
-      {showMobileLayout && <BottomTabNav />}
-    </Box>
+          <Box
+            sx={
+              showMobileLayout && {
+                backgroundColor: "#F0F7FC",
+                display: "flex",
+                flexDirection: "column",
+              }
+            }
+            px={"5px"}
+          >
+            {showMobileLayout && (
+              <Balance childName={child?.name} childBalance={child?.balance} />
+            )}
+          </Box>
+          {children}
+        </PullToRefresh>
+        {showMobileLayout && <BottomTabNav />}
+      </Box>
+    </>
   );
 }
 
