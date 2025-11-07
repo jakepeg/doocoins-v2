@@ -34,6 +34,9 @@ const BalanceCard = ({
         paddingRight: "10px",
         minHeight: "275px",
         maxHeight: "275px",
+        width: "100%",
+        maxWidth: "728px",
+        margin: "0 auto 30px auto",
       }}
       className={`${styles.hero}`}
     >
