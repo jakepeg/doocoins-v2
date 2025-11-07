@@ -64,7 +64,12 @@ const InviteChild = () => {
         alignItems="center"
         height="100vh"
       >
-        <Spinner size="xl" color="#0B334D" thickness="4px" />
+        <Spinner 
+          width="50px" 
+          height="50px" 
+          color="#0B334D" 
+          thickness="6px" 
+        />
       </Box>
     );
   }
