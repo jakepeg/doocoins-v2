@@ -44,12 +44,12 @@ const BalanceCard = ({
       <Box
         display="flex"
         flexDirection="column"
-        gap={1}
+        gap={0}
         sx={{
-          paddingTop: "20px",
+          paddingTop: "15px",
           paddingLeft: "10px",
           paddingRight: "10px",
-          paddingBottom: "20px",
+          paddingBottom: "15px",
           position: "relative",
           zIndex: 1,
         }}
@@ -64,7 +64,7 @@ const BalanceCard = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: "10px",
+            marginTop: "5px",
             fontSize: "36px",
             fontWeight: 300,
             color: "#fff",
@@ -83,7 +83,7 @@ const BalanceCard = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
-              marginTop: { base: "-15px", md: "-10px" },
+              marginTop: { base: "-18px", md: "-15px" },
             }}
           >
             <Box 
@@ -114,7 +114,7 @@ const BalanceCard = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) */}
-        <Box textAlign="center" mt={goal?.hasGoal ? { base: -3, md: -2 } : { base: -1, md: 1 }} mb={2}>
+        <Box textAlign="center" mt={goal?.hasGoal ? { base: -4, md: -3 } : { base: -2, md: 0 }} mb={1}>
           <Box
             as="button"
             onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
@@ -154,13 +154,13 @@ const BalanceCard = ({
 
         {/* Goal Section - Only shown if goal exists */}
         {goal?.hasGoal && (
-          <Box>
+          <Box mt={1}>
             {/* Goal info with star */}
             <Box 
               display="flex" 
               justifyContent="space-between" 
               alignItems="center" 
-              mb={2}
+              mb={1}
               cursor="pointer"
               onClick={handleOpenGoalPicker}
               _hover={{
@@ -203,7 +203,7 @@ const BalanceCard = ({
             </Box>
 
             {/* Linear Progress Bar */}
-            <Box mt={3}>
+            <Box mt={2}>
               <Progress
                 value={percentage}
                 size="lg"
