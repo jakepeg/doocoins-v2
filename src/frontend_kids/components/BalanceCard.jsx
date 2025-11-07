@@ -146,7 +146,7 @@ const BalanceCard = ({
             }}
           >
             {isLoading ? (
-              <Spinner size="sm" />
+              <Spinner size="sm" color="#0B334D" thickness="3px" />
             ) : goal?.hasGoal ? (
               "Claim Goal"
             ) : (

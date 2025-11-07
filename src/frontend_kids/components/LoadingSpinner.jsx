@@ -1,9 +1,20 @@
 import React from "react";
+import { Box, Spinner } from "@chakra-ui/react";
 
 export default function LoadingSpinner() {
   return (
-    <div className="spinner-container">
-      <div className="loading-spinner"></div>
-    </div>
+    <Box
+      display="flex"
+      justifyContent="center"
+      alignItems="center"
+      height="100vh"
+    >
+      <Spinner 
+        width="50px" 
+        height="50px" 
+        color="#0B334D" 
+        thickness="6px" 
+      />
+    </Box>
   );
 }

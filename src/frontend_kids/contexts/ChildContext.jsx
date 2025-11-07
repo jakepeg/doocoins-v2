@@ -6,8 +6,7 @@ import useCheckIsUserNewToChildList from "../hooks/useCheckIsUserNewToChildList"
 import useCheckIsUserNewToTasks from "../hooks/useCheckIsUserNewToTasks";
 import useCheckIsUserNewToTransactions from "../hooks/useCheckIsUserNewToTransactions";
 import useCheckIsUserNewToSwipeActions from "../hooks/useCheckIsUserNewToSwipeActions";
-import { Box, useToast } from "@chakra-ui/react";
-import LoadingSpinner from "../components/LoadingSpinner";
+import { Box, Spinner, useToast } from "@chakra-ui/react";
 
 export const ChildContext = createContext();
 
@@ -323,7 +322,12 @@ export default function ChildProvider({ children }) {
         justifyContent="center"
         alignItems="center"
       >
-        <LoadingSpinner />
+        <Spinner 
+          width="50px" 
+          height="50px" 
+          color="#0B334D" 
+          thickness="6px" 
+        />
       </Box>
     );
   }
