@@ -1,11 +1,13 @@
 import { extendBaseTheme } from "@chakra-ui/react";
 import chakraTheme from "@chakra-ui/theme";
 
-const { Button } = chakraTheme.components;
+const { Button, Modal, Drawer } = chakraTheme.components;
 
 const theme = extendBaseTheme({
   components: {
-    Button
+    Button,
+    Modal,
+    Drawer,
   },
 });
 

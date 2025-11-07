@@ -50,6 +50,19 @@ const Rewards = () => {
     }
   }, [child]);
 
+  // Listen for reward list updates from the goal picker
+  React.useEffect(() => {
+    const handleRewardListUpdate = () => {
+      console.log("Reward list updated, refreshing...");
+      getRewards({ disableFullLoader: true, callService: false, revokeStateUpdate: false });
+    };
+
+    window.addEventListener('rewardListUpdated', handleRewardListUpdate);
+    return () => {
+      window.removeEventListener('rewardListUpdated', handleRewardListUpdate);
+    };
+  }, [child?.id]);
+
   const getChildren = async ({ revokeStateUpdate = false }) => {
     await get("selectedChild", store).then(async (data) => {
       const [balance, name] = await Promise.all([

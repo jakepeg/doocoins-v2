@@ -120,7 +120,14 @@ const BalanceCard = ({
         <Box textAlign="center" mt={goal?.hasGoal ? { base: -4, md: -3 } : { base: -2, md: 0 }} mb={1}>
           <Box
             as="button"
-            onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
+            onClick={(e) => {
+              console.log("Button clicked!", { hasGoal: goal?.hasGoal, isLoading, isAbleToClaim });
+              if (goal?.hasGoal) {
+                handleClaimGoal();
+              } else {
+                handleOpenGoalPicker();
+              }
+            }}
             disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
             sx={{
               background: "rgba(255,255,255,0.2)",
@@ -157,7 +164,7 @@ const BalanceCard = ({
 
         {/* Goal Section - Only shown if goal exists */}
         {goal?.hasGoal && (
-          <Box mt={1}>
+          <Box mt={1} position="relative" zIndex={100}>
             {/* Goal info with star */}
             <Box 
               display="flex" 
@@ -165,7 +172,12 @@ const BalanceCard = ({
               alignItems="center" 
               mb={1}
               cursor="pointer"
-              onClick={handleOpenGoalPicker}
+              onClick={(e) => {
+                console.log("Goal section clicked!", e);
+                handleOpenGoalPicker();
+              }}
+              position="relative"
+              zIndex={10}
               _hover={{
                 opacity: 0.8,
               }}
@@ -186,8 +198,8 @@ const BalanceCard = ({
                 </Box>
                 <Text 
                   sx={{
-                    fontSize: "14px",
-                    fontWeight: 300,
+                    fontSize: "18px",
+                    fontWeight: 400,
                     color: "#fff",
                   }}
                 >
