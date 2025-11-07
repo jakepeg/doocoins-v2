@@ -225,7 +225,11 @@ const Alerts = () => {
         ...prevState,
         balance: prevState.balance + task.value,
       }));
-      await handleUpdateTransactions([new_transactions, ...transactions]);
+      
+      // Get current transactions and add new one
+      const currentTransactions = await get("transactionList");
+      await handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
+      
       // API call approveTask
       setBlockingChildUpdate(true);
 
@@ -278,13 +282,20 @@ const Alerts = () => {
               });
             } else {
               // setLoader((prevState) => ({ ...prevState, init: false }));
-              const filteredTransactions = transactions.filter(
+              // Revert transaction on error
+              const currentTransactions = await get("transactionList");
+              const filteredTransactions = (currentTransactions || []).filter(
                 (transaction) => transaction.id !== new_transactions.id
               );
               await handleUpdateTransactions(filteredTransactions);
               setChild((prevState) => ({
                 ...prevState,
                 balance: prevState.balance - task.value,
+              }));
+              // Restore task to the list
+              setList((prevState) => ({
+                ...prevState,
+                tasks: [...(prevState.tasks || []), task],
               }));
               console.error(returnedApproveTask.err);
               setBlockingChildUpdate(false);
@@ -304,6 +315,18 @@ const Alerts = () => {
         // });
         // getAlerts({ callService: true });
       } catch (error) {
+        // Restore task to the list on catch error
+        setList((prevState) => ({
+          ...prevState,
+          tasks: [...(prevState.tasks || []), task],
+        }));
+        // Revert transaction on error
+        const currentTransactions = await get("transactionList");
+        handleUpdateTransactions(
+          (currentTransactions || []).filter(
+            (transaction) => transaction.id !== new_transactions.id
+          )
+        );
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,
@@ -322,7 +345,10 @@ const Alerts = () => {
         name: reward.name,
         transactionType: "GOAL_DEBIT",
       };
-      handleUpdateTransactions([new_transactions, ...transactions]);
+      
+      // Get current transactions and add new one
+      const currentTransactions = await get("transactionList");
+      handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
 
       setChild((prevState) => ({
         ...prevState,
@@ -367,11 +393,18 @@ const Alerts = () => {
               });
             } else {
               console.error(returnedClaimReward.err);
+              // Revert transaction on error
+              const currentTransactions = await get("transactionList");
               handleUpdateTransactions(
-                transactions.filter(
+                (currentTransactions || []).filter(
                   (transaction) => transaction.id !== new_transactions.id
                 )
               );
+              // Restore reward to the list
+              setList((prevState) => ({
+                ...prevState,
+                rewards: [...(prevState.rewards || []), reward],
+              }));
               setBlockingChildUpdate(false);
             }
           })
@@ -386,6 +419,18 @@ const Alerts = () => {
         // });
         // getAlerts({ callService: true });
       } catch (error) {
+        // Restore reward to the list on catch error
+        setList((prevState) => ({
+          ...prevState,
+          rewards: [...(prevState.rewards || []), reward],
+        }));
+        // Revert transaction on error
+        const currentTransactions = await get("transactionList");
+        handleUpdateTransactions(
+          (currentTransactions || []).filter(
+            (transaction) => transaction.id !== new_transactions.id
+          )
+        );
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,

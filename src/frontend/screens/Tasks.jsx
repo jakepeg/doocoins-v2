@@ -227,13 +227,15 @@ const Tasks = () => {
           if ("ok" in response) {
             // Success - remove isLocal flag and get the real ID from backend
             const returnedTask = Object.values(response)[0];
-            const updatedTasksList = tasks.map((t) =>
-              t.isLocal && t.name === taskName
-                ? { ...t, id: parseInt(returnedTask.id), isLocal: false }
-                : t
-            );
-            setTasks(updatedTasksList);
-            set("taskList", updatedTasksList);
+            setTasks((currentTasks) => {
+              const updatedTasksList = currentTasks.map((t) =>
+                t.isLocal && t.name === taskName
+                  ? { ...t, id: parseInt(returnedTask.id), isLocal: false }
+                  : t
+              );
+              set("taskList", updatedTasksList);
+              return updatedTasksList;
+            });
             toast({
               title: "Task added successfully",
               status: "success",
@@ -277,16 +279,18 @@ const Tasks = () => {
     };
     handleCloseEditPopup();
     let prevTask;
-    const updatedList = tasks.map((task) => {
-      if (task.id === task_object.id) {
-        prevTask = task;
-        return task_object;
-      } else {
-        return task;
-      }
+    setTasks((currentTasks) => {
+      const updatedList = currentTasks.map((task) => {
+        if (task.id === task_object.id) {
+          prevTask = task;
+          return task_object;
+        } else {
+          return task;
+        }
+      });
+      set("taskList", updatedList);
+      return updatedList;
     });
-    setTasks(updatedList);
-    set("taskList", updatedList);
 
     actor?.updateTask(child.id, taskID, task_object).then((response) => {
       if ("ok" in response) {
@@ -299,12 +303,14 @@ const Tasks = () => {
         });
       } else {
         // Revert on error
-        const updatedList = tasks.map((task) => {
-          const updatedTask = task.id === task_object.id ? prevTask : task;
-          return updatedTask;
+        setTasks((currentTasks) => {
+          const updatedList = currentTasks.map((task) => {
+            const updatedTask = task.id === task_object.id ? prevTask : task;
+            return updatedTask;
+          });
+          set("taskList", updatedList);
+          return updatedList;
         });
-        setTasks(updatedList);
-        set("taskList", updatedList);
         toast({
           title: "Failed to update task",
           status: "error",
@@ -314,12 +320,14 @@ const Tasks = () => {
       }
     }).catch((error) => {
       // Revert on error
-      const updatedList = tasks.map((task) => {
-        const updatedTask = task.id === task_object.id ? prevTask : task;
-        return updatedTask;
+      setTasks((currentTasks) => {
+        const updatedList = currentTasks.map((task) => {
+          const updatedTask = task.id === task_object.id ? prevTask : task;
+          return updatedTask;
+        });
+        set("taskList", updatedList);
+        return updatedList;
       });
-      setTasks(updatedList);
-      set("taskList", updatedList);
     });
   }
 
@@ -536,7 +544,7 @@ const Tasks = () => {
       )}
       {showPopup.add_task && (
         <AddActionDialog
-          handleSubmitForm={handleSubmitTask}
+          handleSubmitForm={handleSubmit}
           handleClosePopup={handleToggleAddTaskPopup}
           title="Add a Task"
           namePlaceHolder="Task Name"

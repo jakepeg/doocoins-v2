@@ -202,16 +202,19 @@ const Rewards = () => {
     }
     handleCloseEditPopup();
     let prevReward;
-    const updatedList = rewards.map((reward) => {
-      if (reward.id === reward_object.id) {
-        prevReward = reward;
-        return reward_object;
-      } else {
-        return reward;
-      }
+    setRewards((currentRewards) => {
+      const updatedList = currentRewards.map((reward) => {
+        if (reward.id === reward_object.id) {
+          prevReward = reward;
+          return reward_object;
+        } else {
+          return reward;
+        }
+      });
+      set("rewardList", updatedList);
+      return updatedList;
     });
-    setRewards(updatedList);
-    set("rewardList", updatedList);
+    
     actor
       ?.updateGoal(child.id, rewardID, reward_object)
       .then((response) => {
@@ -225,13 +228,15 @@ const Rewards = () => {
           });
         } else {
           // Revert on error
-          const updatedList = rewards.map((reward) => {
-            const updatedReward =
-              reward.id === reward_object.id ? prevReward : reward;
-            return updatedReward;
+          setRewards((currentRewards) => {
+            const updatedList = currentRewards.map((reward) => {
+              const updatedReward =
+                reward.id === reward_object.id ? prevReward : reward;
+              return updatedReward;
+            });
+            set("rewardList", updatedList);
+            return updatedList;
           });
-          setRewards(updatedList);
-          set("rewardList", updatedList);
           toast({
             title: "Failed to update reward",
             status: "error",
@@ -242,13 +247,15 @@ const Rewards = () => {
       })
       .catch((error) => {
         // Revert on error
-        const updatedList = rewards.map((reward) => {
-          const updatedReward =
-            reward.id === reward_object.id ? prevReward : reward;
-          return updatedReward;
+        setRewards((currentRewards) => {
+          const updatedList = currentRewards.map((reward) => {
+            const updatedReward =
+              reward.id === reward_object.id ? prevReward : reward;
+            return updatedReward;
+          });
+          set("rewardList", updatedList);
+          return updatedList;
         });
-        setRewards(updatedList);
-        set("rewardList", updatedList);
       });
   }
 
@@ -325,28 +332,32 @@ const Rewards = () => {
       };
       set("childGoal", returnedGoal);
       setGoal(returnedGoal);
-      const finalRewards = rewards.map((reward) => {
-        if (reward.id === reward_id) {
-          return { ...reward, active: true };
-        } else {
-          return { ...reward, active: false };
-        }
+      setRewards((currentRewards) => {
+        const finalRewards = currentRewards.map((reward) => {
+          if (reward.id === reward_id) {
+            return { ...reward, active: true };
+          } else {
+            return { ...reward, active: false };
+          }
+        });
+        set("rewardList", finalRewards);
+        return finalRewards;
       });
-      setRewards(finalRewards);
-      set("rewardList", finalRewards);
     } else {
       set("childGoal", noGoalEntity);
       setGoal(noGoalEntity);
       handleCloseRemoveGoalPopup();
-      const finalRewards = rewards.map((reward) => {
-        if (reward.id === selectedReward.id) {
-          return { ...reward, active: false };
-        } else {
-          return reward;
-        }
+      setRewards((currentRewards) => {
+        const finalRewards = currentRewards.map((reward) => {
+          if (reward.id === selectedReward.id) {
+            return { ...reward, active: false };
+          } else {
+            return reward;
+          }
+        });
+        set("rewardList", finalRewards);
+        return finalRewards;
       });
-      setRewards(finalRewards);
-      set("rewardList", finalRewards);
     }
     
     // API call currentGoal
@@ -375,15 +386,17 @@ const Rewards = () => {
         } else {
           console.error(returnedCurrentGoal.err);
           // Revert optimistic update on error
-          const finalRewards = rewards.map((reward) => {
-            if (reward.id === reward_id) {
-              return { ...reward, active: !isForSet };
-            } else {
-              return reward;
-            }
+          setRewards((currentRewards) => {
+            const finalRewards = currentRewards.map((reward) => {
+              if (reward.id === reward_id) {
+                return { ...reward, active: !isForSet };
+              } else {
+                return reward;
+              }
+            });
+            set("rewardList", finalRewards);
+            return finalRewards;
           });
-          setRewards(finalRewards);
-          set("rewardList", finalRewards);
           
           // Revert goal
           if (isForSet) {
@@ -395,15 +408,17 @@ const Rewards = () => {
       .catch((error) => {
         console.error("Error setting goal:", error);
         // Revert on error
-        const finalRewards = rewards.map((reward) => {
-          if (reward.id === reward_id) {
-            return { ...reward, active: !isForSet };
-          } else {
-            return reward;
-          }
+        setRewards((currentRewards) => {
+          const finalRewards = currentRewards.map((reward) => {
+            if (reward.id === reward_id) {
+              return { ...reward, active: !isForSet };
+            } else {
+              return reward;
+            }
+          });
+          set("rewardList", finalRewards);
+          return finalRewards;
         });
-        setRewards(finalRewards);
-        set("rewardList", finalRewards);
         
         if (isForSet) {
           set("childGoal", noGoalEntity);
@@ -579,13 +594,15 @@ const Rewards = () => {
           if ("ok" in response) {
             // Success - remove isLocal flag and get the real ID from backend
             const returnedReward = Object.values(response)[0];
-            const updatedRewardsList = rewards.map((r) =>
-              r.isLocal && r.name === rewardName
-                ? { ...r, id: parseInt(returnedReward.id), isLocal: false }
-                : r
-            );
-            setRewards(updatedRewardsList);
-            set("rewardList", updatedRewardsList);
+            setRewards((currentRewards) => {
+              const updatedRewardsList = currentRewards.map((r) =>
+                r.isLocal && r.name === rewardName
+                  ? { ...r, id: parseInt(returnedReward.id), isLocal: false }
+                  : r
+              );
+              set("rewardList", updatedRewardsList);
+              return updatedRewardsList;
+            });
             toast({
               title: "Reward added successfully",
               status: "success",
