@@ -28,27 +28,24 @@ function ProtectedRoute({ children }) {
         paddingTop="70px"
         paddingBottom={showMobileLayout ? "80px" : "0"}
       >
-        <Box
-          className="container"
-          margin="0 auto"
+        <PullToRefresh
+          onRefresh={async () => {
+            const data = await refetchContent({ refetch: true });
+            return data
+          }}
+          className="text-center"
         >
-          <PullToRefresh
-            onRefresh={async () => {
-              const data = await refetchContent({ refetch: true });
-              return data
-            }}
-            className="text-center"
+          <Box
+            className="container"
+            margin="0 auto"
+            px={"5px"}
           >
-            <Box
-              px={"5px"}
-            >
-              {showMobileLayout && (
-                <Balance childName={child?.name} childBalance={child?.balance} />
-              )}
-            </Box>
+            {showMobileLayout && (
+              <Balance childName={child?.name} childBalance={child?.balance} />
+            )}
             {children}
-          </PullToRefresh>
-        </Box>
+          </Box>
+        </PullToRefresh>
       </Box>
       {showMobileLayout && <BottomTabNav />}
     </>

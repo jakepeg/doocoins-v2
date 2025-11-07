@@ -160,15 +160,23 @@ function ProtectedRoute({ children }) {
           flex="1"
           overflow="visible"
           paddingTop={contentPaddingTop}
+          width="100vw"
+          position="relative"
+          left="50%"
+          right="50%"
+          marginLeft="-50vw"
+          marginRight="-50vw"
         >
-          {showMobileLayout && !isChildListRoute && (
-            <Balance 
-              childName={child?.name} 
-              childBalance={child?.balance}
-              handleTogglePopup={handleTogglePopup}
-            />
-          )}
-          {children}
+          <Box maxWidth="768px" width="100%" margin="0 auto">
+            {showMobileLayout && !isChildListRoute && (
+              <Balance 
+                childName={child?.name} 
+                childBalance={child?.balance}
+                handleTogglePopup={handleTogglePopup}
+              />
+            )}
+            {children}
+          </Box>
         </Box>
 
         {showMobileLayout && <BottomTabNav />}
