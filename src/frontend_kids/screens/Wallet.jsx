@@ -4,7 +4,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import dc from "../assets/images/dc.svg";
 import { useAuth } from "../use-auth-client";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Box, Skeleton, Stack } from "@chakra-ui/react";
+import { Box, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { ChildContext } from "../contexts/ChildContext";
 import EmptyStateMessage from "../components/EmptyStateMessage";
 
@@ -135,9 +135,14 @@ const Wallet = () => {
   return (
     <>
       <div className="light-panel transactions max-w-screen">
-        <h2 className="title-button dark">
-          <span>Transactions</span>
-        </h2>
+        <div className="panel-header-wrapper" style={{ position: "relative" }}>
+          <h2 className="title-button">
+            <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
+              Recent Activity
+            </Text>
+          </h2>
+        </div>
+        <div className="example">
         {isLoading.transactions ? (
           <>
             <Stack gap={"20px"} margin={"0 0 20px 0"}>
@@ -160,30 +165,39 @@ const Wallet = () => {
             {transactions.length > 0 ? (
               <>
                 {sortTransactionsByDate().map((transaction) => (
-                  <div
-                    className="list-item"
+                  <Box
+                    backgroundColor="white"
+                    borderRadius="md"
+                    padding={4}
+                    marginBottom={3}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    width="100%"
+                    boxSizing="border-box"
                     role="button"
                     key={parseInt(transaction.id)}
                   >
-                    <div>
-                      <span className="date">
+                    <Box>
+                      <Text fontSize="24px" fontWeight="400" color="#0b334d">
+                        {transaction.name}
+                      </Text>
+                      <Text fontSize="18px" fontWeight="400" color="#0b334d">
                         {humanReadableDate(transaction.completedDate)}
-                      </span>
-                      {transaction.name}
-                    </div>
-                    <div>
+                      </Text>
+                    </Box>
+                    <Box display="flex" alignItems="center" gap={2}>
                       {transaction.transactionType === `GOAL_DEBIT` ? (
-                        <span>-</span>
+                        <Text fontSize="24px" fontWeight="400" color="#E53E3E">-</Text>
                       ) : null}
-
                       <img
                         src={dc}
-                        className="dc-img-small pushdown"
                         alt="DooCoins symbol"
+                        style={{ width: 20, height: 20, marginRight: -8, marginTop: -4, verticalAlign: 'middle' }}
                       />
-                      {parseInt(transaction.value)}
-                    </div>
-                  </div>
+                      <Text fontSize="24px" fontWeight="400" color="#0b334d">{parseInt(transaction.value)}</Text>
+                    </Box>
+                  </Box>
                 ))}
               </>
             ) : (
@@ -193,6 +207,7 @@ const Wallet = () => {
             )}
           </>
         )}
+        </div>
       </div>
     </>
   );
