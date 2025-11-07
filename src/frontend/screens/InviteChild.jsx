@@ -110,7 +110,7 @@ const InviteChild = () => {
           <Box as="ol" ml="20px" color="#0B334D">
             <Box as="li" fontSize="lg" mb="16px">
               Scan the QR code below using your child's device camera
-              <Box mt="8px" display="flex" justifyContent="center">
+              <Box mt="8px">
                 <Image 
                   src={qrChildImage} 
                   alt="QR code for DooCoins Kids app" 
