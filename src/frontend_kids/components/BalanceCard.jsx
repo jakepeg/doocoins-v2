@@ -67,7 +67,7 @@ const BalanceCard = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: "5px",
+            marginTop: "-10px",
             fontSize: "36px",
             fontWeight: 300,
             color: "#fff",
@@ -86,7 +86,7 @@ const BalanceCard = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
-              marginTop: { base: "-18px", md: "-15px" },
+              marginTop: { base: "-3px", md: "0px" },
             }}
           >
             <Box 
