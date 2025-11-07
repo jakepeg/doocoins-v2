@@ -504,21 +504,15 @@ const Rewards = () => {
   }
 
   React.useEffect(() => {
-    if (child) getRewards(child);
+    if (child) getRewards({ callService: true }); // Always fetch fresh data from backend
   }, [actor, child]);
 
   // Add listener to refresh rewards when returning to this screen
   React.useEffect(() => {
     const refreshRewardsFromStorage = async () => {
-      const storedRewards = await get("rewardList");
-      if (storedRewards && !loader.init) {
-        setRewards(
-          storedRewards.map((reward) => ({
-            ...reward,
-            id: parseInt(reward.id),
-            value: parseInt(reward.value),
-          }))
-        );
+      // Always fetch from backend instead of just storage to ensure consistency
+      if (child && actor && !loader.init) {
+        getRewards({ callService: true, disableFullLoader: true });
       }
     };
 
@@ -575,13 +569,21 @@ const Rewards = () => {
 
   const handleSubmitReward = (rewardName, value) => {
     if (rewardName) {
+      // Use timestamp as temporary unique ID for optimistic update
+      const tempId = Date.now();
+      
+      // Calculate next ID: find the highest ID from current rewards and add 1
+      const maxId = rewards.reduce((max, r) => Math.max(max, parseInt(r.id) || 0), 0);
+      const nextId = maxId + 1;
+      
       const reward = {
         name: rewardName,
         value: parseInt(value),
         active: false,
         archived: false,
-        id: rewards?.[0]?.id + 1 || 1,
+        id: nextId, // Use calculated next ID
         isLocal: true,
+        tempId: tempId,
       };
       const newRewardsList = [reward, ...rewards];
       setRewards(newRewardsList);
@@ -592,17 +594,20 @@ const Rewards = () => {
         .addGoal(reward, child.id)
         .then((response) => {
           if ("ok" in response) {
-            // Success - remove isLocal flag and get the real ID from backend
-            const returnedReward = Object.values(response)[0];
-            setRewards((currentRewards) => {
-              const updatedRewardsList = currentRewards.map((r) =>
-                r.isLocal && r.name === rewardName
-                  ? { ...r, id: parseInt(returnedReward.id), isLocal: false }
-                  : r
-              );
-              set("rewardList", updatedRewardsList);
-              return updatedRewardsList;
-            });
+            // Backend returns ALL goals/rewards - replace with fresh data
+            const allReturnedRewards = Object.values(response)[0];
+            const activeRewards = allReturnedRewards
+              .filter(r => !r.archived)
+              .map((reward) => ({
+                ...reward,
+                id: parseInt(reward.id),
+                value: parseInt(reward.value),
+                active: reward.active || false,
+              }));
+            
+            setRewards(activeRewards);
+            set("rewardList", activeRewards);
+            
             toast({
               title: "Reward added successfully",
               status: "success",
