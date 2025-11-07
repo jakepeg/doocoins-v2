@@ -13,7 +13,6 @@ import WalletIcon from "./WalletIcon2";
 import TasksIcon from "./TasksIcon2";
 import RewardsIcon from "./RewardsIcon2";
 import strings from "../../utils/constants";
-import BottomNavCallout from "../Callouts/BottomNavCallout";
 import { ChildContext } from "../../contexts/ChildContext";
 
 function BottomTabNav() {
