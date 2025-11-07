@@ -152,21 +152,15 @@ const Tasks = () => {
   }
 
   React.useEffect(() => {
-    if (child) getTasks(child);
+    if (child) getTasks({ callService: true }); // Always fetch fresh data from backend
   }, [actor, child]);
 
   // Add listener to refresh tasks when updated from other components
   React.useEffect(() => {
     const refreshTasksFromStorage = async () => {
-      const storedTasks = await get("taskList");
-      if (storedTasks && !loader.init) {
-        setTasks(
-          storedTasks.map((task) => ({
-            ...task,
-            id: parseInt(task.id),
-            value: parseInt(task.value),
-          }))
-        );
+      // Always fetch from backend instead of just storage to ensure consistency
+      if (child && actor && !loader.init) {
+        getTasks({ callService: true, disableFullLoader: true });
       }
     };
 
@@ -209,12 +203,21 @@ const Tasks = () => {
 
   const handleSubmit = (taskName, value) => {
     if (taskName) {
+      // Use timestamp as temporary unique ID for optimistic update
+      const tempId = Date.now();
+      
+      // Calculate next ID: find the highest ID from current tasks and add 1
+      // This works because backend increments childToTaskNumber after each add
+      const maxId = tasks.reduce((max, t) => Math.max(max, parseInt(t.id) || 0), 0);
+      const nextId = maxId + 1;
+      
       const task = {
         name: taskName,
         value: parseInt(value),
         archived: false,
-        id: tasks?.[0]?.id + 1 || 1,
+        id: nextId, // Use calculated next ID
         isLocal: true,
+        tempId: tempId,
       };
       const newTasksList = [task, ...tasks];
       setTasks(newTasksList);
@@ -225,17 +228,19 @@ const Tasks = () => {
         .addTask(task, child.id)
         .then((response) => {
           if ("ok" in response) {
-            // Success - remove isLocal flag and get the real ID from backend
-            const returnedTask = Object.values(response)[0];
-            setTasks((currentTasks) => {
-              const updatedTasksList = currentTasks.map((t) =>
-                t.isLocal && t.name === taskName
-                  ? { ...t, id: parseInt(returnedTask.id), isLocal: false }
-                  : t
-              );
-              set("taskList", updatedTasksList);
-              return updatedTasksList;
-            });
+            // Backend returns ALL tasks - filter to only non-archived
+            const allReturnedTasks = Object.values(response)[0];
+            const activeTasks = allReturnedTasks
+              .filter(t => !t.archived)
+              .map((task) => ({
+                ...task,
+                id: parseInt(task.id),
+                value: parseInt(task.value),
+              }));
+            
+            setTasks(activeTasks);
+            set("taskList", activeTasks);
+            
             toast({
               title: "Task added successfully",
               status: "success",
