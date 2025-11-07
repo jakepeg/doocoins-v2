@@ -1,7 +1,7 @@
 import { extendBaseTheme } from "@chakra-ui/react";
 import chakraTheme from "@chakra-ui/theme";
 
-const { Button, Drawer, Menu, Modal, Alert, Skeleton } = chakraTheme.components;
+const { Button, Drawer, Menu, Modal, Alert, Skeleton, CloseButton } = chakraTheme.components;
 
 const theme = extendBaseTheme({
   breakpoints: {
@@ -76,6 +76,7 @@ const theme = extendBaseTheme({
     Modal,
     Alert,
     Skeleton,
+    CloseButton,
   },
 });
 
