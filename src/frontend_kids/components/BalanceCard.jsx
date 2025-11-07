@@ -30,12 +30,12 @@ const BalanceCard = ({
         overflow: "hidden",
         WebkitBorderRadius: "12px",
         position: "relative",
-        paddingLeft: "10px",
-        paddingRight: "10px",
+        paddingLeft: "15px",
+        paddingRight: "15px",
         minHeight: "275px",
         maxHeight: "275px",
         width: "100%",
-        maxWidth: "728px",
+        maxWidth: "768px",
         margin: "0 auto 30px auto",
       }}
       className={`${styles.hero}`}
