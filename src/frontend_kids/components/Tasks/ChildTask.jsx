@@ -36,13 +36,16 @@ const ChildTask = ({ task, handleReq }) => {
         key={parseInt(task.id)}
         position="relative"
       >
-        <Text fontSize="24px" fontWeight="400" color="#0b334d">
-          {task.name}
-        </Text>
+        <Box display="flex" flexDirection="column" gap={1}>
+          <Text fontSize="24px" fontWeight="400" color="#0b334d">
+            {task.name}
+          </Text>
+          <Text fontSize="18px" fontWeight="400" color="#0b334d">
+            {parseInt(task.value)} DooCoins
+          </Text>
+        </Box>
 
         <Box display="flex" alignItems="center" gap={2}>
-          <DCIcon className="balance-dc-icon" width="20px" height="20px" />
-          <Text fontSize="24px" fontWeight="400" color="#0b334d">{parseInt(task.value)}</Text>
           {showEmoji ? (
             <ScaleFade initialScale={0.9} in={isOpen}>
               <Box
