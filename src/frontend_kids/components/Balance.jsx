@@ -1,17 +1,11 @@
 import * as React from "react";
-import dc from "../assets/images/dc-thin-white.svg";
-import ReqClaimIcon from "../assets/images/card-header/req_claim.svg";
-import NoGoalIcon from "../assets/images/card-header/cc-nogoal.svg";
-import PlainGoalBackground from "../assets/images/card-header/cc.svg";
-import styles from "../assets/css/golabal.module.css";
-import { Box, useToast } from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
 import { get, set } from "idb-keyval";
 import { ChildContext } from "../contexts/ChildContext";
 import { useAuth } from "../use-auth-client";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
 import { noGoalEntity } from "../utils/constants";
-import ReloadIcon from "./icons/ReloadIcon";
+import { useNavigate } from "react-router-dom";
+import BalanceCard from "./BalanceCard";
 
 const Balance = () => {
   const {
@@ -27,6 +21,7 @@ const Balance = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const balance = child?.balance || 0;
   const toast = useToast();
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -125,14 +120,16 @@ const Balance = () => {
   ).toFixed(0);
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
 
-  const handleReq = async (selectedReward) => {
+  const handleClaimGoal = async () => {
+    if (!isAbleToClaim || isLoading) return;
+    
     try {
       setIsLoading(true);
       await actor.requestClaimReward(
         child.id,
-        parseInt(selectedReward.id),
-        parseInt(selectedReward.value),
-        selectedReward.name
+        parseInt(goal.id),
+        parseInt(goal.value),
+        goal.name
       );
       toast({
         title: `well done ${child.name}, the reward is pending`,
@@ -156,133 +153,21 @@ const Balance = () => {
     }
   };
 
-  const handleGoalClick = () => {
-    if (isAbleToClaim && !isLoading) {
-      handleReq(goal);
-    }
+  const handleOpenGoalPicker = () => {
+    // Navigate to the rewards page where goals can be selected
+    navigate("/rewards");
   };
 
   return (
-    <>
-      <header
-        style={{
-          backgroundImage: `url(${
-            !goal?.hasGoal
-              ? NoGoalIcon
-              : isAbleToClaim
-              ? ReqClaimIcon
-              : goal?.hasGoal
-              ? PlainGoalBackground
-              : null
-          })`,
-        }}
-        className={`${styles.hero}`} //${props.isModalOpen}
-      >
-        <Box
-          display={"flex"}
-          flexDirection={"row"}
-          justifyContent={"space-between"}
-          alignItems={"center"}
-          height={"100%"}
-        >
-          <Box display={"flex"} flexDirection={"column"} gap={0}>
-            <Box className={styles.name}>{child?.name}</Box>
-            {child?.balance >= 0 && (
-              <Box className={styles.balance}>
-                <img src={dc} className="dc-img-big" alt="DooCoins symbol" />
-                {child?.balance}
-              </Box>
-            )}
-          </Box>
-          <Box
-            sx={{
-              background: "transparent",
-              zIndex: 999,
-              minWidth: isAbleToClaim && "25%",
-              minHeight: isAbleToClaim && { base: "70%", sm: "80%" },
-              transform: isAbleToClaim && { base: `translateX(-4vw)` },
-              cursor: isAbleToClaim && "pointer",
-            }}
-            onClick={handleGoalClick}
-          >
-            {goal?.hasGoal && !isAbleToClaim ? (
-              <>
-                <Box
-                  display={"flex"}
-                  className={styles.circular_progress}
-                  flexDirection={"column"}
-                  alignItems={"right"}
-                  sx={{
-                    width: { base: 100, sm: 100, md: 195 },
-                    height: { base: 160, sm: 200, md: 250 },
-                    maxHeight: "220px",
-                  }}
-                >
-                  <CircularProgressbar
-                    value={percentage}
-                    text={`${percentage}%`}
-                    background
-                    backgroundPadding={6}
-                    strokeWidth={4}
-                    styles={buildStyles({
-                      strokeLinecap: "butt",
-                      backgroundColor: "transparent",
-                      textColor: "#fff",
-                      pathColor: "#00A4D7",
-                      trailColor: "transparent",
-                      textSize: "1.2em",
-                    })}
-                  />
-                  <p
-                    style={{
-                      color: "#fff",
-                      marginTop: "0px",
-                      textAlign: "center",
-                      fontSize: "25px",
-                      fontWeight: "300",
-                      lineHeight: "1.5em",
-                    }}
-                  >
-                    {goal.name}
-                  </p>
-                </Box>
-              </>
-            ) : null}
-            {goal?.hasGoal && isAbleToClaim && (
-              <Box
-                sx={{
-                  color: "#fff",
-                  marginTop: "0px",
-                  textAlign: "center",
-                  fontSize: "1em",
-                  lineHeight: "1em",
-                  position: "absolute",
-                  bottom: { base: "-0%", sm: "-0%" },
-                  transform: "translateX(-5%) translateY(6px)",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  width: "120%",
-                }}
-              >
-                {goal.name}
-              </Box>
-            )}
-          </Box>
-        </Box>
-        <button
-          onClick={() => refetchContent({ refetch: true })}
-          style={{
-            position: "absolute",
-            top: "-2px",
-            left: "32px",
-            transform: `translateX(-50%) translateY(50%)`,
-          }}
-        >
-          <ReloadIcon className={refetching && "rotate"} />
-        </button>
-      </header>
-    </>
+    <BalanceCard
+      child={child}
+      goal={goal}
+      percentage={percentage}
+      isAbleToClaim={isAbleToClaim}
+      isLoading={isLoading}
+      handleOpenGoalPicker={handleOpenGoalPicker}
+      handleClaimGoal={handleClaimGoal}
+    />
   );
 };
 
