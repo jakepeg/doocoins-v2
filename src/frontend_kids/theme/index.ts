@@ -17,7 +17,6 @@ const theme = extendBaseTheme({
     brand: {
       white: "#ffffff",
       darkBlue: "#0b334d",
-      lightBlue: "#DFF3FF",
     },
   },
   textStyles: {

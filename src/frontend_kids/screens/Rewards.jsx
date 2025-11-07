@@ -146,6 +146,7 @@ const Rewards = () => {
         title: "An error occurred.",
         description: `Apologies, please try again later.`,
         status: "error",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });
@@ -209,6 +210,7 @@ const Rewards = () => {
             toast({
               title: `Good luck achieving your goal, ${child.name}.`,
               status: "success",
+              variant: "solid",
               duration: 4000,
               isClosable: true,
             });
@@ -216,6 +218,7 @@ const Rewards = () => {
             toast({
               title: `Goal removed for ${child.name}.`,
               status: "success",
+              variant: "solid",
               duration: 4000,
               isClosable: true,
             });
@@ -256,6 +259,7 @@ const Rewards = () => {
       toast({
         title: `well done ${child.name}, the reward is pending`,
         status: "success",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });
@@ -265,6 +269,7 @@ const Rewards = () => {
         title: "An error occurred.",
         description: `Apologies, please try again later.`,
         status: "error",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });

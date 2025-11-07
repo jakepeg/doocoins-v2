@@ -146,6 +146,7 @@ const Tasks = () => {
       toast({
         title: `well done ${child.name}, the task is pending`,
         status: "success",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });
@@ -155,6 +156,7 @@ const Tasks = () => {
         title: "An error occurred.",
         description: `Apologies, please try again later.`,
         status: "error",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });

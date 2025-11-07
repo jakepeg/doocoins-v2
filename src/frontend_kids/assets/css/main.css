@@ -13,6 +13,27 @@ body.authenticated {
   background: #DFF3FF !important;
 }
 
+/* Fix toast icon size */
+.chakra-alert__icon svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Force toast backgrounds - debugging */
+.chakra-alert {
+  opacity: 1 !important;
+  background: inherit !important;
+  padding: 16px !important;
+}
+
+.chakra-alert[data-status="success"] {
+  background-color: var(--chakra-colors-green-100) !important;
+}
+
+.chakra-alert[data-status="error"] {
+  background-color: var(--chakra-colors-red-100) !important;
+}
+
 .rstra-content-container, .rstra-container {
   background-color: transparent !important;
   justify-content: end !important;

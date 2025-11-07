@@ -137,6 +137,7 @@ const Balance = () => {
       toast({
         title: `well done ${child.name}, the reward is pending`,
         status: "success",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });
@@ -146,6 +147,7 @@ const Balance = () => {
         title: "An error occurred.",
         description: `Apologies, please try again later.`,
         status: "error",
+        variant: "solid",
         duration: 4000,
         isClosable: true,
       });

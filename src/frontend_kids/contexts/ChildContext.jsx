@@ -212,6 +212,7 @@ export default function ChildProvider({ children }) {
           title: "An error occurred.",
           description: `Could not fetch kids details.`,
           status: "error",
+          variant: "solid",
           duration: 4000,
           isClosable: true,
         });
