@@ -106,7 +106,7 @@ function CustomTabs() {
           alignItems: "center",
           border: "none",
           width: "100%",
-          maxWidth: "544px",
+          maxWidth: "768px",
           minWidth: "320px",
           margin: "0 auto",
           backgroundColor: "#0B334D",
