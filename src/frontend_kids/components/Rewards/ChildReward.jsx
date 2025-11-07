@@ -38,19 +38,31 @@ const ChildReward = ({
 
   return (
     <>
-      <Box px={5} as="li" className="list-item" key={parseInt(reward.id)}>
-        <Text textAlign={"left"} fontSize={"24px"}>
+      <Box
+        backgroundColor="white"
+        borderRadius="md"
+        padding={4}
+        marginBottom={3}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        width="100%"
+        boxSizing="border-box"
+        role="button"
+        key={parseInt(reward.id)}
+      >
+        <Text fontSize="24px" fontWeight="400" color="#0b334d">
           {reward.name}
         </Text>
-        <div className="child-balance">
-          <DCIcon className="balance-dc-icon" width="24px" height="24px" />
-          <Box fontSize={"24px"}>{parseInt(reward.value)}</Box>
+        <Box display="flex" alignItems="center" gap={2}>
+          <DCIcon className="balance-dc-icon" width="20px" height="20px" />
+          <Text fontSize="24px" fontWeight="400" color="#0b334d">{parseInt(reward.value)}</Text>
           {showEmoji ? (
             <ScaleFade initialScale={0.9} in={isOpen}>
             <Box
                 p={1}
                 background="#FBB03B"
-                ml={4}
+                ml={2}
                 cursor="pointer"
                 borderRadius={100}
               >
@@ -64,26 +76,21 @@ const ChildReward = ({
             <>
               {child.balance >= reward.value ? (
                 <Box
-                  ml={4}
+                  ml={2}
                   p={1}
                   background="#129FAA"
                   cursor="pointer"
                   borderRadius={100}
                   onClick={() => handleClick(reward, "req")}
                 >
-
-
-
-
                   <TickIcon 
-                    // width and height should be 20px
                     width="18px"
                     height="18px"
                    />
                 </Box>
               ) : reward.active ? (
                 <Box
-                  ml={4}
+                  ml={2}
                   p={1}
                   background="red"
                   cursor="pointer"
@@ -92,14 +99,13 @@ const ChildReward = ({
                 >
                   <CloseIcon 
                     stroke="#fff" 
-                    // width and height should be 20px
                     width="20px" 
                     height="20px" 
                   />
                 </Box>
               ) : (
                 <Box
-                  ml={4}
+                  ml={2}
                   p={0}
                   cursor="pointer"
                   borderRadius={100}
@@ -113,7 +119,7 @@ const ChildReward = ({
               )}
             </>
           )}
-        </div>
+        </Box>
       </Box>
     </>
   );

@@ -2,7 +2,7 @@ import * as React from "react";
 import { get, set } from "idb-keyval";
 import { useAuth } from "../use-auth-client";
 import ChildTask from "../components/Tasks/ChildTask";
-import { Skeleton, Stack, useDisclosure, useToast } from "@chakra-ui/react";
+import { Skeleton, Stack, Text, useDisclosure, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -186,8 +186,10 @@ const Tasks = () => {
   return (
     <div className={`light-panel max-w-screen`}>
       <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
-        <h2 className="title-button dark">
-          <span>Tasks</span>
+        <h2 className="title-button">
+          <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
+            Tasks
+          </Text>
         </h2>
       </div>
       {loader.init ? (

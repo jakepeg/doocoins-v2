@@ -1,7 +1,7 @@
 import * as React from "react";
 import { get, set } from "idb-keyval";
 import { useAuth } from "../use-auth-client";
-import { Skeleton, Stack, useDisclosure, useToast } from "@chakra-ui/react";
+import { Skeleton, Stack, Text, useDisclosure, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import strings, { noGoalEntity } from "../utils/constants";
 import { ChildContext } from "../contexts/ChildContext";
@@ -319,8 +319,10 @@ const Rewards = () => {
   return (
     <div className={`light-panel max-w-screen`}>
       <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
-        <h2 className="title-button dark">
-          <span>Rewards</span>{" "}
+        <h2 className="title-button">
+          <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
+            Rewards
+          </Text>
         </h2>
       </div>
       {loader.init ? (
