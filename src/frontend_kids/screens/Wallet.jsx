@@ -134,7 +134,7 @@ const Wallet = () => {
 
   return (
     <>
-      <div className="light-panel transactions max-w-screen">
+      <div className="light-panel transactions">
         <div className="panel-header-wrapper" style={{ position: "relative" }}>
           <h2 className="title-button">
             <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">

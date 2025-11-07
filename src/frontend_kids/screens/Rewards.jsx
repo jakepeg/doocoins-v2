@@ -322,7 +322,7 @@ const Rewards = () => {
   }
 
   return (
-    <div className={`light-panel max-w-screen`}>
+    <div className={`light-panel`}>
       <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
         <h2 className="title-button">
           <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
