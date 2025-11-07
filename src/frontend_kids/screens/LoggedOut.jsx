@@ -95,7 +95,6 @@ function LoggedOut() {
 
   return (
     <Box
-      className="container"
       display="flex"
       flexDirection="column"
       justifyContent={"space-between"}
@@ -103,6 +102,10 @@ function LoggedOut() {
       gap={6}
       py={8}
       backgroundColor={"#0B334D"}
+      minHeight="100vh"
+      width="100%"
+      maxWidth="100%"
+      margin={0}
     >
       <Box
         display="flex"
