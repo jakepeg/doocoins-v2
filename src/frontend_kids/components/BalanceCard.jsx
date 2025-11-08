@@ -117,7 +117,7 @@ const BalanceCard = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) */}
-        <Box textAlign="center" mt={goal?.hasGoal ? { base: -4, md: -3 } : { base: -2, md: 0 }} mb={1}>
+        <Box textAlign="center" mt={goal?.hasGoal ? { base: "-26px", md: "-22px" } : { base: "-18px", md: "-10px" }} mb={1}>
           <Box
             as="button"
             onClick={(e) => {
@@ -164,7 +164,7 @@ const BalanceCard = ({
 
         {/* Goal Section - Only shown if goal exists */}
         {goal?.hasGoal && (
-          <Box mt={1} position="relative" zIndex={100}>
+          <Box mt="-6px" position="relative" zIndex={100}>
             {/* Goal info with star */}
             <Box 
               display="flex" 
@@ -208,7 +208,7 @@ const BalanceCard = ({
               </HStack>
               <Text 
                 sx={{
-                  fontSize: "14px",
+                  fontSize: "18px",
                   fontWeight: 700,
                   color: "#fff",
                 }}
