@@ -46,6 +46,22 @@ main {
   align-items: center !important;
 }
 
+/* Apply safe-area padding only on native (Capacitor) using a body class */
+.native-safe main,
+.native-safe #pageContent {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Small spacer only on native to push initial content below status bar */
+.native-only-safe-spacer {
+  display: none;
+}
+
+.native-safe .native-only-safe-spacer {
+  display: block;
+  height: calc(env(safe-area-inset-top, 0px) + 8px);
+}
+
 header {
   -webkit-box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 -moz-box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
