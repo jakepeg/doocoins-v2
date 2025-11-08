@@ -2,15 +2,21 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { canisterId, createActor } from "../declarations/backend";
 import { createStore, del, get } from "idb-keyval";
 import { HttpAgent } from "@dfinity/agent";
+import { Capacitor } from "@capacitor/core";
 
 const AuthContext = createContext();
 
 const store = createStore('db', 'kids');
 
-// Check if we're in local development
-const isLocal = process.env.NODE_ENV === "development" || 
+// Check if we're in native Capacitor (production iOS/Android)
+const isNative = Capacitor.isNativePlatform();
+
+// Only use local development mode if NOT in native app AND hostname is localhost/127.0.0.1
+const isLocal = !isNative && (
+  process.env.NODE_ENV === "development" || 
   window.location.hostname.includes("localhost") || 
-  window.location.hostname.includes("127.0.0.1");
+  window.location.hostname.includes("127.0.0.1")
+);
 
 export const useAuthClient = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
