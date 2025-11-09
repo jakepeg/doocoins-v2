@@ -14,6 +14,7 @@ import TasksIcon from "./TasksIcon2";
 import RewardsIcon from "./RewardsIcon2";
 import strings from "../../utils/constants";
 import { ChildContext } from "../../contexts/ChildContext";
+import { Capacitor } from "@capacitor/core";
 
 function BottomTabNav() {
   const { pathname } = useLocation();
@@ -51,6 +52,7 @@ function CustomTabs() {
   const { pathname } = useLocation();
   const { isNewToSystem, handleUpdateCalloutState } =
     React.useContext(ChildContext);
+  const isNative = Capacitor.isNativePlatform();
 
   const CustomTab = React.forwardRef((props, ref) => {
     // 1. Reuse the `useTab` hook
@@ -70,7 +72,12 @@ function CustomTabs() {
     return (
       <Link to={props.href}>
         <Button
-          style={{ border: "none", paddingTop: '18px' }}
+          style={{ 
+            border: "none", 
+            paddingTop: '18px',
+            paddingLeft: isNative ? '10px' : '0',
+            paddingRight: isNative ? '10px' : '0'
+          }}
           display="flex"
           flex="0 0 25em"
           flexDirection="column"

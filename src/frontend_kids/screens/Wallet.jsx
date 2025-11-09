@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Box, Skeleton, Stack, Text } from "@chakra-ui/react";
 import { ChildContext } from "../contexts/ChildContext";
 import EmptyStateMessage from "../components/EmptyStateMessage";
+import { Capacitor } from "@capacitor/core";
 
 const Wallet = () => {
   const { actor, store } = useAuth();
@@ -128,13 +129,15 @@ const Wallet = () => {
     return transactions;
   }, [transactions]);
 
+  const isNative = Capacitor.isNativePlatform();
+
   if (isLoading.child) {
     return <LoadingSpinner />;
   }
 
   return (
     <>
-      <div className="light-panel transactions">
+      <div className="light-panel transactions" style={{ paddingBottom: isNative ? '30px' : '0' }}>
         <div className="panel-header-wrapper" style={{ position: "relative" }}>
           <h2 className="title-button">
             <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">

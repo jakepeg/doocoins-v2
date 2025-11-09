@@ -9,6 +9,7 @@ import {
   Progress,
 } from "@chakra-ui/react";
 import { ActiveBackground } from "./BalanceCardBackgrounds";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Simplified Balance Card for Kids App
@@ -23,6 +24,8 @@ const BalanceCard = ({
   handleOpenGoalPicker,
   handleClaimGoal,
 }) => {
+  const isNative = Capacitor.isNativePlatform();
+  
   return (
     <header
       style={{
@@ -36,7 +39,7 @@ const BalanceCard = ({
         maxHeight: "275px",
         width: "100%",
         maxWidth: "768px",
-        margin: "0 auto 30px auto",
+        margin: isNative ? "10px auto 30px auto" : "0 auto 30px auto",
       }}
       className={`${styles.hero}`}
     >
@@ -55,6 +58,7 @@ const BalanceCard = ({
           paddingBottom: "15px",
           position: "relative",
           zIndex: 1,
+          marginTop: isNative ? "-20px" : "0",
         }}
       >
         {/* Name - Top */}

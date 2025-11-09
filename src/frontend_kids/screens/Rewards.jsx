@@ -7,6 +7,7 @@ import strings, { noGoalEntity } from "../utils/constants";
 import { ChildContext } from "../contexts/ChildContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ChildReward from "../components/Rewards/ChildReward";
+import { Capacitor } from "@capacitor/core";
 
 const Rewards = () => {
   const { actor, store } = useAuth();
@@ -330,12 +331,14 @@ const Rewards = () => {
     );
   }, [rewards, isOpen]);
 
+  const isNative = Capacitor.isNativePlatform();
+
   if (loader.child) {
     return <LoadingSpinner />;
   }
 
   return (
-    <div className={`light-panel`}>
+    <div className={`light-panel`} style={{ paddingBottom: isNative ? '30px' : '0' }}>
       <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
         <h2 className="title-button">
           <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
