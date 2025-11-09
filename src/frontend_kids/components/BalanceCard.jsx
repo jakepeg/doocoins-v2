@@ -39,7 +39,7 @@ const BalanceCard = ({
         maxHeight: "275px",
         width: "100%",
         maxWidth: "768px",
-        margin: isNative ? "10px auto 30px auto" : "0 auto 30px auto",
+        margin: isNative ? "10px auto 30px auto" : "20px auto 30px auto",
       }}
       className={`${styles.hero}`}
     >
