@@ -15,7 +15,8 @@ if (Capacitor?.isNativePlatform?.()) {
 		console.log('[StatusBar] Error setting style:', err);
 	});
 	
-	// Add background div that covers status bar + safe area
+	// Add blue background div that covers status bar + safe area
+	// We make it tall enough to cover the status bar AND extend down
 	const statusBarBg = document.createElement('div');
 	statusBarBg.id = 'status-bar-bg';
 	statusBarBg.style.cssText = `
@@ -24,12 +25,12 @@ if (Capacitor?.isNativePlatform?.()) {
 		left: 0;
 		right: 0;
 		height: 50px;
-		background-color: #6B46C1;
+		background-color: #0B334D;
 		z-index: -1;
 	`;
 	document.body.prepend(statusBarBg);
 	
-	console.log('[StatusBar] Status bar configured for kids app');
+	console.log('[StatusBar] Blue background added for kids app');
 }
 
 const root = createRoot(document.getElementById("root"));

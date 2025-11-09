@@ -18,36 +18,66 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
 
+  const contentPaddingTop = "48px";
+
   return (
     <>
-      <NavDrawer />
       <Box
-        width="100%"
+        className="container"
         backgroundColor="#DFF3FF"
+        gap={0}
+        display="flex"
+        flexDirection="column"
         minHeight="100vh"
-        paddingTop="70px"
-        paddingBottom={showMobileLayout ? "80px" : "0"}
       >
-        <PullToRefresh
-          onRefresh={async () => {
-            const data = await refetchContent({ refetch: true });
-            return data
-          }}
-          className="text-center"
+        {/* Dark blue header section with NavDrawer */}
+        <Box 
+          backgroundColor="#0B334D"
+          width="100vw"
+          position="relative"
+          left="50%"
+          right="50%"
+          marginLeft="-50vw"
+          marginRight="-50vw"
         >
-          <Box
-            className="container"
-            margin="0 auto"
-            px={"5px"}
-          >
-            {showMobileLayout && (
-              <Balance childName={child?.name} childBalance={child?.balance} />
-            )}
-            {children}
+          <NavDrawer />
+        </Box>
+
+        {/* Content area */}
+        <Box
+          backgroundColor="#DFF3FF"
+          display="flex"
+          flexDirection="column"
+          flex="1"
+          overflow="visible"
+          paddingTop={contentPaddingTop}
+          width="100vw"
+          position="relative"
+          left="50%"
+          right="50%"
+          marginLeft="-50vw"
+          marginRight="-50vw"
+        >
+          <Box maxWidth="768px" width="100%" margin="0 auto">
+            <PullToRefresh
+              onRefresh={async () => {
+                const data = await refetchContent({ refetch: true });
+                return data
+              }}
+              className="text-center"
+            >
+              <Box px={"5px"}>
+                {showMobileLayout && (
+                  <Balance childName={child?.name} childBalance={child?.balance} />
+                )}
+                {children}
+              </Box>
+            </PullToRefresh>
           </Box>
-        </PullToRefresh>
+        </Box>
+
+        {showMobileLayout && <BottomTabNav />}
       </Box>
-      {showMobileLayout && <BottomTabNav />}
     </>
   );
 }
