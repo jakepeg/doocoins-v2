@@ -108,7 +108,7 @@ function LoggedOut() {
     <Box
       display="flex"
       flexDirection="column"
-      justifyContent={"space-between"}
+      justifyContent={"flex-start"}
       alignItems={"center"}
       gap={6}
       py={8}
@@ -190,8 +190,19 @@ function LoggedOut() {
           )}
         </Box>
       </Box>
-      <Box mt="-30px">
+      <Box mt="auto" mb={4} transform="translateY(-30px)">
         <img src={ICBadge} alt="Internet Computer" />
+        {import.meta.env.VITE_APP_VERSION && (
+          <Text
+            mt={2}
+            fontSize="sm"
+            color="#fff"
+            fontWeight={300}
+            textAlign="center"
+          >
+            v{import.meta.env.VITE_APP_VERSION}
+          </Text>
+        )}
       </Box>
     </Box>
   );

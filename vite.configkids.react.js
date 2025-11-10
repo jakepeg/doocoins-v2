@@ -5,8 +5,23 @@ import EnvironmentPlugin from "vite-plugin-environment";
 import dotenv from "dotenv";
 import reactRefresh from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
+import fs from "fs";
 
 dotenv.config();
+
+// Auto-increment build number
+function updateVersion() {
+  const packagePath = path.resolve(__dirname, "package.json");
+  const pkg = JSON.parse(fs.readFileSync(packagePath, "utf8"));
+  const versionParts = pkg.version.split(".");
+  const buildNumber = parseInt(versionParts[3] || "0") + 1;
+  const newVersion = `${versionParts[0]}.${versionParts[1]}.${versionParts[2]}.${buildNumber}`;
+  pkg.version = newVersion;
+  fs.writeFileSync(packagePath, JSON.stringify(pkg, null, 2) + "\n");
+  return newVersion;
+}
+
+const version = process.env.NODE_ENV === "production" ? updateVersion() : JSON.parse(fs.readFileSync(path.resolve(__dirname, "package.json"), "utf8")).version;
 
 const manifestForPlugin = {
   registerType: "prompt",
@@ -62,7 +77,8 @@ export default defineConfig({
     emptyOutDir: true
   },
   define: {
-    global: "window"
+    global: "window",
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(version)
   },
   server: {
     host: true,
