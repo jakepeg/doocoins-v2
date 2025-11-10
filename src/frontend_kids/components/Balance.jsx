@@ -20,6 +20,7 @@ const Balance = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGoalPickerOpen, setIsGoalPickerOpen] = React.useState(false);
   const [availableRewards, setAvailableRewards] = React.useState([]);
+  const [isPendingApproval, setIsPendingApproval] = React.useState(false);
   const balance = child?.balance || 0;
   const toast = useToast();
 
@@ -27,6 +28,12 @@ const Balance = () => {
     if (!blockingChildUpdate) {
       getChildGoal();
     }
+    // Check if there's a pending approval state
+    get("goalPendingApproval", store).then((pending) => {
+      if (pending) {
+        setIsPendingApproval(true);
+      }
+    });
   }, []);
 
   const getChildGoal = () => {
@@ -39,6 +46,18 @@ const Balance = () => {
           hasGoal: data.hasGoal,
         });
         setIsLoading(false);
+        
+        // Check if goal was cleared (approved by parent) while we had pending approval
+        const pendingApproval = await get("goalPendingApproval", store);
+        if (pendingApproval && !data.hasGoal) {
+          // Goal was approved and cleared, remove pending state
+          setIsPendingApproval(false);
+          set("goalPendingApproval", false, store);
+        }
+      } else {
+        // No goal set, clear pending approval state if it exists
+        setIsPendingApproval(false);
+        set("goalPendingApproval", false, store);
       }
     });
   };
@@ -115,32 +134,17 @@ const Balance = () => {
       .finally(() => setIsLoading(false));
   };
   const calculatePercentage = () => {
-    console.log('Percentage calc - full goal object:', goal);
-    console.log('Percentage calc - full child object:', child);
-    console.log('Percentage calc:', { 
-      goalValue: goal?.value, 
-      childBalance: child?.balance,
-      hasGoal: goal?.hasGoal,
-      goalValueType: typeof goal?.value,
-      childBalanceType: typeof child?.balance
-    });
     if (!goal?.value || goal?.value <= 0) {
-      console.log('No goal value, returning 0');
       return 0;
     }
     if (child?.balance === undefined || child?.balance === null) {
-      console.log('No child balance, returning 0');
       return 0;
     }
     const calc = (Number(child?.balance) / Number(goal?.value)) * 100;
-    console.log('Calculated percentage:', calc);
     if (isNaN(calc)) {
-      console.log('Result is NaN, returning 0');
       return 0;
     }
-    const result = Math.min(calc, 100).toFixed(0);
-    console.log('Final percentage result:', result);
-    return result;
+    return Math.min(calc, 100).toFixed(0);
   };
   const percentage = calculatePercentage();
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
@@ -211,7 +215,7 @@ const Balance = () => {
   };
 
   const handleClaimGoal = async () => {
-    if (!isAbleToClaim || isLoading) return;
+    if (!isAbleToClaim || isLoading || isPendingApproval) return;
     
     try {
       setIsLoading(true);
@@ -221,8 +225,13 @@ const Balance = () => {
         parseInt(goal.value),
         goal.name
       );
+      
+      // Set pending approval state instead of clearing the goal
+      setIsPendingApproval(true);
+      set("goalPendingApproval", true, store);
+      
       toast({
-        title: `well done ${child.name}, the reward is pending`,
+        title: `Well done ${child.name}! Awaiting parent approval.`,
         status: "success",
         variant: "solid",
         duration: 4000,
@@ -251,6 +260,7 @@ const Balance = () => {
         percentage={percentage}
         isAbleToClaim={isAbleToClaim}
         isLoading={isLoading}
+        isPendingApproval={isPendingApproval}
         handleOpenGoalPicker={handleOpenGoalPicker}
         handleClaimGoal={handleClaimGoal}
       />

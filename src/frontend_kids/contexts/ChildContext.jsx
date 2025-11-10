@@ -177,6 +177,12 @@ export default function ChildProvider({ children }) {
             };
             set("childGoal", returnedGoal, store);
             setGoal(returnedGoal);
+          } else {
+            // No active goal found, clear it
+            set("childGoal", noGoalEntity, store);
+            setGoal(noGoalEntity);
+            // Also clear pending approval state
+            set("goalPendingApproval", false, store);
           }
         }
         const filteredRewards = rewards?.[0].map((reward) => {

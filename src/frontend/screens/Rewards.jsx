@@ -108,6 +108,8 @@ const Rewards = () => {
             actor?.getGoals(child.id).then(async (returnedRewards) => {
               if ("ok" in returnedRewards) {
                 const rewards = Object.values(returnedRewards);
+                console.log("📦 Raw rewards from getGoals:", rewards[0]);
+                console.log("📊 Reward details:", rewards[0]?.map(r => ({ id: r.id, name: r.name, archived: r.archived })));
                 let currentGoalId;
                 await actor?.getCurrentGoal(child.id).then((returnedGoal) => {
                   currentGoalId = parseInt(returnedGoal);
@@ -267,6 +269,9 @@ const Rewards = () => {
       id: rewardID,
       archived: true,
     };
+    console.log("🗑️ Deleting reward:", { rewardID, reward_object });
+    console.log("🔍 selectedReward before delete:", selectedReward);
+    console.log("🔍 reward_object.archived:", reward_object.archived);
     const finalRewards = rewards.filter((reward) => reward.id !== rewardID);
     setRewards(finalRewards);
     set("rewardList", finalRewards);
@@ -275,8 +280,10 @@ const Rewards = () => {
     actor
       ?.updateGoal(child.id, rewardID, reward_object)
       .then((response) => {
+        console.log("✅ Delete response from backend:", response);
         if ("ok" in response) {
-          // Success - optimistic update is correct
+          // Success - force refresh from backend to ensure deleted item stays gone
+          getRewards({ callService: true, disableFullLoader: true });
           toast({
             title: "Reward deleted successfully",
             status: "success",
@@ -597,7 +604,7 @@ const Rewards = () => {
             // Backend returns ALL goals/rewards - replace with fresh data
             const allReturnedRewards = Object.values(response)[0];
             const activeRewards = allReturnedRewards
-              .filter(r => !r.archived)
+              .filter(r => r.archived === false)
               .map((reward) => ({
                 ...reward,
                 id: parseInt(reward.id),

@@ -144,11 +144,12 @@ const Balance = ({ handleTogglePopup }) => {
       balance: prevState.balance - goal.value,
     }));
     setBlockingChildUpdate(true);
-    handleUnsetGoal();
     actor
       ?.claimGoal(child.id, reward_id, date)
       .then(async (returnedClaimReward) => {
         if ("ok" in returnedClaimReward) {
+          // Only clear the goal AFTER successful claim
+          handleUnsetGoal();
           toast({
             title: `Yay - well deserved, ${child.name}.`,
             status: "success",
@@ -175,14 +176,59 @@ const Balance = ({ handleTogglePopup }) => {
             setBlockingChildUpdate(false);
           });
         } else {
-          console.error(returnedClaimReward.err);
+          console.error("Failed to claim goal:", returnedClaimReward.err);
+          // Rollback all optimistic updates
           handleUpdateTransactions(
             transactions.filter(
               (transaction) => transaction.id !== new_transactions.id
             )
           );
+          // Restore balance
+          setChild((prevState) => ({
+            ...prevState,
+            balance: prevState.balance + goal.value,
+          }));
+          // Restore goal
+          getReward({ rewardId: reward_id, revokeStateUpdate: false });
           setBlockingChildUpdate(false);
+          
+          // Format error message properly
+          const errorMsg = returnedClaimReward.err?.NotFound !== undefined 
+            ? "Goal not found in backend" 
+            : JSON.stringify(returnedClaimReward.err);
+          
+          toast({
+            title: "Failed to claim goal",
+            description: errorMsg,
+            status: "error",
+            duration: 4000,
+            isClosable: true,
+          });
         }
+      })
+      .catch((error) => {
+        console.error("Failed to claim goal (promise rejected):", error);
+        // Rollback all optimistic updates
+        handleUpdateTransactions(
+          transactions.filter(
+            (transaction) => transaction.id !== new_transactions.id
+          )
+        );
+        // Restore balance
+        setChild((prevState) => ({
+          ...prevState,
+          balance: prevState.balance + goal.value,
+        }));
+        // Restore goal
+        getReward({ rewardId: reward_id, revokeStateUpdate: false });
+        setBlockingChildUpdate(false);
+        toast({
+          title: "Failed to claim goal",
+          description: error.message || "Network error",
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
       })
       .finally(() => {
         setIsLoading(false);
@@ -244,6 +290,12 @@ const Balance = ({ handleTogglePopup }) => {
               if (!revokeStateUpdate) {
                 setGoal(returnedGoal);
               }
+            } else {
+              // No active goal found, clear it
+              set("childGoal", noGoalEntity);
+              if (!revokeStateUpdate) {
+                setGoal(noGoalEntity);
+              }
             }
           }
           const filteredRewards = rewards?.[0].map((reward) => {
@@ -265,10 +317,20 @@ const Balance = ({ handleTogglePopup }) => {
       })
       .finally(() => setIsLoading(false));
   };
-  const percentage = (
-    (Number(child?.balance) / Number(goal?.value)) *
-    100
-  ).toFixed(0);
+  const calculatePercentage = () => {
+    if (!goal?.value || goal?.value <= 0) {
+      return 0;
+    }
+    if (child?.balance === undefined || child?.balance === null) {
+      return 0;
+    }
+    const calc = (Number(child?.balance) / Number(goal?.value)) * 100;
+    if (isNaN(calc)) {
+      return 0;
+    }
+    return Math.min(calc, 100).toFixed(0);
+  };
+  const percentage = calculatePercentage();
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
 
   const handleOpenGoalPicker = async () => {

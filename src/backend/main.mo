@@ -478,7 +478,16 @@ persistent actor {
           Text.equal,
         );
         let myChildGoalsFormatted = Option.get(myChildGoals, Trie.empty());
-        return #ok(Trie.toArray(myChildGoalsFormatted, extractGoals));
+        let allGoals = Trie.toArray(myChildGoalsFormatted, extractGoals);
+
+        // Filter out archived goals before returning
+        let unArchivedGoals : Buffer.Buffer<Types.Goal> = Buffer.Buffer<Types.Goal>(0);
+        for (goal in allGoals.vals()) {
+          if (goal.archived == false) {
+            unArchivedGoals.add(goal);
+          };
+        };
+        return #ok(Buffer.toArray(unArchivedGoals));
       };
     };
   };
@@ -519,6 +528,7 @@ persistent actor {
   //----------------------------------------------------------------------------------------------------
 
   public func getGoals(childId : Text) : async Result.Result<[Types.Goal], Types.Error> {
+    Debug.print("📦 getGoals called for childId: " # childId);
     let unArchivedGoals : Buffer.Buffer<Types.Goal> = Buffer.Buffer<Types.Goal>(0);
     let myChildGoals = Trie.find(
       childToGoals,
@@ -527,11 +537,43 @@ persistent actor {
     );
     let myChildGoalsFormatted = Option.get(myChildGoals, Trie.empty());
     let agnosticArchivedGoalList = Trie.toArray(myChildGoalsFormatted, extractGoals);
+
+    Debug.print("📦 Total goals found: " # Nat.toText(agnosticArchivedGoalList.size()));
+
+    // MIGRATION: Reconstruct each goal to ensure archived field exists
+    var migratedTrie = myChildGoalsFormatted;
     for (goal in agnosticArchivedGoalList.vals()) {
-      if (goal.archived == false) {
-        unArchivedGoals.add(goal);
+      Debug.print("📦 Goal ID=" # Nat.toText(goal.id) # " name=" # goal.name # " archived=" # debug_show (goal.archived));
+      let migratedGoal : Types.Goal = {
+        name = goal.name;
+        value = goal.value;
+        id = goal.id;
+        archived = goal.archived; // This will default to false if missing
+      };
+      let (newTrie, _old) = Trie.put(
+        migratedTrie,
+        keyNat(goal.id),
+        Nat.equal,
+        migratedGoal,
+      );
+      migratedTrie := newTrie;
+
+      if (migratedGoal.archived == false) {
+        unArchivedGoals.add(migratedGoal);
       };
     };
+
+    Debug.print("📦 Returning " # Nat.toText(unArchivedGoals.size()) # " unarchived goals");
+
+    // Save migrated trie back
+    let (updatedChildToGoals, _) = Trie.put(
+      childToGoals,
+      keyText(childId),
+      Text.equal,
+      migratedTrie,
+    );
+    childToGoals := updatedChildToGoals;
+
     return #ok(Buffer.toArray(unArchivedGoals));
   };
 
@@ -730,15 +772,47 @@ persistent actor {
       return #err(#NotAuthorized);
     };
 
+    // Debug logging
+    Debug.print("🔧 updateGoal called for goalId: " # Nat.toText(goalId));
+    Debug.print("🔧 updatedGoal.archived = " # debug_show (updatedGoal.archived));
+    Debug.print("🔧 updatedGoal.name = " # updatedGoal.name);
+
+    // FORCE UPDATE: Retrieve existing goal and rebuild it to ensure archived field persists
+    let existingGoals = Trie.find(childToGoals, keyText(childId), Text.equal);
+    let existingGoalsFormatted = Option.get(existingGoals, Trie.empty());
+    let existingGoal = Trie.find(existingGoalsFormatted, keyNat(goalId), Nat.equal);
+
+    // Create new goal with explicit archived field
+    let finalUpdatedGoal : Types.Goal = {
+      name = updatedGoal.name;
+      value = updatedGoal.value;
+      id = updatedGoal.id;
+      archived = updatedGoal.archived;
+    };
+
+    Debug.print("🔧 finalUpdatedGoal.archived = " # debug_show (finalUpdatedGoal.archived));
+
     let updatedChildToGoals = Trie.put2D(
       childToGoals,
       keyText(childId),
       Text.equal,
       keyNat(goalId),
       Nat.equal,
-      updatedGoal,
+      finalUpdatedGoal,
     );
     childToGoals := updatedChildToGoals;
+
+    // Verify the update
+    let verifyGoals = Trie.find(childToGoals, keyText(childId), Text.equal);
+    let verifyGoalsFormatted = Option.get(verifyGoals, Trie.empty());
+    let verifiedGoal = Trie.find(verifyGoalsFormatted, keyNat(goalId), Nat.equal);
+    switch (verifiedGoal) {
+      case null { Debug.print("❌ Goal not found after update!") };
+      case (?g) {
+        Debug.print("✅ Verified goal.archived = " # debug_show (g.archived));
+      };
+    };
+
     return #ok(());
   };
 

@@ -6,7 +6,6 @@ import {
   HStack,
   Text,
   Spinner,
-  Progress,
 } from "@chakra-ui/react";
 import ActionsMenu from "./common/ActionsMenu";
 import { ActiveBackground } from "./BalanceCardBackgrounds";
@@ -47,6 +46,11 @@ const BalanceCardV2 = ({
   handleOpenGoalPicker,
   handleClaimGoal,
 }) => {
+  // Ensure percentage is a valid number (handle both string and number)
+  const safePercentage = (percentage !== undefined && percentage !== null && !isNaN(Number(percentage))) 
+    ? Number(percentage) 
+    : 0;
+
   return (
     <header
       style={{
@@ -175,28 +179,41 @@ const BalanceCardV2 = ({
           </Box>
         )}
 
-        {/* Button - Always shown (Set Goal or Claim Goal) */}
+        {/* Button - Always shown (Set Goal or Claim Goal) with integrated progress */}
         <Box textAlign="center" mt={goal?.hasGoal ? { base: -3, md: -2 } : { base: -1, md: 1 }} mb={2}>
           <Box
             as="button"
             onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
             disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
             sx={{
-              background: "rgba(255,255,255,0.2)",
+              position: "relative",
+              overflow: "hidden",
               borderRadius: "999px",
-              padding: "12px 24px",
+              padding: "14px 32px",
               color: "#fff",
               fontWeight: 700,
               fontSize: "18px",
-              minWidth: "140px",
+              minWidth: "210px", // 50% wider than before (was 140px)
               textAlign: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
               border: "2px solid rgba(255,255,255,0.3)",
               cursor: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
-              opacity: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? 0.4 : 1,
               transition: "all 0.2s",
+              background: "rgba(255,255,255,0.2)",
+              // Use pseudo-element for progress fill
+              _before: goal?.hasGoal ? {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: `${safePercentage}%`,
+                background: "#00D4FF",
+                borderRadius: "999px 0 0 999px", // Only round the left side
+                transition: "width 0.3s ease",
+                zIndex: 0,
+              } : {},
               _hover: {
-                background: (goal?.hasGoal && !isAbleToClaim) ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.3)",
                 transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(1.05)",
               },
               _active: {
@@ -204,25 +221,35 @@ const BalanceCardV2 = ({
               },
             }}
           >
-            {isLoading ? (
-              <Spinner size="sm" />
-            ) : goal?.hasGoal ? (
-              "Claim Goal"
-            ) : (
-              "Set a Goal"
-            )}
+            <Box 
+              as="span"
+              sx={{
+                position: "relative",
+                zIndex: 1,
+                opacity: (goal?.hasGoal && !isAbleToClaim) ? 0.6 : 1,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              {isLoading ? (
+                <Spinner size="sm" color="#0B334D" thickness="3px" />
+              ) : goal?.hasGoal ? (
+                "Claim Goal"
+              ) : (
+                "Set a Goal"
+              )}
+            </Box>
           </Box>
         </Box>
 
         {/* Goal Section - Only shown if goal exists */}
         {goal?.hasGoal && (
-          <Box>
+          <Box mt="2px">
             {/* Goal info with star */}
             <Box 
               display="flex" 
               justifyContent="space-between" 
               alignItems="center" 
-              mb={2}
+              mb={1}
               cursor="pointer"
               onClick={handleOpenGoalPicker}
               _hover={{
@@ -248,25 +275,8 @@ const BalanceCardV2 = ({
                 </Text>
               </HStack>
               <Text textStyle="smallHeavyWhite">
-                {percentage}%
+                {safePercentage}%
               </Text>
-            </Box>
-
-            {/* Linear Progress Bar */}
-            <Box mt={3}>
-              <Progress
-                value={percentage}
-                size="lg"
-                height="12px"
-                colorScheme="cyan"
-                borderRadius="full"
-                bg="rgba(255,255,255,0.2)"
-                sx={{
-                  "& > div": {
-                    backgroundColor: "#00D4FF",
-                  },
-                }}
-              />
             </Box>
           </Box>
         )}

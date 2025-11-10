@@ -20,6 +20,7 @@ const BalanceCard = ({
   percentage,
   isAbleToClaim,
   isLoading,
+  isPendingApproval,
   handleOpenGoalPicker,
   handleClaimGoal,
 }) => {
@@ -172,7 +173,7 @@ const BalanceCard = ({
                 handleOpenGoalPicker();
               }
             }}
-            disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
+            disabled={isLoading || isPendingApproval || (goal?.hasGoal && !isAbleToClaim)}
             sx={{
               position: "relative",
               overflow: "hidden",
@@ -185,12 +186,22 @@ const BalanceCard = ({
               textAlign: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
               border: "2px solid rgba(255,255,255,0.3)",
-              cursor: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
+              cursor: (isLoading || isPendingApproval || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
               transition: "all 0.2s",
-              // Background with progress overlay
-              background: goal?.hasGoal 
-                ? `linear-gradient(to right, #00D4FF ${safePercentage}%, rgba(255,255,255,0.2) ${safePercentage}%)`
-                : "rgba(255,255,255,0.2)",
+              background: "rgba(255,255,255,0.2)",
+              // Use pseudo-element for progress fill
+              _before: goal?.hasGoal ? {
+                content: '""',
+                position: "absolute",
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: `${safePercentage}%`,
+                background: "#00D4FF",
+                borderRadius: "999px 0 0 999px", // Only round the left side
+                transition: "width 0.3s ease",
+                zIndex: 0,
+              } : {},
               _hover: {
                 transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(1.05)",
               },
@@ -199,13 +210,25 @@ const BalanceCard = ({
               },
             }}
           >
-            {isLoading ? (
-              <Spinner size="sm" color="#0B334D" thickness="3px" />
-            ) : goal?.hasGoal ? (
-              "Claim Goal"
-            ) : (
-              "Set a Goal"
-            )}
+            <Box 
+              as="span"
+              sx={{
+                position: "relative",
+                zIndex: 1,
+                opacity: (goal?.hasGoal && !isAbleToClaim && !isPendingApproval) ? 0.6 : 1,
+                transition: "opacity 0.3s ease",
+              }}
+            >
+              {isLoading ? (
+                <Spinner size="sm" color="#0B334D" thickness="3px" />
+              ) : isPendingApproval ? (
+                "Awaiting Approval"
+              ) : goal?.hasGoal ? (
+                "Claim Goal"
+              ) : (
+                "Set a Goal"
+              )}
+            </Box>
           </Box>
         </Box>
 
