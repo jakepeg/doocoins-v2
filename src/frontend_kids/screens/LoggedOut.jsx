@@ -181,7 +181,7 @@ function LoggedOut() {
           )}
         </Box>
       </Box>
-      <Box mt={isNative ? 0 : "-30px"}>
+      <Box mt="-30px">
         <img src={ICBadge} alt="Internet Computer" />
       </Box>
     </Box>
