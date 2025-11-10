@@ -165,7 +165,7 @@ function LoggedOut() {
         </Text>
 
         <Box>
-          {checkForIOS() ? (
+          {!isNative && checkForIOS() ? (
             <div className="install-prompt">
               <p className="light prompt-text">
                 Install for a better experience
