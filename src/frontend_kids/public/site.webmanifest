@@ -4,30 +4,30 @@
   "description": "Children earn DooCoins for good behavior, completing chores and personal achievements. Web3 dApp built on blockchain",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "assets/images/favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "/192.png",
+      "src": "assets/images/192.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "/512.png",
+      "src": "assets/images/512.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any maskable"
     },
     {
-      "src": "/144.png",
+      "src": "assets/images/144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/1024.png",
+      "src": "assets/images/1024.png",
       "sizes": "1024x1024",
       "type": "image/png",
       "purpose": "any maskable"
