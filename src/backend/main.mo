@@ -422,10 +422,10 @@ persistent actor {
 
     for (task in agnosticArchivedChildTaskList.vals()) {
       Debug.print("📦 Task ID=" # Nat.toText(task.id) # " name=" # task.name # " archived=" # debug_show (task.archived));
-      
+
       let taskId = task.id;
       let alreadySeen = Array.find<Nat>(Buffer.toArray(seenIds), func(id) = id == taskId);
-      
+
       // Reconstruct task to ensure archived field exists
       let migratedTask : Types.Task = {
         name = task.name;
@@ -433,14 +433,14 @@ persistent actor {
         id = task.id;
         archived = task.archived;
       };
-      
+
       if (alreadySeen == null and migratedTask.archived == false) {
         // First occurrence and not archived - keep it
         let (newTrie, _old) = Trie.put(
           cleanedTrie,
           keyNat(taskId),
           Nat.equal,
-          migratedTask
+          migratedTask,
         );
         cleanedTrie := newTrie;
         seenIds.add(taskId);
