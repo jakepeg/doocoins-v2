@@ -9,6 +9,7 @@ import useClearContextState from "../hooks/useClearContextState";
 import MagicCode from "../components/MagicCode";
 import { set } from "idb-keyval";
 import { ChildContext } from "../contexts/ChildContext";
+import { Capacitor } from "@capacitor/core";
 
 function checkForIOS() {
   // already installed
@@ -43,6 +44,7 @@ function LoggedOut() {
   const clearContextState = useClearContextState();
   const [checkingCode, setCheckingCode] = useState(false)
   const [loadingState, setLoadingState] = useState(null)
+  const isNative = Capacitor.isNativePlatform();
 
   const [isAuthenticatedWithChildData, setIsAuthenticatedWithChildData] = useState(!!(isAuthenticated && child?.id))
 
@@ -179,7 +181,7 @@ function LoggedOut() {
           )}
         </Box>
       </Box>
-      <Box>
+      <Box mt={isNative ? 0 : "-30px"}>
         <img src={ICBadge} alt="Internet Computer" />
       </Box>
     </Box>
