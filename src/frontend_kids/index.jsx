@@ -26,7 +26,8 @@ if (Capacitor?.isNativePlatform?.()) {
 		right: 0;
 		height: 50px;
 		background-color: #0B334D;
-		z-index: -1;
+		z-index: 9999;
+		pointer-events: none;
 	`;
 	document.body.prepend(statusBarBg);
 	

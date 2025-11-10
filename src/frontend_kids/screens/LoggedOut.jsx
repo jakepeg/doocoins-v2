@@ -49,6 +49,15 @@ function LoggedOut() {
   const [isAuthenticatedWithChildData, setIsAuthenticatedWithChildData] = useState(!!(isAuthenticated && child?.id))
 
   React.useEffect(() => {
+    // Set status bar background to dark blue for native
+    if (isNative) {
+      import('@capacitor/status-bar').then(({ StatusBar }) => {
+        StatusBar.setBackgroundColor({ color: '#0B334D' }).catch(() => {});
+      });
+    }
+  }, [isNative]);
+
+  React.useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       logout();
       clearContextState();
