@@ -110,6 +110,14 @@ const Rewards = () => {
                 const rewards = Object.values(returnedRewards);
                 console.log("📦 Raw rewards from getGoals:", rewards[0]);
                 console.log("📊 Reward details:", rewards[0]?.map(r => ({ id: r.id, name: r.name, archived: r.archived })));
+                
+                // Check for duplicates
+                const ids = rewards[0]?.map(r => r.id) || [];
+                const duplicateIds = ids.filter((id, index) => ids.indexOf(id) !== index);
+                if (duplicateIds.length > 0) {
+                  console.error("🚨 DUPLICATES DETECTED in backend response! IDs:", duplicateIds);
+                }
+                
                 let currentGoalId;
                 await actor?.getCurrentGoal(child.id).then((returnedGoal) => {
                   currentGoalId = parseInt(returnedGoal);
@@ -125,6 +133,7 @@ const Rewards = () => {
                       currentGoalId === parseInt(reward.id) ? true : false,
                   };
                 });
+                console.log("💾 Setting rewards to localStorage and state:", filteredRewards.length, "rewards");
                 set("rewardList", filteredRewards);
                 if (!revokeStateUpdate) {
                   setRewards(filteredRewards);
@@ -282,8 +291,7 @@ const Rewards = () => {
       .then((response) => {
         console.log("✅ Delete response from backend:", response);
         if ("ok" in response) {
-          // Success - force refresh from backend to ensure deleted item stays gone
-          getRewards({ callService: true, disableFullLoader: true });
+          // Success - optimistic update already removed it, no need to refetch
           toast({
             title: "Reward deleted successfully",
             status: "success",

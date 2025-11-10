@@ -402,8 +402,7 @@ persistent actor {
 
   // public shared (msg) func getTasks(childId : Text) : async Result.Result<[Types.Task], Types.Error> {
   public shared func getTasks(childId : Text) : async Result.Result<[Types.Task], Types.Error> {
-    let unArchivedChildsTasks : Buffer.Buffer<Types.Task> = Buffer.Buffer<Types.Task>(0);
-
+    Debug.print("📦 getTasks called for childId: " # childId);
     let myChildTasks = Trie.find(
       childToTasks,
       keyText(childId),
@@ -412,11 +411,62 @@ persistent actor {
     let myChildTasksFormatted = Option.get(myChildTasks, Trie.empty());
     let agnosticArchivedChildTaskList = Trie.toArray(myChildTasksFormatted, extractTasks);
 
+    Debug.print("📦 Total tasks found: " # Nat.toText(agnosticArchivedChildTaskList.size()));
+
+    // AUTO-CLEANUP: Build new trie with only unique, unarchived tasks
+    var cleanedTrie : Trie.Trie<Nat, Types.Task> = Trie.empty();
+    var seenIds : Buffer.Buffer<Nat> = Buffer.Buffer<Nat>(0);
+    let unArchivedChildsTasks : Buffer.Buffer<Types.Task> = Buffer.Buffer<Types.Task>(0);
+    var duplicatesRemoved : Nat = 0;
+    var archivedRemoved : Nat = 0;
+
     for (task in agnosticArchivedChildTaskList.vals()) {
-      if (task.archived == false) {
-        unArchivedChildsTasks.add(task);
+      Debug.print("📦 Task ID=" # Nat.toText(task.id) # " name=" # task.name # " archived=" # debug_show (task.archived));
+      
+      let taskId = task.id;
+      let alreadySeen = Array.find<Nat>(Buffer.toArray(seenIds), func(id) = id == taskId);
+      
+      // Reconstruct task to ensure archived field exists
+      let migratedTask : Types.Task = {
+        name = task.name;
+        value = task.value;
+        id = task.id;
+        archived = task.archived;
+      };
+      
+      if (alreadySeen == null and migratedTask.archived == false) {
+        // First occurrence and not archived - keep it
+        let (newTrie, _old) = Trie.put(
+          cleanedTrie,
+          keyNat(taskId),
+          Nat.equal,
+          migratedTask
+        );
+        cleanedTrie := newTrie;
+        seenIds.add(taskId);
+        unArchivedChildsTasks.add(migratedTask);
+      } else if (alreadySeen != null) {
+        duplicatesRemoved += 1;
+        Debug.print("🗑️ Auto-removing DUPLICATE task ID=" # Nat.toText(taskId));
+      } else if (migratedTask.archived == true) {
+        archivedRemoved += 1;
+        Debug.print("🗑️ Auto-removing ARCHIVED task ID=" # Nat.toText(taskId));
       };
     };
+
+    if (duplicatesRemoved > 0 or archivedRemoved > 0) {
+      Debug.print("🧹 AUTO-CLEANUP: Removed " # Nat.toText(duplicatesRemoved) # " duplicate tasks and " # Nat.toText(archivedRemoved) # " archived tasks");
+      // Save cleaned trie back to storage
+      let (updatedChildToTasks, _) = Trie.put(
+        childToTasks,
+        keyText(childId),
+        Text.equal,
+        cleanedTrie,
+      );
+      childToTasks := updatedChildToTasks;
+    };
+
+    Debug.print("📦 Returning " # Nat.toText(unArchivedChildsTasks.size()) # " unarchived tasks");
     return #ok(Buffer.toArray(unArchivedChildsTasks));
   };
 
@@ -529,7 +579,6 @@ persistent actor {
 
   public func getGoals(childId : Text) : async Result.Result<[Types.Goal], Types.Error> {
     Debug.print("📦 getGoals called for childId: " # childId);
-    let unArchivedGoals : Buffer.Buffer<Types.Goal> = Buffer.Buffer<Types.Goal>(0);
     let myChildGoals = Trie.find(
       childToGoals,
       keyText(childId),
@@ -540,40 +589,60 @@ persistent actor {
 
     Debug.print("📦 Total goals found: " # Nat.toText(agnosticArchivedGoalList.size()));
 
-    // MIGRATION: Reconstruct each goal to ensure archived field exists
-    var migratedTrie = myChildGoalsFormatted;
+    // AUTO-CLEANUP: Build new trie with only unique, unarchived goals
+    var cleanedTrie : Trie.Trie<Nat, Types.Goal> = Trie.empty();
+    var seenIds : Buffer.Buffer<Nat> = Buffer.Buffer<Nat>(0);
+    let unArchivedGoals : Buffer.Buffer<Types.Goal> = Buffer.Buffer<Types.Goal>(0);
+    var duplicatesRemoved : Nat = 0;
+    var archivedRemoved : Nat = 0;
+
     for (goal in agnosticArchivedGoalList.vals()) {
       Debug.print("📦 Goal ID=" # Nat.toText(goal.id) # " name=" # goal.name # " archived=" # debug_show (goal.archived));
+
+      let goalId = goal.id;
+      let alreadySeen = Array.find<Nat>(Buffer.toArray(seenIds), func(id) = id == goalId);
+
+      // Reconstruct goal to ensure archived field exists
       let migratedGoal : Types.Goal = {
         name = goal.name;
         value = goal.value;
         id = goal.id;
-        archived = goal.archived; // This will default to false if missing
+        archived = goal.archived;
       };
-      let (newTrie, _old) = Trie.put(
-        migratedTrie,
-        keyNat(goal.id),
-        Nat.equal,
-        migratedGoal,
-      );
-      migratedTrie := newTrie;
 
-      if (migratedGoal.archived == false) {
+      if (alreadySeen == null and migratedGoal.archived == false) {
+        // First occurrence and not archived - keep it
+        let (newTrie, _old) = Trie.put(
+          cleanedTrie,
+          keyNat(goalId),
+          Nat.equal,
+          migratedGoal,
+        );
+        cleanedTrie := newTrie;
+        seenIds.add(goalId);
         unArchivedGoals.add(migratedGoal);
+      } else if (alreadySeen != null) {
+        duplicatesRemoved += 1;
+        Debug.print("🗑️ Auto-removing DUPLICATE goal ID=" # Nat.toText(goalId));
+      } else if (migratedGoal.archived == true) {
+        archivedRemoved += 1;
+        Debug.print("🗑️ Auto-removing ARCHIVED goal ID=" # Nat.toText(goalId));
       };
     };
 
+    if (duplicatesRemoved > 0 or archivedRemoved > 0) {
+      Debug.print("🧹 AUTO-CLEANUP: Removed " # Nat.toText(duplicatesRemoved) # " duplicates and " # Nat.toText(archivedRemoved) # " archived goals");
+      // Save cleaned trie back to storage
+      let (updatedChildToGoals, _) = Trie.put(
+        childToGoals,
+        keyText(childId),
+        Text.equal,
+        cleanedTrie,
+      );
+      childToGoals := updatedChildToGoals;
+    };
+
     Debug.print("📦 Returning " # Nat.toText(unArchivedGoals.size()) # " unarchived goals");
-
-    // Save migrated trie back
-    let (updatedChildToGoals, _) = Trie.put(
-      childToGoals,
-      keyText(childId),
-      Text.equal,
-      migratedTrie,
-    );
-    childToGoals := updatedChildToGoals;
-
     return #ok(Buffer.toArray(unArchivedGoals));
   };
 
@@ -1282,5 +1351,68 @@ persistent actor {
         #ok(formatted);
       };
     };
+  };
+
+  // CLEANUP FUNCTION: Remove duplicates and archived goals for a child
+  public shared (msg) func cleanupGoals(childId : Text) : async Result.Result<Text, Types.Error> {
+    let callerId = msg.caller;
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    let myChildGoals = Trie.find(
+      childToGoals,
+      keyText(childId),
+      Text.equal,
+    );
+    let myChildGoalsFormatted = Option.get(myChildGoals, Trie.empty());
+    let allGoals = Trie.toArray(myChildGoalsFormatted, extractGoals);
+
+    Debug.print("🧹 CLEANUP: Found " # Nat.toText(allGoals.size()) # " total goals");
+
+    // Create new trie with only unique, unarchived goals (keep first occurrence)
+    var cleanedTrie : Trie.Trie<Nat, Types.Goal> = Trie.empty();
+    var seenIds : Buffer.Buffer<Nat> = Buffer.Buffer<Nat>(0);
+    var removedCount : Nat = 0;
+
+    for (goal in allGoals.vals()) {
+      let goalId = goal.id;
+      let alreadySeen = Array.find<Nat>(Buffer.toArray(seenIds), func(id) = id == goalId);
+
+      if (alreadySeen == null and goal.archived == false) {
+        // First occurrence and not archived - keep it
+        let (newTrie, _old) = Trie.put(
+          cleanedTrie,
+          keyNat(goalId),
+          Nat.equal,
+          goal,
+        );
+        cleanedTrie := newTrie;
+        seenIds.add(goalId);
+        Debug.print("✅ Keeping goal ID=" # Nat.toText(goalId) # " name=" # goal.name);
+      } else {
+        // Duplicate or archived - remove it
+        removedCount += 1;
+        if (alreadySeen != null) {
+          Debug.print("🗑️ Removing DUPLICATE goal ID=" # Nat.toText(goalId) # " name=" # goal.name);
+        } else {
+          Debug.print("🗑️ Removing ARCHIVED goal ID=" # Nat.toText(goalId) # " name=" # goal.name);
+        };
+      };
+    };
+
+    // Save cleaned trie back
+    let (updatedChildToGoals, _) = Trie.put(
+      childToGoals,
+      keyText(childId),
+      Text.equal,
+      cleanedTrie,
+    );
+    childToGoals := updatedChildToGoals;
+
+    let resultMessage = "Cleaned up " # Nat.toText(removedCount) # " goals. Kept " # Nat.toText(seenIds.size()) # " unique unarchived goals.";
+    Debug.print("🧹 CLEANUP COMPLETE: " # resultMessage);
+
+    return #ok(resultMessage);
   };
 };
