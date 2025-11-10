@@ -6,14 +6,13 @@ import {
   HStack,
   Text,
   Spinner,
-  Progress,
 } from "@chakra-ui/react";
 import { ActiveBackground } from "./BalanceCardBackgrounds";
 import { Capacitor } from "@capacitor/core";
 
 /**
  * Simplified Balance Card for Kids App
- * Features: Linear progress bar, no kebab menu, Set Goal/Claim Goal button
+ * Features: Progress bar integrated into button, no kebab menu, Set Goal/Claim Goal button
  */
 const BalanceCard = ({
   child,
@@ -25,6 +24,47 @@ const BalanceCard = ({
   handleClaimGoal,
 }) => {
   const isNative = Capacitor.isNativePlatform();
+  
+  // Ensure percentage is a valid number (handle both string and number)
+  const safePercentage = (percentage !== undefined && percentage !== null && !isNaN(Number(percentage))) 
+    ? Number(percentage) 
+    : 0;
+  
+  // Show loading spinner if no child data
+  if (!child) {
+    return (
+      <header
+        style={{
+          borderRadius: "12px",
+          overflow: "hidden",
+          WebkitBorderRadius: "12px",
+          position: "relative",
+          paddingLeft: "15px",
+          paddingRight: "15px",
+          minHeight: "275px",
+          maxHeight: "275px",
+          width: "100%",
+          maxWidth: "768px",
+          margin: isNative ? "10px auto 30px auto" : "20px auto 30px auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        className={`${styles.hero}`}
+      >
+        <ActiveBackground />
+        <Box position="relative" zIndex={1}>
+          <Spinner 
+            size="xl" 
+            color="#fff" 
+            thickness="4px"
+            width="60px"
+            height="60px"
+          />
+        </Box>
+      </header>
+    );
+  }
   
   return (
     <header
@@ -120,7 +160,7 @@ const BalanceCard = ({
           </Box>
         )}
 
-        {/* Button - Always shown (Set Goal or Claim Goal) */}
+        {/* Button - Always shown (Set Goal or Claim Goal) with integrated progress */}
         <Box textAlign="center" mt={goal?.hasGoal ? { base: "-26px", md: "-22px" } : { base: "-18px", md: "-10px" }} mb={1}>
           <Box
             as="button"
@@ -134,21 +174,24 @@ const BalanceCard = ({
             }}
             disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
             sx={{
-              background: "rgba(255,255,255,0.2)",
+              position: "relative",
+              overflow: "hidden",
               borderRadius: "999px",
-              padding: "12px 24px",
+              padding: "14px 32px",
               color: "#fff",
               fontWeight: 700,
               fontSize: "18px",
-              minWidth: "140px",
+              minWidth: "210px", // 50% wider than before (was 140px)
               textAlign: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
               border: "2px solid rgba(255,255,255,0.3)",
               cursor: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
-              opacity: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? 0.4 : 1,
               transition: "all 0.2s",
+              // Background with progress overlay
+              background: goal?.hasGoal 
+                ? `linear-gradient(to right, #00D4FF ${safePercentage}%, rgba(255,255,255,0.2) ${safePercentage}%)`
+                : "rgba(255,255,255,0.2)",
               _hover: {
-                background: (goal?.hasGoal && !isAbleToClaim) ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.3)",
                 transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(1.05)",
               },
               _active: {
@@ -168,7 +211,7 @@ const BalanceCard = ({
 
         {/* Goal Section - Only shown if goal exists */}
         {goal?.hasGoal && (
-          <Box mt="-6px" position="relative" zIndex={100}>
+          <Box mt="2px" position="relative" zIndex={100}>
             {/* Goal info with star */}
             <Box 
               display="flex" 
@@ -217,25 +260,8 @@ const BalanceCard = ({
                   color: "#fff",
                 }}
               >
-                {percentage}%
+                {safePercentage}%
               </Text>
-            </Box>
-
-            {/* Linear Progress Bar */}
-            <Box mt={2}>
-              <Progress
-                value={percentage}
-                size="lg"
-                height="12px"
-                colorScheme="cyan"
-                borderRadius="full"
-                bg="rgba(255,255,255,0.2)"
-                sx={{
-                  "& > div": {
-                    backgroundColor: "#00D4FF",
-                  },
-                }}
-              />
             </Box>
           </Box>
         )}

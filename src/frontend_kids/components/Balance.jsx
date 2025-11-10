@@ -114,10 +114,35 @@ const Balance = () => {
       })
       .finally(() => setIsLoading(false));
   };
-  const percentage = (
-    (Number(child?.balance) / Number(goal?.value)) *
-    100
-  ).toFixed(0);
+  const calculatePercentage = () => {
+    console.log('Percentage calc - full goal object:', goal);
+    console.log('Percentage calc - full child object:', child);
+    console.log('Percentage calc:', { 
+      goalValue: goal?.value, 
+      childBalance: child?.balance,
+      hasGoal: goal?.hasGoal,
+      goalValueType: typeof goal?.value,
+      childBalanceType: typeof child?.balance
+    });
+    if (!goal?.value || goal?.value <= 0) {
+      console.log('No goal value, returning 0');
+      return 0;
+    }
+    if (child?.balance === undefined || child?.balance === null) {
+      console.log('No child balance, returning 0');
+      return 0;
+    }
+    const calc = (Number(child?.balance) / Number(goal?.value)) * 100;
+    console.log('Calculated percentage:', calc);
+    if (isNaN(calc)) {
+      console.log('Result is NaN, returning 0');
+      return 0;
+    }
+    const result = Math.min(calc, 100).toFixed(0);
+    console.log('Final percentage result:', result);
+    return result;
+  };
+  const percentage = calculatePercentage();
   const isAbleToClaim = balance >= goal?.value && goal?.value > 0;
 
   const handleOpenGoalPicker = async () => {
