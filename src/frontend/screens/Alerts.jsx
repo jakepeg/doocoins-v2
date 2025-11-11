@@ -520,18 +520,6 @@ const Alerts = () => {
                         strId: reward.id,
                       }});
                     }}
-                    onDelete={() => {
-                      setList((prevState) => ({
-                        ...prevState,
-                        rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.id),
-                      }));
-                      rejectRequest({ reward: {
-                        ...reward,
-                        value: parseInt(reward.value),
-                        id: parseInt(reward.reward || reward.id),
-                        strId: reward.id,
-                      }});
-                    }}
                   />
                 </li>
               ))}
@@ -542,13 +530,6 @@ const Alerts = () => {
                     type="task"
                     onApprove={() => approveRequest({ task: { ...task, value: parseInt(task.value) }})}
                     onDecline={() => {
-                      setList((prevState) => ({
-                        ...prevState,
-                        tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
-                      }));
-                      rejectRequest({ task: { ...task, value: parseInt(task.value) }});
-                    }}
-                    onDelete={() => {
                       setList((prevState) => ({
                         ...prevState,
                         tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),

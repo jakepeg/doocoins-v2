@@ -15,13 +15,7 @@ const CloseIcon = (props) => (
   </svg>
 );
 
-const TrashIcon = (props) => (
-  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zm3.5-9h1v9h-1v-9zm4 0h1v9h-1v-9zM15.5 4l-1-1h-5l-1 1H5v2h14V4h-3.5z" />
-  </svg>
-);
-
-const RequestItem = ({ request, onApprove, onDecline, onDelete, type = "task" }) => {
+const RequestItem = ({ request, onApprove, onDecline, type = "task" }) => {
   return (
     <Box
       backgroundColor="white"
@@ -47,22 +41,15 @@ const RequestItem = ({ request, onApprove, onDecline, onDelete, type = "task" })
           actions={[
             {
               id: "approve",
-              label: `Approve ${type}`,
+              label: "Approve",
               icon: <CheckIcon />,
               onClick: onApprove,
             },
             {
               id: "decline",
-              label: `Decline ${type}`,
+              label: "Decline",
               icon: <CloseIcon />,
               onClick: onDecline,
-            },
-            {
-              id: "delete",
-              label: `Delete ${type}`,
-              isDestructive: true,
-              icon: <TrashIcon color="#E53E3E" />,
-              onClick: onDelete,
             },
           ]}
         />
