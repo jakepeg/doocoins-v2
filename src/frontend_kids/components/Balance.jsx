@@ -43,15 +43,21 @@ const Balance = () => {
   // Watch for goal changes from context (e.g., when parent approves and goal is cleared or goal changes)
   React.useEffect(() => {
     // If we have a goal update, check if we need to clear pending state
-    if (goal) {
+    if (goal && child) {
       // Goal was cleared (hasGoal is false) while we had pending approval
       if (!goal.hasGoal && isPendingApproval) {
-        console.log("Goal approved by parent, clearing pending state");
+        console.log("Goal approved by parent (goal cleared), clearing pending state");
+        setIsPendingApproval(false);
+        set("goalPendingApproval", false, store);
+      }
+      // Goal is still set but balance dropped below goal value (was paid out)
+      else if (goal.hasGoal && isPendingApproval && child.balance < goal.value) {
+        console.log("Goal approved by parent (balance decreased), clearing pending state");
         setIsPendingApproval(false);
         set("goalPendingApproval", false, store);
       }
     }
-  }, [goal?.hasGoal, isPendingApproval]);
+  }, [goal?.hasGoal, goal?.value, child?.balance, isPendingApproval]);
   
   // Refetch data when window gains focus (e.g., after switching back from parent app)
   React.useEffect(() => {
@@ -62,12 +68,18 @@ const Balance = () => {
         
         // After refetch, check if goal was approved
         const currentGoal = await get("childGoal", store);
+        const currentChild = await get("selectedChild", store);
+        const currentBalance = await get(`balance-${currentChild}`, store);
         const pendingApproval = await get("goalPendingApproval", store);
         
-        if (pendingApproval && currentGoal && !currentGoal.hasGoal) {
-          console.log("Detected goal approval on focus, clearing pending state");
-          setIsPendingApproval(false);
-          set("goalPendingApproval", false, store);
+        if (pendingApproval) {
+          // Check if goal was cleared OR if balance dropped below goal value (paid out)
+          if ((currentGoal && !currentGoal.hasGoal) || 
+              (currentGoal && currentGoal.hasGoal && currentBalance < currentGoal.value)) {
+            console.log("Detected goal approval on focus, clearing pending state");
+            setIsPendingApproval(false);
+            set("goalPendingApproval", false, store);
+          }
         }
       }
     };
@@ -87,12 +99,15 @@ const Balance = () => {
         });
         setIsLoading(false);
         
-        // Check if goal was cleared (approved by parent) while we had pending approval
+        // Check if goal was cleared (approved by parent) OR if balance dropped below goal (paid out)
         const pendingApproval = await get("goalPendingApproval", store);
-        if (pendingApproval && !data.hasGoal) {
-          // Goal was approved and cleared, remove pending state
-          setIsPendingApproval(false);
-          set("goalPendingApproval", false, store);
+        if (pendingApproval) {
+          if (!data.hasGoal || (data.hasGoal && child?.balance < parseInt(data.value))) {
+            // Goal was approved and cleared or paid out, remove pending state
+            console.log("Goal approved (detected in getChildGoal), clearing pending state");
+            setIsPendingApproval(false);
+            set("goalPendingApproval", false, store);
+          }
         }
       } else {
         // No goal set, clear pending approval state if it exists
