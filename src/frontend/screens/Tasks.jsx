@@ -508,7 +508,7 @@ const Tasks = () => {
                 ))}
               </ul>
             </div>
-            {tasks.length > TASK_LIMIT && !showAll && (
+            {tasks.length > ITEM_LIMIT && !showAll && (
               <Box textAlign="center" marginTop={4} marginBottom={2}>
                 <Text
                   as="button"

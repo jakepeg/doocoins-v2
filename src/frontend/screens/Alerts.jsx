@@ -559,7 +559,7 @@ const Alerts = () => {
                 ))}
               </ul>
             </div>
-            {requests.length > REQUEST_LIMIT && !showAll && (
+            {totalRequests > ITEM_LIMIT && !showAll && (
               <Box textAlign="center" marginTop={4} marginBottom={2}>
                 <Text
                   as="button"
@@ -569,7 +569,7 @@ const Alerts = () => {
                   onClick={() => setShowAll(true)}
                   textDecoration="underline"
                 >
-                  See all requests ({requests.length} total)
+                  See all requests ({totalRequests} total)
                 </Text>
               </Box>
             )}
