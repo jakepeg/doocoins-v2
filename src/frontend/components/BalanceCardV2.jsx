@@ -136,6 +136,9 @@ const BalanceCardV2 = ({
             letterSpacing: "-0.5px",
             textAlign: "left",
             marginTop: "10px",
+            fontSize: "36px",
+            fontWeight: 300,
+            color: "#fff",
           }}
           title={child?.name}
         >
