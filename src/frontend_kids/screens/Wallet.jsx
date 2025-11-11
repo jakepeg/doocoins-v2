@@ -24,6 +24,8 @@ const Wallet = () => {
     transactions: false,
     child: !child ? true : false,
   });
+  const [showAll, setShowAll] = React.useState(false);
+  const TRANSACTION_LIMIT = 20;
 
   React.useEffect(() => {
     if (child) {
@@ -120,14 +122,19 @@ const Wallet = () => {
   }, [actor, child]);
 
   const sortTransactionsByDate = React.useCallback(() => {
-    transactions.sort((a, b) => {
+    const sorted = [...transactions].sort((a, b) => {
       const dateA = new Date(parseInt(a.completedDate) * 1000);
       const dateB = new Date(parseInt(b.completedDate) * 1000);
       return dateB - dateA;
     });
 
-    return transactions;
+    return sorted;
   }, [transactions]);
+
+  const displayedTransactions = React.useMemo(() => {
+    const sorted = sortTransactionsByDate();
+    return showAll ? sorted : sorted.slice(0, TRANSACTION_LIMIT);
+  }, [sortTransactionsByDate, showAll]);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -167,7 +174,7 @@ const Wallet = () => {
           <>
             {transactions.length > 0 ? (
               <>
-                {sortTransactionsByDate().map((transaction) => (
+                {displayedTransactions.map((transaction) => (
                   <Box
                     backgroundColor="white"
                     borderRadius="md"
@@ -202,6 +209,25 @@ const Wallet = () => {
                     </Box>
                   </Box>
                 ))}
+                {transactions.length > TRANSACTION_LIMIT && !showAll && (
+                  <Box
+                    textAlign="center"
+                    marginTop={4}
+                    marginBottom={2}
+                  >
+                    <Text
+                      as="button"
+                      fontSize="24px"
+                      fontWeight="400"
+                      color="#00A4D7"
+                      cursor="pointer"
+                      onClick={() => setShowAll(true)}
+                      textDecoration="underline"
+                    >
+                      See all activity ({transactions.length} total)
+                    </Text>
+                  </Box>
+                )}
               </>
             ) : (
               <EmptyStateMessage>

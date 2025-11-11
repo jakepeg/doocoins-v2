@@ -27,6 +27,8 @@ const Tasks = () => {
     singles: false,
     child: !child ? true : false,
   });
+  const [showAll, setShowAll] = React.useState(false);
+  const TASK_LIMIT = 20;
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -164,23 +166,42 @@ const Tasks = () => {
     }
   };
 
+  const displayedTasks = React.useMemo(() => {
+    return showAll ? tasks : tasks?.slice(0, TASK_LIMIT);
+  }, [tasks, showAll]);
+
   const TaskList = React.useMemo(() => {
     return (
       <>
-        {tasks?.length ? (
+        {displayedTasks?.length ? (
           <div className="example">
             <ul className="child-list" style={{ position: "relative" }}>
-              {tasks.map((task) => (
+              {displayedTasks.map((task) => (
                 <React.Fragment key={task.id}>
                   <ChildTask handleReq={handleReq} key={task.id} task={task} />
                 </React.Fragment>
               ))}
             </ul>
+            {tasks.length > TASK_LIMIT && !showAll && (
+              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "8px" }}>
+                <Text
+                  as="button"
+                  fontSize="24px"
+                  fontWeight="400"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all tasks ({tasks.length} total)
+                </Text>
+              </div>
+            )}
           </div>
         ) : null}
       </>
     );
-  }, [tasks]);
+  }, [displayedTasks, tasks, showAll]);
 
   const isNative = Capacitor.isNativePlatform();
 

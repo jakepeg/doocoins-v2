@@ -29,6 +29,8 @@ const Rewards = () => {
     singles: false,
     child: !child ? true : false,
   });
+  const [showAll, setShowAll] = React.useState(false);
+  const REWARD_LIMIT = 20;
 
   React.useEffect(() => {
     if (isNewToSystem[strings.CALLOUT_REWARDS_LIST]) {
@@ -290,13 +292,17 @@ const Rewards = () => {
     }
   };
 
+  const displayedRewards = React.useMemo(() => {
+    return showAll ? rewards : rewards?.slice(0, REWARD_LIMIT);
+  }, [rewards, showAll]);
+
   const RewardList = React.useMemo(() => {
     return (
       <>
-        {rewards?.length ? (
+        {displayedRewards?.length ? (
           <div className="example">
             <ul className="list-wrapper">
-              {rewards.map((reward) => (
+              {displayedRewards.map((reward) => (
                 <React.Fragment key={reward.id}>
                   <ChildReward
                     handleRemove={(selectedReward) => {
@@ -325,11 +331,26 @@ const Rewards = () => {
                 </React.Fragment>
               ))}
             </ul>
+            {rewards.length > REWARD_LIMIT && !showAll && (
+              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "8px" }}>
+                <Text
+                  as="button"
+                  fontSize="24px"
+                  fontWeight="400"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all rewards ({rewards.length} total)
+                </Text>
+              </div>
+            )}
           </div>
         ) : null}
       </>
     );
-  }, [rewards, isOpen]);
+  }, [displayedRewards, rewards, showAll, isOpen]);
 
   const isNative = Capacitor.isNativePlatform();
 
