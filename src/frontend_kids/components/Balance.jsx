@@ -27,6 +27,10 @@ const Balance = () => {
   React.useEffect(() => {
     if (!blockingChildUpdate) {
       getChildGoal();
+      // Fetch fresh data from backend to ensure goal state is up-to-date
+      if (child?.id && actor) {
+        refetchContent({ refetch: true });
+      }
     }
     // Check if there's a pending approval state
     get("goalPendingApproval", store).then((pending) => {
@@ -34,7 +38,43 @@ const Balance = () => {
         setIsPendingApproval(true);
       }
     });
-  }, []);
+  }, [child?.id, actor]);
+
+  // Watch for goal changes from context (e.g., when parent approves and goal is cleared or goal changes)
+  React.useEffect(() => {
+    // If we have a goal update, check if we need to clear pending state
+    if (goal) {
+      // Goal was cleared (hasGoal is false) while we had pending approval
+      if (!goal.hasGoal && isPendingApproval) {
+        console.log("Goal approved by parent, clearing pending state");
+        setIsPendingApproval(false);
+        set("goalPendingApproval", false, store);
+      }
+    }
+  }, [goal?.hasGoal, isPendingApproval]);
+  
+  // Refetch data when window gains focus (e.g., after switching back from parent app)
+  React.useEffect(() => {
+    const handleFocus = async () => {
+      if (child?.id && actor && !refetching) {
+        console.log("Window focused, refreshing goal data");
+        await refetchContent({ refetch: true });
+        
+        // After refetch, check if goal was approved
+        const currentGoal = await get("childGoal", store);
+        const pendingApproval = await get("goalPendingApproval", store);
+        
+        if (pendingApproval && currentGoal && !currentGoal.hasGoal) {
+          console.log("Detected goal approval on focus, clearing pending state");
+          setIsPendingApproval(false);
+          set("goalPendingApproval", false, store);
+        }
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [child?.id, actor, refetching]);
 
   const getChildGoal = () => {
     get("childGoal", store).then(async (data) => {
@@ -187,6 +227,10 @@ const Balance = () => {
           };
           setGoal(newGoal);
           await set("childGoal", newGoal, store);
+          
+          // Clear any pending approval state when setting a new goal
+          setIsPendingApproval(false);
+          await set("goalPendingApproval", false, store);
         }
 
         // Dispatch custom event to notify other components

@@ -36,17 +36,8 @@ const BalanceCard = ({
     return (
       <header
         style={{
-          borderRadius: "12px",
-          overflow: "hidden",
-          WebkitBorderRadius: "12px",
-          position: "relative",
-          paddingLeft: "15px",
-          paddingRight: "15px",
           minHeight: "275px",
           maxHeight: "275px",
-          width: "100%",
-          maxWidth: "768px",
-          margin: isNative ? "10px auto 30px auto" : "20px auto 30px auto",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -74,13 +65,10 @@ const BalanceCard = ({
         overflow: "hidden",
         WebkitBorderRadius: "12px",
         position: "relative",
-        paddingLeft: "15px",
-        paddingRight: "15px",
+        paddingLeft: "10px",
+        paddingRight: "10px",
         minHeight: "275px",
         maxHeight: "275px",
-        width: "100%",
-        maxWidth: "768px",
-        margin: isNative ? "10px auto 30px auto" : "20px auto 30px auto",
       }}
       className={`${styles.hero}`}
     >
@@ -106,13 +94,12 @@ const BalanceCard = ({
         <Text 
           textStyle="largeLightWhite"
           sx={{
-            maxWidth: "100%",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: "-10px",
+            marginTop: "15px",
             fontSize: "36px",
             fontWeight: 300,
             color: "#fff",

@@ -68,6 +68,11 @@ header {
 box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 }
 
+/* Override pull-to-refresh overflow to allow shadow to show */
+.ptr, .ptr__children {
+  overflow: visible !important;
+}
+
 .screen-title {
   font-size: 24px;
   font-weight: 400;
@@ -90,15 +95,14 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 }
 
 .light-panel {
-  background-color: #DFF3FF;
-  /* min-height: 95%; */
-  /* min-height: calc(100vh - 50px); */
+  background-color: transparent;
+  /* min-height: 100vh; */
+  padding-bottom: 100px; /* Space for bottom nav */
 }
 
 .panel-header-wrapper {
-  padding: 0 20px 20px 0;
-  margin: 20px 0 10px 0;
-  background-color: #DFF3FF;
+  padding: 5px 0 20px 0;
+  margin: 20px 0 10px;
 }
 
 .dark {
@@ -123,11 +127,11 @@ box-shadow: 0px 10px 37px -12px rgba(0,0,0,0.75);
 
 .example {
   text-align: left;
-  background-color: #DFF3FF;
+  padding: 0;
 }
 
 .transactions {
-  padding: 0;
+  padding: 0 16px 20px 16px;
 }
 
 .list-wrapper {
