@@ -110,31 +110,31 @@ const ChildItem = ({ child, handleTogglePopup }) => {
           actions={[
             {
               id: "view",
-              label: "View child",
+              label: `View ${child.name}`,
               icon: <EyeIcon />,
               onClick: () => handleSelectChild(),
             },
             {
               id: "share",
-              label: "Share child",
+              label: `Share ${child.name}`,
               icon: <ShareIcon />,
               onClick: handleShareChild,
             },
             {
               id: "invite",
-              label: "Invite to app",
+              label: `Invite ${child.name}`,
               icon: <MailIcon />,
               onClick: () => navigate("/invite", { state: { child } }),
             },
             {
               id: "edit",
-              label: "Edit name",
+              label: `Edit ${child.name}`,
               icon: <PencilIcon />,
               onClick: () => handleTogglePopup?.(true, child, "edit"),
             },
             {
               id: "delete",
-              label: "Delete child",
+              label: `Delete ${child.name}`,
               icon: <TrashIcon />,
               onClick: () => handleTogglePopup?.(true, child, "delete"),
               isDestructive: true,

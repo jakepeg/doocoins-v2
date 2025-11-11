@@ -89,19 +89,19 @@ const BalanceCardV2 = ({
           actions={[
             {
               id: "share",
-              label: "Share child",
+              label: `Share ${child?.name}`,
               icon: <ShareIcon />,
               onClick: handleShareChild,
             },
             {
               id: "invite",
-              label: "Invite to app",
+              label: `Invite ${child?.name}`,
               icon: <MailIcon />,
               onClick: handleNavigateToInvite,
             },
             {
               id: "edit",
-              label: "Edit name",
+              label: `Edit ${child?.name}`,
               icon: <PencilIcon />,
               onClick: handleToggleEditPopup,
             },
