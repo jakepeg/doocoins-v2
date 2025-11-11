@@ -51,7 +51,7 @@ const ActionsMenu = ({
         onClick={(e) => e.stopPropagation()}
       />
       <Portal>
-        <MenuList borderRadius="16px" boxShadow="lg" py={{ base: "6px", md: "6px" }}>
+        <MenuList borderRadius="16px" boxShadow="lg" py={{ base: "6px", md: "6px" }} px={{ base: "6px", md: "6px" }}>
           {actions
             .filter(Boolean)
             .map((action, idx) => {
