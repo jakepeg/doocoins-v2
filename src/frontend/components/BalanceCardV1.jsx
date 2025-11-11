@@ -195,7 +195,7 @@ const BalanceCardV1 = ({
                 },
               }}
             >
-              {isLoading ? <Spinner size="sm" /> : "Set a Goal"}
+              {isLoading ? <Spinner boxSize="32px" color="#0B334D" thickness="4px" speed="0.65s" /> : "Set a Goal"}
             </Box>
           )}
 
@@ -299,7 +299,7 @@ const BalanceCardV1 = ({
                   },
                 }}
               >
-                {isLoading ? <Spinner size="sm" /> : "Claim Goal"}
+                {isLoading ? <Spinner boxSize="32px" color="#0B334D" thickness="4px" speed="0.65s" /> : "Claim Goal"}
               </Box>
               <HStack
                 spacing={1}
