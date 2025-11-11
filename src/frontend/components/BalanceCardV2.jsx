@@ -208,7 +208,7 @@ const BalanceCardV2 = ({
                 left: 0,
                 bottom: 0,
                 width: `${safePercentage}%`,
-                background: "#00D4FF",
+                background: "#00A4D7",
                 borderRadius: "999px 0 0 999px", // Only round the left side
                 transition: "width 0.3s ease",
                 zIndex: 0,

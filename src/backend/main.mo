@@ -1078,6 +1078,9 @@ persistent actor {
   public shared func getRewardReqs(childId : Text) : async [Types.RewardRequest] {
     // Create an empty buffer to store the reward requests
     let rewardsRequestBuffer : Buffer.Buffer<Types.RewardRequest> = Buffer.Buffer<Types.RewardRequest>(0);
+    // Buffer to track seen IDs for deduplication
+    let seenIds : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
+
     // Find the child's reward requests in the Trie
     let allChildRewards = Trie.find(
       childRequestsRewards,
@@ -1088,10 +1091,49 @@ persistent actor {
     let allChildrenRewardsFormatted = Option.get(allChildRewards, Trie.empty());
     // Convert the child's requests (potentially empty Trie) to a list of "RewardRequest" objects
     let agnosticArchivedRewardslist = Trie.toArray(allChildrenRewardsFormatted, extractReReq);
-    // Iterate through the list of requests and add them to the buffer
+
+    // Iterate through the list of requests and add them to the buffer (with deduplication)
     for (reward in agnosticArchivedRewardslist.vals()) {
-      rewardsRequestBuffer.add(reward);
+      // Check if we've already seen this ID
+      var isDuplicate = false;
+      for (seenId in seenIds.vals()) {
+        if (seenId == reward.id) {
+          isDuplicate := true;
+        };
+      };
+
+      // Only add if not a duplicate
+      if (not isDuplicate) {
+        rewardsRequestBuffer.add(reward);
+        seenIds.add(reward.id);
+      };
     };
+
+    // If we found duplicates, clean up the trie
+    if (seenIds.size() < agnosticArchivedRewardslist.size()) {
+      Debug.print("🧹 Cleaning up duplicate reward requests for child: " # childId);
+      // Rebuild the trie with only unique requests
+      var cleanedTrie : Types.RewardReqMap = Trie.empty();
+      for (reward in rewardsRequestBuffer.vals()) {
+        let (newTrie, _) = Trie.put(
+          cleanedTrie,
+          keyText(reward.id),
+          Text.equal,
+          reward,
+        );
+        cleanedTrie := newTrie;
+      };
+
+      // Update the main trie
+      let (updatedChildRequests, _) = Trie.put(
+        childRequestsRewards,
+        keyText(childId),
+        Text.equal,
+        cleanedTrie,
+      );
+      childRequestsRewards := updatedChildRequests;
+    };
+
     // Convert the buffer containing requests to a Motoko array and return it
     return Buffer.toArray(rewardsRequestBuffer);
   };
@@ -1147,6 +1189,8 @@ persistent actor {
   //  public shared (msg) func getTaskReqs(childId : Text) : async [Types.TaskRequest] {
   public shared func getTaskReqs(childId : Text) : async [Types.TaskRequest] {
     let tasksRequestBuffer : Buffer.Buffer<Types.TaskRequest> = Buffer.Buffer<Types.TaskRequest>(0);
+    // Buffer to track seen IDs for deduplication
+    let seenIds : Buffer.Buffer<Text> = Buffer.Buffer<Text>(0);
 
     let allChildTasks = Trie.find(
       childRequestsTasks,
@@ -1158,8 +1202,46 @@ persistent actor {
 
     let agnosticArchivedTaskList = Trie.toArray(allChildrenTasksFormatted, extractTasksReq);
 
+    // Iterate through the list of requests and add them to the buffer (with deduplication)
     for (task in agnosticArchivedTaskList.vals()) {
-      tasksRequestBuffer.add(task);
+      // Check if we've already seen this ID
+      var isDuplicate = false;
+      for (seenId in seenIds.vals()) {
+        if (seenId == task.id) {
+          isDuplicate := true;
+        };
+      };
+
+      // Only add if not a duplicate
+      if (not isDuplicate) {
+        tasksRequestBuffer.add(task);
+        seenIds.add(task.id);
+      };
+    };
+
+    // If we found duplicates, clean up the trie
+    if (seenIds.size() < agnosticArchivedTaskList.size()) {
+      Debug.print("🧹 Cleaning up duplicate task requests for child: " # childId);
+      // Rebuild the trie with only unique requests
+      var cleanedTrie : Types.TaskReqMap = Trie.empty();
+      for (task in tasksRequestBuffer.vals()) {
+        let (newTrie, _) = Trie.put(
+          cleanedTrie,
+          keyText(task.id),
+          Text.equal,
+          task,
+        );
+        cleanedTrie := newTrie;
+      };
+
+      // Update the main trie
+      let (updatedChildRequests, _) = Trie.put(
+        childRequestsTasks,
+        keyText(childId),
+        Text.equal,
+        cleanedTrie,
+      );
+      childRequestsTasks := updatedChildRequests;
     };
 
     return Buffer.toArray(tasksRequestBuffer);
