@@ -374,6 +374,9 @@ const Alerts = () => {
           .claimGoal(child.id, parseInt(reward.id), date)
           .then(async (returnedClaimReward) => {
             if ("ok" in returnedClaimReward) {
+              // Clear the current goal after claiming (reset to no goal)
+              await actor?.currentGoal(child.id, 0);
+              
               rejectRequest({ reward });
               // getReward({ rewardId: reward_id, revokeStateUpdate: true });
               actor?.getChildren().then(async (returnedChilren) => {
