@@ -173,7 +173,7 @@ const Wallet = () => {
         ) : (
           <>
             {transactions.length > 0 ? (
-              <>
+              <Box marginBottom={showAll || transactions.length <= TRANSACTION_LIMIT ? "80px" : "0"}>
                 {displayedTransactions.map((transaction) => (
                   <Box
                     backgroundColor="white"
@@ -213,7 +213,7 @@ const Wallet = () => {
                   <Box
                     textAlign="center"
                     marginTop={4}
-                    marginBottom={2}
+                    marginBottom="80px"
                   >
                     <Text
                       as="button"
@@ -228,7 +228,7 @@ const Wallet = () => {
                     </Text>
                   </Box>
                 )}
-              </>
+              </Box>
             ) : (
               <EmptyStateMessage>
                 {`No transactions yet. <br /> Get busy and start earning, ${child?.name}!`}

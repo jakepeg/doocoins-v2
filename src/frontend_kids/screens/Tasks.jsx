@@ -174,7 +174,7 @@ const Tasks = () => {
     return (
       <>
         {displayedTasks?.length ? (
-          <div className="example">
+          <div className="example" style={{ marginBottom: showAll || tasks.length <= TASK_LIMIT ? "80px" : "0" }}>
             <ul className="child-list" style={{ position: "relative" }}>
               {displayedTasks.map((task) => (
                 <React.Fragment key={task.id}>
@@ -183,7 +183,7 @@ const Tasks = () => {
               ))}
             </ul>
             {tasks.length > TASK_LIMIT && !showAll && (
-              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "8px" }}>
+              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "80px" }}>
                 <Text
                   as="button"
                   fontSize="24px"

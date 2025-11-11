@@ -300,7 +300,7 @@ const Rewards = () => {
     return (
       <>
         {displayedRewards?.length ? (
-          <div className="example">
+          <div className="example" style={{ marginBottom: showAll || rewards.length <= REWARD_LIMIT ? "80px" : "0" }}>
             <ul className="list-wrapper">
               {displayedRewards.map((reward) => (
                 <React.Fragment key={reward.id}>
@@ -332,7 +332,7 @@ const Rewards = () => {
               ))}
             </ul>
             {rewards.length > REWARD_LIMIT && !showAll && (
-              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "8px" }}>
+              <div style={{ textAlign: "center", marginTop: "16px", marginBottom: "80px" }}>
                 <Text
                   as="button"
                   fontSize="24px"
