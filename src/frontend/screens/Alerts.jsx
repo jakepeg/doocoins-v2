@@ -10,6 +10,8 @@ import EmptyStateMessage from "../components/EmptyStateMessage";
 
 const Alerts = () => {
   const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const ITEM_LIMIT = 20;
 
   const toast = useToast();
   const {
@@ -486,61 +488,92 @@ const Alerts = () => {
     }
   };
 
+  const displayedRequests = React.useMemo(() => {
+    const allRequests = [...(list.rewards || []), ...(list.tasks || [])];
+    return showAll ? allRequests : allRequests.slice(0, ITEM_LIMIT);
+  }, [list.rewards, list.tasks, showAll]);
+
+  const displayedRewards = React.useMemo(() => {
+    return displayedRequests.filter(item => list.rewards?.some(r => r.id === item.id));
+  }, [displayedRequests, list.rewards]);
+
+  const displayedTasks = React.useMemo(() => {
+    return displayedRequests.filter(item => list.tasks?.some(t => t.id === item.id));
+  }, [displayedRequests, list.tasks]);
+
+  const totalRequests = (list.tasks?.length || 0) + (list.rewards?.length || 0);
+
   const AlertsList = React.useMemo(() => {
     return (
       <>
         {list.tasks?.length || list.rewards?.length ? (
-          <div className="example">
-            <ul className="list-wrapper">
-              {list.rewards.map((reward, idx) => (
-                <li key={reward.id || idx} style={{ listStyle: "none" }}>
-                  <RequestItem
-                    request={{
-                      ...reward,
-                      value: parseInt(reward.value),
-                      id: parseInt(reward.reward || reward.id),
-                      strId: reward.id,
-                    }}
-                    type="reward"
-                    onApprove={() => approveRequest({ reward: {
-                      ...reward,
-                      value: parseInt(reward.value),
-                      id: parseInt(reward.reward || reward.id),
-                      strId: reward.id,
-                    }})}
-                    onDecline={() => {
-                      setList((prevState) => ({
-                        ...prevState,
-                        rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.id),
-                      }));
-                      rejectRequest({ reward: {
+          <>
+            <div className="example">
+              <ul className="list-wrapper">
+                {displayedRewards.map((reward, idx) => (
+                  <li key={reward.id || idx} style={{ listStyle: "none" }}>
+                    <RequestItem
+                      request={{
                         ...reward,
                         value: parseInt(reward.value),
                         id: parseInt(reward.reward || reward.id),
                         strId: reward.id,
-                      }});
-                    }}
-                  />
-                </li>
-              ))}
-              {list.tasks.map((task, idx) => (
-                <li key={task.id || idx} style={{ listStyle: "none" }}>
-                  <RequestItem
-                    request={{ ...task, value: parseInt(task.value) }}
-                    type="task"
-                    onApprove={() => approveRequest({ task: { ...task, value: parseInt(task.value) }})}
-                    onDecline={() => {
-                      setList((prevState) => ({
-                        ...prevState,
-                        tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
-                      }));
-                      rejectRequest({ task: { ...task, value: parseInt(task.value) }});
-                    }}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
+                      }}
+                      type="reward"
+                      onApprove={() => approveRequest({ reward: {
+                        ...reward,
+                        value: parseInt(reward.value),
+                        id: parseInt(reward.reward || reward.id),
+                        strId: reward.id,
+                      }})}
+                      onDecline={() => {
+                        setList((prevState) => ({
+                          ...prevState,
+                          rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.id),
+                        }));
+                        rejectRequest({ reward: {
+                          ...reward,
+                          value: parseInt(reward.value),
+                          id: parseInt(reward.reward || reward.id),
+                          strId: reward.id,
+                        }});
+                      }}
+                    />
+                  </li>
+                ))}
+                {displayedTasks.map((task, idx) => (
+                  <li key={task.id || idx} style={{ listStyle: "none" }}>
+                    <RequestItem
+                      request={{ ...task, value: parseInt(task.value) }}
+                      type="task"
+                      onApprove={() => approveRequest({ task: { ...task, value: parseInt(task.value) }})}
+                      onDecline={() => {
+                        setList((prevState) => ({
+                          ...prevState,
+                          tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
+                        }));
+                        rejectRequest({ task: { ...task, value: parseInt(task.value) }});
+                      }}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {requests.length > REQUEST_LIMIT && !showAll && (
+              <Box textAlign="center" marginTop={4} marginBottom={2}>
+                <Text
+                  as="button"
+                  textStyle="largeLightDark"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all requests ({requests.length} total)
+                </Text>
+              </Box>
+            )}
+          </>
         ) : null}
 
         {!list.tasks?.length && !list.rewards?.length && (
@@ -550,7 +583,7 @@ const Alerts = () => {
         )}
       </>
     );
-  }, [list.tasks, list.rewards]);
+  }, [displayedRewards, displayedTasks, list.tasks, list.rewards, showAll, totalRequests]);
 
   // if (loading) {
   //   return <LoadingSpinner />;

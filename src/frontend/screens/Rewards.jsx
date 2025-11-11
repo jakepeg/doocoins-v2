@@ -51,6 +51,8 @@ const Rewards = () => {
     add_reward: false,
     remove_goal: false,
   });
+  const [showAll, setShowAll] = React.useState(false);
+  const ITEM_LIMIT = 20;
 
   React.useEffect(() => {
     if(!blockingChildUpdate) {
@@ -657,22 +659,43 @@ const Rewards = () => {
     }
   };
 
+  const displayedRewards = React.useMemo(() => {
+    if (!rewards) return [];
+    return showAll ? rewards : rewards.slice(0, ITEM_LIMIT);
+  }, [rewards, showAll]);
+
   const RewardList = React.useMemo(() => {
     return (
       <>
         {rewards?.length ? (
-          <div className="example">
-            <ul className="list-wrapper">
-              {rewards.map((reward) => (
-                <li key={reward.id} style={{ listStyle: "none" }}>
-                  <RewardItem
-                    reward={reward}
-                    handleTogglePopup={handleTogglePopup}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
+          <>
+            <div className="example">
+              <ul className="list-wrapper">
+                {displayedRewards.map((reward) => (
+                  <li key={reward.id} style={{ listStyle: "none" }}>
+                    <RewardItem
+                      reward={reward}
+                      handleTogglePopup={handleTogglePopup}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {rewards.length > ITEM_LIMIT && !showAll && (
+              <Box textAlign="center" marginTop={4} marginBottom={2}>
+                <Text
+                  as="button"
+                  textStyle="largeLightDark"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all rewards ({rewards.length} total)
+                </Text>
+              </Box>
+            )}
+          </>
         ) : (
           <EmptyStateMessage>
             {`Rewards are how children spend DooCoins. A reward can be a treat, like watching a movie, getting a new toy, or enjoying extra screen time. <br /><br /> Tap the + icon to set rewards for ${child?.name}.`}
@@ -680,7 +703,7 @@ const Rewards = () => {
         )}
       </>
     );
-  }, [rewards, child?.name]);
+  }, [displayedRewards, rewards, showAll, child?.name]);
 
   const isModalOpen =
     showPopup.delete ||

@@ -40,6 +40,8 @@ function ChildList() {
   });
   const [selectedChild, setSelectedChild] = React.useState(null);
   const [loader, setLoader] = React.useState({ init: true, singles: false });
+  const [showAll, setShowAll] = React.useState(false);
+  const ITEM_LIMIT = 20;
 
   React.useEffect(() => {
     if (actor && isAuthenticated) {
@@ -233,26 +235,47 @@ function ChildList() {
 
   // trailingActions removed
 
+  const displayedChildren = React.useMemo(() => {
+    if (!children) return [];
+    return showAll ? children : children.slice(0, ITEM_LIMIT);
+  }, [children, showAll]);
+
   const ChildrenList = React.useMemo(() => {
     return (
       <>
         {children?.length ? (
-          <div className="example">
-            <ul className="list-wrapper">
-              {children.length > 0 &&
-                children.map((child, index) => (
-                  <li key={child.id} style={{ listStyle: "none" }}>
-                    <ChildItem
-                      child={child}
-                      handleUpdateOpenItemId={setOpenItemId}
-                      openItemId={openItemId}
-                      index={index}
-                      handleTogglePopup={handleTogglePopup}
-                    />
-                  </li>
-                ))}
-            </ul>
-          </div>
+          <>
+            <div className="example">
+              <ul className="list-wrapper">
+                {displayedChildren.length > 0 &&
+                  displayedChildren.map((child, index) => (
+                    <li key={child.id} style={{ listStyle: "none" }}>
+                      <ChildItem
+                        child={child}
+                        handleUpdateOpenItemId={setOpenItemId}
+                        openItemId={openItemId}
+                        index={index}
+                        handleTogglePopup={handleTogglePopup}
+                      />
+                    </li>
+                  ))}
+              </ul>
+            </div>
+            {children.length > ITEM_LIMIT && !showAll && (
+              <Box textAlign="center" marginTop={4} marginBottom={2}>
+                <Text
+                  as="button"
+                  textStyle="largeLightDark"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all children ({children.length} total)
+                </Text>
+              </Box>
+            )}
+          </>
         ) : (
           // Empty state with V1 upgrade instructions
           <Box p={6} textAlign="center" color="white">
@@ -295,7 +318,7 @@ function ChildList() {
         )}
       </>
     );
-  }, [children]);
+  }, [displayedChildren, children, showAll]);
 
   return (
     <>

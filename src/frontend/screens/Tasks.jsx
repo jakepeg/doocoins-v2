@@ -43,6 +43,8 @@ const Tasks = () => {
     add_task: false,
     approve: false,
   });
+  const [showAll, setShowAll] = React.useState(false);
+  const ITEM_LIMIT = 20;
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -484,22 +486,43 @@ const Tasks = () => {
     });
   }
 
+  const displayedTasks = React.useMemo(() => {
+    if (!tasks) return [];
+    return showAll ? tasks : tasks.slice(0, ITEM_LIMIT);
+  }, [tasks, showAll]);
+
   const TaskList = React.useMemo(() => {
     return (
       <>
         {tasks?.length ? (
-          <div className="example">
-            <ul className="list-wrapper">
-              {tasks.map((task) => (
-                <li key={task.id} style={{ listStyle: "none" }}>
-                  <TaskItem
-                    task={task}
-                    handleTogglePopup={handleTogglePopup}
-                  />
-                </li>
-              ))}
-            </ul>
-          </div>
+          <>
+            <div className="example">
+              <ul className="list-wrapper">
+                {displayedTasks.map((task) => (
+                  <li key={task.id} style={{ listStyle: "none" }}>
+                    <TaskItem
+                      task={task}
+                      handleTogglePopup={handleTogglePopup}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+            {tasks.length > TASK_LIMIT && !showAll && (
+              <Box textAlign="center" marginTop={4} marginBottom={2}>
+                <Text
+                  as="button"
+                  textStyle="largeLightDark"
+                  color="#00A4D7"
+                  cursor="pointer"
+                  onClick={() => setShowAll(true)}
+                  textDecoration="underline"
+                >
+                  See all tasks ({tasks.length} total)
+                </Text>
+              </Box>
+            )}
+          </>
         ) : (
           <EmptyStateMessage>
             {`Tasks are how kids earn DooCoins, they can be things like chores, achievements, good behaviour, or a weekly allowance. <br /><br /> Tap the + icon to set tasks for ${child?.name}.`}
@@ -507,7 +530,7 @@ const Tasks = () => {
         )}
       </>
     );
-  }, [tasks, child?.name]);
+  }, [displayedTasks, tasks, showAll, child?.name]);
 
   const isModalOpen =
     showPopup.delete ||
