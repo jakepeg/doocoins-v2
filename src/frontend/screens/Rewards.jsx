@@ -28,9 +28,15 @@ const Rewards = () => {
   const navigate = useNavigate();
   const [rewards, setRewards] = React.useState([]);
   const [currentGoal, setCurrentGoal] = React.useState(null);
-  const { child, setChild, setGoal, blockingChildUpdate, setBlockingChildUpdate } =
-    React.useContext(ChildContext);
-  const [transactions, setTransactions] = React.useState([]);
+  const {
+    child,
+    setChild,
+    setGoal,
+    blockingChildUpdate,
+    setBlockingChildUpdate,
+    transactions,
+    setTransactions,
+  } = React.useContext(ChildContext);
   const [loader, setLoader] = React.useState({
     init: true,
     singles: false,
@@ -503,6 +509,18 @@ const Rewards = () => {
             );
             set("childList", updatedChildrenData);
             await getChildren({ revokeStateUpdate: true });
+            
+            // Fetch updated transactions from backend to sync with wallet
+            actor?.getTransactions(child.id).then((returnedTransactions) => {
+              if ("ok" in returnedTransactions) {
+                const backendTransactions = Object.values(returnedTransactions);
+                if (backendTransactions.length) {
+                  set("transactionList", backendTransactions[0]);
+                  setTransactions(backendTransactions[0]);
+                }
+              }
+            });
+            
             setBlockingChildUpdate(false)
             setLoader((prevState) => ({ ...prevState, init: false }));
           });

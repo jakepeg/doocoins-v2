@@ -28,6 +28,8 @@ const Tasks = () => {
     setChild,
     blockingChildUpdate,
     setBlockingChildUpdate,
+    transactions,
+    setTransactions,
   } = React.useContext(ChildContext);
   const [loader, setLoader] = React.useState({
     init: true,
@@ -41,7 +43,6 @@ const Tasks = () => {
     add_task: false,
     approve: false,
   });
-  const [transactions, setTransactions] = React.useState([]);
 
   React.useEffect(() => {
     if (!blockingChildUpdate) {
@@ -57,16 +58,6 @@ const Tasks = () => {
       }));
     }
   }, [child]);
-
-  function getTransactions() {
-    get("transactionList").then(async (val) => {
-      setTransactions(val || []);
-    });
-  }
-
-  React.useEffect(() => {
-    getTransactions();
-  }, []);
 
   const getChildren = async ({ revokeStateUpdate = false }) => {
     await get("selectedChild").then(async (data) => {
@@ -457,6 +448,18 @@ const Tasks = () => {
             );
             set("childList", updatedChildrenData);
             await getChildren({ revokeStateUpdate: true });
+            
+            // Fetch updated transactions from backend to sync with wallet
+            actor?.getTransactions(child.id).then((returnedTransactions) => {
+              if ("ok" in returnedTransactions) {
+                const backendTransactions = Object.values(returnedTransactions);
+                if (backendTransactions.length) {
+                  set("transactionList", backendTransactions[0]);
+                  setTransactions(backendTransactions[0]);
+                }
+              }
+            });
+            
             setLoader((prevState) => ({ ...prevState, init: false }));
             setBlockingChildUpdate(false);
           } else {
