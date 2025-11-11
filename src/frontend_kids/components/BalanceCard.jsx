@@ -220,7 +220,7 @@ const BalanceCard = ({
               }}
             >
               {isLoading ? (
-                <Spinner size="sm" color="#0B334D" thickness="3px" />
+                <Spinner boxSize="32px" color="#0B334D" thickness="4px" speed="0.65s" />
               ) : isPendingApproval ? (
                 "Awaiting Approval"
               ) : goal?.hasGoal ? (
