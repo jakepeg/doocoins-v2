@@ -405,12 +405,24 @@ const Alerts = () => {
                   (transaction) => transaction.id !== new_transactions.id
                 )
               );
+              // Restore balance
+              setChild((prevState) => ({
+                ...prevState,
+                balance: prevState.balance + reward.value,
+              }));
               // Restore reward to the list
               setList((prevState) => ({
                 ...prevState,
                 rewards: [...(prevState.rewards || []), reward],
               }));
               setBlockingChildUpdate(false);
+              toast({
+                title: "Unable to claim reward.",
+                description: returnedClaimReward.err?.BalanceNotEnough ? "Not enough balance." : "Please try again.",
+                status: "error",
+                duration: 4000,
+                isClosable: true,
+              });
             }
           })
           .finally(() => {
