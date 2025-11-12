@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Text, VStack, HStack } from "@chakra-ui/react";
-import ActionsMenu from "../common/ActionsMenu";
+import ActionsMenu from "../../../shared/components/ActionsMenu";
 
 // Inline icons
 const CheckIcon = (props) => (

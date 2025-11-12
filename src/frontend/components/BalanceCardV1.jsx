@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
-import ActionsMenu from "./common/ActionsMenu";
+import ActionsMenu from "../../shared/components/ActionsMenu";
 
 // Inline icons for the actions menu
 const ShareIcon = (props) => (

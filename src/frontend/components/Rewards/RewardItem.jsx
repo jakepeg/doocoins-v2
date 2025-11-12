@@ -1,6 +1,6 @@
 import React from "react";
 import { Box, Text, VStack } from "@chakra-ui/react";
-import ActionsMenu from "../common/ActionsMenu";
+import ActionsMenu from "../../../shared/components/ActionsMenu";
 import { ChildContext } from "../../contexts/ChildContext";
 
 // Inline icons

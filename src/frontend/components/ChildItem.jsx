@@ -3,7 +3,7 @@ import { Box, Text, VStack, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { set } from "idb-keyval";
 import { ChildContext } from "../contexts/ChildContext";
-import ActionsMenu from "./common/ActionsMenu";
+import ActionsMenu from "../../shared/components/ActionsMenu";
 
 export const swipeContainerStyles = {
   backgroundColor: "#FFF",

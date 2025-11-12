@@ -5,6 +5,7 @@ import { ReactComponent as TickIcon } from "../../assets/images/tick.svg";
 import { ReactComponent as CloseIcon } from "../../assets/images/close.svg";
 import { ReactComponent as GoalIcon } from "../../assets/images/goal.svg";
 import { ReactComponent as SmileyIcon } from "../../assets/images/smiley.svg";
+import ActionsMenu from "../../../shared/components/ActionsMenu";
 
 const ChildReward = ({
   reward,
@@ -62,65 +63,46 @@ const ChildReward = ({
         <Box display="flex" alignItems="center" gap={2}>
           {showEmoji ? (
             <ScaleFade initialScale={0.9} in={isOpen}>
-            <Box
+              <Box
                 p={1}
                 background="#FBB03B"
                 ml={2}
                 cursor="pointer"
                 borderRadius={100}
               >
-            <SmileyIcon 
-                    width="18px"
-                    height="18px"
-                   />
-                   </Box>
+                <SmileyIcon 
+                  width="18px"
+                  height="18px"
+                />
+              </Box>
             </ScaleFade>
           ) : (
-            <>
-              {child.balance >= reward.value ? (
-                <Box
-                  ml={2}
-                  p={1}
-                  background="#129FAA"
-                  cursor="pointer"
-                  borderRadius={100}
-                  onClick={() => handleClick(reward, "req")}
-                >
-                  <TickIcon 
-                    width="18px"
-                    height="18px"
-                   />
-                </Box>
-              ) : reward.active ? (
-                <Box
-                  ml={2}
-                  p={1}
-                  background="red"
-                  cursor="pointer"
-                  borderRadius={100}
-                  onClick={() => handleClick(reward, "close")}
-                >
-                  <CloseIcon 
-                    stroke="#fff" 
-                    width="20px" 
-                    height="20px" 
-                  />
-                </Box>
-              ) : (
-                <Box
-                  ml={2}
-                  p={0}
-                  cursor="pointer"
-                  borderRadius={100}
-                  onClick={() => handleClick(reward, "set")}
-                >
-                  <GoalIcon 
-                    fill="#129FAA" 
-                    width="26px" 
-                    height="26px" />
-                </Box>
-              )}
-            </>
+            <ActionsMenu
+              actions={[
+                child.balance >= reward.value
+                  ? {
+                      id: "claim",
+                      label: "Claim Reward",
+                      icon: <TickIcon width="18px" height="18px" />,
+                      onClick: () => handleClick(reward, "req"),
+                    }
+                  : reward.active
+                  ? {
+                      id: "remove-goal",
+                      label: "Remove Goal",
+                      icon: <CloseIcon stroke="currentColor" width="20px" height="20px" />,
+                      onClick: () => handleClick(reward, "close"),
+                      isDestructive: true,
+                    }
+                  : {
+                      id: "set-goal",
+                      label: "Set as Goal",
+                      icon: <GoalIcon fill="currentColor" width="26px" height="26px" />,
+                      onClick: () => handleClick(reward, "set"),
+                    },
+              ]}
+              iconColor="#0b334d"
+            />
           )}
         </Box>
       </Box>

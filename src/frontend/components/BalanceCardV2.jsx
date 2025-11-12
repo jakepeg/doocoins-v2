@@ -7,7 +7,7 @@ import {
   Text,
   Spinner,
 } from "@chakra-ui/react";
-import ActionsMenu from "./common/ActionsMenu";
+import ActionsMenu from "../../shared/components/ActionsMenu";
 import { ActiveBackground } from "./BalanceCardBackgrounds";
 
 // Inline icons for the actions menu
