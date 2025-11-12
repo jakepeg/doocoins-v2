@@ -108,6 +108,8 @@ const BalanceCardV2 = ({
           ]}
           ariaLabel="Child actions menu"
           iconColor="black"
+          buttonBg="transparent"
+          buttonHoverBg="whiteAlpha.200"
         />
       </Box>
 

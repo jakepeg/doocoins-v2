@@ -35,7 +35,9 @@ const ActionsMenu = ({
   ariaLabel = "More options", 
   placement = "bottom-end", 
   size = "md",
-  iconColor = "#0b334d"
+  iconColor = "#0b334d",
+  buttonBg = "white",
+  buttonHoverBg = "#F7FAFC"
 }) => {
   return (
     <Menu placement={placement} computePositionOnMount>
@@ -46,9 +48,9 @@ const ActionsMenu = ({
         size={size}
         fontSize="lg"
         color={iconColor}
-        bg="white"
-        _hover={{ bg: "#F7FAFC" }}
-        _active={{ bg: "#F7FAFC" }}
+        bg={buttonBg}
+        _hover={{ bg: buttonHoverBg }}
+        _active={{ bg: buttonHoverBg }}
         onClick={(e) => e.stopPropagation()}
       />
       <Portal>
