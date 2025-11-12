@@ -145,8 +145,10 @@ const Tasks = () => {
   }
 
   React.useEffect(() => {
-    if (child) getTasks({ callService: true }); // Always fetch fresh data from backend
-  }, [actor, child]);
+    if (child) {
+      getTasks({ callService: false }); // Load from storage first, only fetch if storage empty
+    }
+  }, [actor, child?.id]);
 
   // Add listener to refresh tasks when updated from other components
   React.useEffect(() => {
@@ -159,13 +161,11 @@ const Tasks = () => {
 
     // Listen for custom event
     window.addEventListener("tasksUpdated", refreshTasksFromStorage);
-    window.addEventListener("focus", refreshTasksFromStorage);
 
     return () => {
       window.removeEventListener("tasksUpdated", refreshTasksFromStorage);
-      window.removeEventListener("focus", refreshTasksFromStorage);
     };
-  }, [loader.init]);
+  }, [child, actor]);
 
   const handleTogglePopup = (isOpen, task, popup) => {
     setSelectedTask(task);

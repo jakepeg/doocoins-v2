@@ -539,8 +539,10 @@ const Rewards = () => {
   }
 
   React.useEffect(() => {
-    if (child) getRewards({ callService: true }); // Always fetch fresh data from backend
-  }, [actor, child]);
+    if (child) {
+      getRewards({ callService: false }); // Load from storage first, only fetch if storage empty
+    }
+  }, [actor, child?.id]);
 
   // Add listener to refresh rewards when returning to this screen
   React.useEffect(() => {
@@ -550,9 +552,6 @@ const Rewards = () => {
         getRewards({ callService: true, disableFullLoader: true });
       }
     };
-
-    // Refresh on component mount/focus
-    window.addEventListener("focus", refreshRewardsFromStorage);
     
     // Listen for custom event from Balance component
     window.addEventListener("rewardListUpdated", refreshRewardsFromStorage);
@@ -561,10 +560,9 @@ const Rewards = () => {
     refreshRewardsFromStorage();
 
     return () => {
-      window.removeEventListener("focus", refreshRewardsFromStorage);
       window.removeEventListener("rewardListUpdated", refreshRewardsFromStorage);
     };
-  }, [loader.init]);
+  }, []);
 
   const handleCloseDeletePopup = () => {
     setShowPopup((prevState) => ({ ...prevState, ["delete"]: false }));
