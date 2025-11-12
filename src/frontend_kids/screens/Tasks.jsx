@@ -174,7 +174,7 @@ const Tasks = () => {
     return (
       <>
         {displayedTasks?.length ? (
-          <div className="example" style={{ marginBottom: showAll || tasks.length <= TASK_LIMIT ? "80px" : "0" }}>
+          <div className="example" style={{ marginBottom: showAll || tasks.length <= TASK_LIMIT ? "80px" : "0", padding: "0 16px 20px 16px" }}>
             <ul className="child-list" style={{ position: "relative" }}>
               {displayedTasks.map((task) => (
                 <React.Fragment key={task.id}>
@@ -211,7 +211,7 @@ const Tasks = () => {
 
   return (
     <div className={`light-panel`} style={{ paddingBottom: isNative ? '30px' : '0' }}>
-      <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
+      <div className={`panel-header-wrapper`} style={{ position: "relative", padding: "5px 16px 20px 16px" }}>
         <h2 className="title-button">
           <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
             Tasks

@@ -300,7 +300,7 @@ const Rewards = () => {
     return (
       <>
         {displayedRewards?.length ? (
-          <div className="example" style={{ marginBottom: showAll || rewards.length <= REWARD_LIMIT ? "80px" : "0" }}>
+          <div className="example" style={{ marginBottom: showAll || rewards.length <= REWARD_LIMIT ? "80px" : "0", padding: "0 16px 20px 16px" }}>
             <ul className="list-wrapper">
               {displayedRewards.map((reward) => (
                 <React.Fragment key={reward.id}>
@@ -360,7 +360,7 @@ const Rewards = () => {
 
   return (
     <div className={`light-panel`} style={{ paddingBottom: isNative ? '30px' : '0' }}>
-      <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
+      <div className={`panel-header-wrapper`} style={{ position: "relative", padding: "5px 16px 20px 16px" }}>
         <h2 className="title-button">
           <Text as="span" textStyle="smallHeavyDark" fontSize="18px" fontWeight="700" color="#0b334d">
             Rewards
