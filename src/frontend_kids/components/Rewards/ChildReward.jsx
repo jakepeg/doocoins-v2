@@ -1,11 +1,27 @@
 import { Box, ScaleFade, useDisclosure, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { ReactComponent as DCIcon } from "../../assets/images/dc.svg";
-import { ReactComponent as TickIcon } from "../../assets/images/tick.svg";
-import { ReactComponent as CloseIcon } from "../../assets/images/close.svg";
-import { ReactComponent as GoalIcon } from "../../assets/images/goal.svg";
 import { ReactComponent as SmileyIcon } from "../../assets/images/smiley.svg";
 import ActionsMenu from "../../../shared/components/ActionsMenu";
+
+// Inline icons matching parent app style
+const CheckIcon = (props) => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z" />
+  </svg>
+);
+
+const StarIcon = (props) => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6L12 2z" />
+  </svg>
+);
+
+const CloseIcon = (props) => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+  </svg>
+);
 
 const ChildReward = ({
   reward,
@@ -83,25 +99,24 @@ const ChildReward = ({
                   ? {
                       id: "claim",
                       label: "Claim Reward",
-                      icon: <TickIcon width="18px" height="18px" />,
+                      icon: <CheckIcon />,
                       onClick: () => handleClick(reward, "req"),
                     }
                   : reward.active
                   ? {
                       id: "remove-goal",
                       label: "Remove Goal",
-                      icon: <CloseIcon stroke="currentColor" width="20px" height="20px" />,
+                      icon: <CloseIcon color="#E53E3E" />,
                       onClick: () => handleClick(reward, "close"),
                       isDestructive: true,
                     }
                   : {
                       id: "set-goal",
                       label: "Set as Goal",
-                      icon: <GoalIcon fill="currentColor" width="26px" height="26px" />,
+                      icon: <StarIcon />,
                       onClick: () => handleClick(reward, "set"),
                     },
               ]}
-              iconColor="#0b334d"
             />
           )}
         </Box>

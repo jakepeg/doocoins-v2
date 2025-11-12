@@ -35,7 +35,7 @@ const ActionsMenu = ({
   ariaLabel = "More options", 
   placement = "bottom-end", 
   size = "md",
-  iconColor = "inherit"
+  iconColor = "#0b334d"
 }) => {
   return (
     <Menu placement={placement} computePositionOnMount>
@@ -43,15 +43,16 @@ const ActionsMenu = ({
         as={IconButton}
         aria-label={ariaLabel}
         icon={<KebabIcon boxSize="1.5em" />}
-        variant="ghost"
         size={size}
-        fontSize={{ base: "xl", md: "lg" }}
+        fontSize="lg"
         color={iconColor}
-        _hover={{ bg: "whiteAlpha.200" }}
+        bg="white"
+        _hover={{ bg: "#F7FAFC" }}
+        _active={{ bg: "#F7FAFC" }}
         onClick={(e) => e.stopPropagation()}
       />
       <Portal>
-        <MenuList borderRadius="16px" boxShadow="lg" py={{ base: "6px", md: "6px" }} px={{ base: "6px", md: "6px" }}>
+        <MenuList borderRadius="16px" boxShadow="lg" border="1px solid #000" bg="white" py="6px" px="6px">
           {actions
             .filter(Boolean)
             .map((action, idx) => {
@@ -63,14 +64,16 @@ const ActionsMenu = ({
                     action.onClick?.();
                   }}
                   isDisabled={action.isDisabled}
-                  color={action.isDestructive ? "red.500" : undefined}
-                  _hover={action.isDestructive ? { bg: "red.50" } : undefined}
-                  py={{ base: "14px", md: "12px" }}
-                  fontSize={{ base: "lg", md: "md" }}
+                  color={action.isDestructive ? "red.500" : "#0b334d"}
+                  _hover={action.isDestructive ? { bg: "red.50" } : { bg: "gray.100" }}
+                  py="12px"
+                  px="16px"
+                  fontSize="md"
+                  borderRadius="8px"
                 >
                   <HStack spacing={3} align="center">
                     {action.icon}
-                    <Text fontSize="lg">{action.label}</Text>
+                    <Text fontSize="md">{action.label}</Text>
                   </HStack>
                 </MenuItem>
               );
