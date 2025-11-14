@@ -13,6 +13,7 @@ import { Capacitor } from "@capacitor/core";
 /**
  * Simplified Balance Card for Kids App
  * Features: Progress bar integrated into button, no kebab menu, Set Goal/Claim Goal button
+ * Updated: Goal info displayed in button label (name + percentage or "Claim [name]")
  */
 const BalanceCard = ({
   child,

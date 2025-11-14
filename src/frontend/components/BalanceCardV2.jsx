@@ -32,7 +32,7 @@ const PencilIcon = (props) => (
 /**
  * Balance Card V2 - New design with linear progress bar
  * Features: Linear progress bar, new background, vertical layout
- * TODO: Customize this design with your new layout/styling
+ * Updated: Goal info displayed in button label (name + percentage or "Claim [name]")
  */
 const BalanceCardV2 = ({
   child,
