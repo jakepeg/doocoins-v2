@@ -44,8 +44,8 @@ const BalanceCard = ({
     return (
       <header
         style={{
-          minHeight: isTablet ? "200px" : "275px",
-          maxHeight: isTablet ? "200px" : "275px",
+          minHeight: "240px",
+          maxHeight: "240px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -75,9 +75,9 @@ const BalanceCard = ({
         position: "relative",
         paddingLeft: "10px",
         paddingRight: "10px",
-        minHeight: isTablet ? "200px" : "275px",
-        maxHeight: isTablet ? "200px" : "275px",
-        marginTop: isTablet ? "35px" : "0",
+        minHeight: "240px",
+        maxHeight: "240px",
+        marginTop: "30px",
       }}
       className={`${styles.hero}`}
     >
@@ -96,7 +96,7 @@ const BalanceCard = ({
           paddingBottom: "15px",
           position: "relative",
           zIndex: 1,
-          marginTop: isNative ? "-20px" : "0",
+          marginTop: "0",
         }}
       >
         {/* Name - Top */}
@@ -108,9 +108,9 @@ const BalanceCard = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: isTablet ? "25px" : "15px",
-            fontSize: isTablet ? "24px" : "36px",
-            fontWeight: isTablet ? 400 : 300,
+            marginTop: "15px",
+            fontSize: "36px",
+            fontWeight: 300,
             color: "#fff",
           }}
           title={child?.name}
@@ -133,12 +133,11 @@ const BalanceCard = ({
             <Box 
               as="img" 
               src={dc} 
-              className="dc-img-big" 
               alt="DooCoins symbol"
               sx={{
                 display: "inline-block",
                 transform: "translateY(-10px)",
-                width: "33px",
+                width: "33px !important",
                 height: "auto",
               }}
             />
@@ -158,7 +157,7 @@ const BalanceCard = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) with integrated progress */}
-        <Box textAlign="center" mt={goal?.hasGoal ? { base: "-26px", md: "-22px" } : { base: "-18px", md: "-10px" }} mb={1}>
+        <Box textAlign="center" mt="-22px" mb={1}>
           <Box
             as="button"
             onClick={(e) => {
