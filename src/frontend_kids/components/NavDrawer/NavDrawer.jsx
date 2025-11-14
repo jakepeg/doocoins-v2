@@ -45,7 +45,7 @@ function NavDrawer() {
         zIndex={100}
         backgroundColor="#0B334D"
         px={4}
-        pt={isTablet ? "40px" : 0}
+        pt={isNative ? "40px" : 0}
         pb={3}
       >
         <NavLink to="/">
