@@ -60,8 +60,8 @@ const BalanceCardV2 = ({
         position: "relative",
         paddingLeft: "10px",
         paddingRight: "10px",
-        minHeight: "275px",
-        maxHeight: "275px",
+        minHeight: "240px",
+        maxHeight: "240px",
       }}
       className={`${styles.hero}`}
     >
@@ -156,18 +156,17 @@ const BalanceCardV2 = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
-              marginTop: { base: "-15px", md: "-10px" },
+              marginTop: { base: "-8px", md: "-5px" },
             }}
           >
             <Box 
               as="img" 
               src={dc} 
-              className="dc-img-big" 
               alt="DooCoins symbol"
               sx={{
                 display: "inline-block",
                 transform: "translateY(-10px)",
-                width: "33px",
+                width: "33px !important",
                 height: "auto",
               }}
             />
@@ -185,7 +184,7 @@ const BalanceCardV2 = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) with integrated progress */}
-        <Box textAlign="center" mt={goal?.hasGoal ? { base: "-22px", md: "-18px" } : { base: "-14px", md: "-6px" }} mb={2}>
+        <Box textAlign="center" mt="-17px" mb={2}>
           <Box
             as="button"
             onClick={(e) => {
