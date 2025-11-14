@@ -24,7 +24,7 @@ const EditDialog = ({
         ref={nameRef}
         defaultValue={selectedItem.name ? selectedItem.name : undefined}
         placeholder={namePlaceholder}
-        maxLength="18"
+        maxLength="15"
       />
       {hasValueField && (
         <input

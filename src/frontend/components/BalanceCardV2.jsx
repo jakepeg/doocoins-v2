@@ -188,21 +188,31 @@ const BalanceCardV2 = ({
         <Box textAlign="center" mt={goal?.hasGoal ? { base: "-22px", md: "-18px" } : { base: "-14px", md: "-6px" }} mb={2}>
           <Box
             as="button"
-            onClick={goal?.hasGoal ? handleClaimGoal : handleOpenGoalPicker}
-            disabled={isLoading || (goal?.hasGoal && !isAbleToClaim)}
+            onClick={(e) => {
+              console.log("Button clicked!", { hasGoal: goal?.hasGoal, isLoading, isAbleToClaim });
+              if (goal?.hasGoal && !isAbleToClaim) {
+                handleOpenGoalPicker();
+              } else if (goal?.hasGoal) {
+                handleClaimGoal();
+              } else {
+                handleOpenGoalPicker();
+              }
+            }}
+            disabled={isLoading}
             sx={{
               position: "relative",
               overflow: "hidden",
               borderRadius: "999px",
-              padding: "14px 32px",
+              padding: "14px 24px",
               color: "#fff",
               fontWeight: 700,
               fontSize: "18px",
-              minWidth: "210px", // 50% wider than before (was 140px)
+              minWidth: "210px",
+              maxWidth: "90%", // Prevent button from being too wide
               textAlign: "center",
               boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
               border: "2px solid rgba(255,255,255,0.3)",
-              cursor: (isLoading || (goal?.hasGoal && !isAbleToClaim)) ? "not-allowed" : "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
               transition: "all 0.2s",
               background: "rgba(255,255,255,0.2)",
               // Use pseudo-element for progress fill
@@ -219,10 +229,10 @@ const BalanceCardV2 = ({
                 zIndex: 0,
               } : {},
               _hover: {
-                transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(1.05)",
+                transform: "scale(1.05)",
               },
               _active: {
-                transform: (goal?.hasGoal && !isAbleToClaim) ? "none" : "scale(0.98)",
+                transform: "scale(0.98)",
               },
             }}
           >
@@ -231,60 +241,41 @@ const BalanceCardV2 = ({
               sx={{
                 position: "relative",
                 zIndex: 1,
-                opacity: (goal?.hasGoal && !isAbleToClaim) ? 0.6 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
+                opacity: 1,
                 transition: "opacity 0.3s ease",
               }}
             >
               {isLoading ? (
                 <Spinner boxSize="32px" color="#0B334D" thickness="4px" speed="0.65s" />
               ) : goal?.hasGoal ? (
-                "Claim Goal"
+                <>
+                  {isAbleToClaim ? (
+                    // When goal is 100%, show "Claim [Goal Name]"
+                    <Text as="span" noOfLines={1} overflow="hidden" textOverflow="ellipsis">
+                      Claim {goal.name}
+                    </Text>
+                  ) : (
+                    // When goal is in progress, show name + percentage
+                    <>
+                      <Text as="span" flexShrink={0}>
+                        {goal.name}
+                      </Text>
+                      <Text as="span" flexShrink={0}>
+                        {safePercentage}%
+                      </Text>
+                    </>
+                  )}
+                </>
               ) : (
                 "Set a Goal"
               )}
             </Box>
           </Box>
         </Box>
-
-        {/* Goal Section - Only shown if goal exists */}
-        {goal?.hasGoal && (
-          <Box mt="2px">
-            {/* Goal info with star */}
-            <Box 
-              display="flex" 
-              justifyContent="space-between" 
-              alignItems="center" 
-              mb={1}
-              cursor="pointer"
-              onClick={handleOpenGoalPicker}
-              _hover={{
-                opacity: 0.8,
-              }}
-            >
-              <HStack spacing={2} align="center">
-                <Box
-                  as="svg"
-                  width="18px"
-                  height="18px"
-                  viewBox="0 0 24 24"
-                  fill="#fff"
-                  color="#fff"
-                >
-                  <path
-                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                    fill="currentColor"
-                  />
-                </Box>
-                <Text textStyle="smallLightWhite">
-                  Goal: {goal.name}
-                </Text>
-              </HStack>
-              <Text textStyle="smallHeavyWhite">
-                {safePercentage}%
-              </Text>
-            </Box>
-          </Box>
-        )}
       </Box>
     </header>
   );

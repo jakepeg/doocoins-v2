@@ -22,7 +22,7 @@ const AddActionDialog = ({
         ref={nameRef}
         defaultValue={nameRef.current ? nameRef.current.value : ""}
         placeholder={namePlaceHolder}
-        maxLength="18"
+        maxLength="15"
         autoFocus
       />
       <input
