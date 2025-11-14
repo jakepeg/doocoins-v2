@@ -26,6 +26,13 @@ const BalanceCard = ({
   handleClaimGoal,
 }) => {
   const isNative = Capacitor.isNativePlatform();
+  const [isTablet, setIsTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isNative) {
+      setIsTablet(window.innerWidth >= 768);
+    }
+  }, [isNative]);
   
   // Ensure percentage is a valid number (handle both string and number)
   const safePercentage = (percentage !== undefined && percentage !== null && !isNaN(Number(percentage))) 
@@ -37,8 +44,8 @@ const BalanceCard = ({
     return (
       <header
         style={{
-          minHeight: "275px",
-          maxHeight: "275px",
+          minHeight: isTablet ? "200px" : "275px",
+          maxHeight: isTablet ? "200px" : "275px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -68,8 +75,9 @@ const BalanceCard = ({
         position: "relative",
         paddingLeft: "10px",
         paddingRight: "10px",
-        minHeight: "275px",
-        maxHeight: "275px",
+        minHeight: isTablet ? "200px" : "275px",
+        maxHeight: isTablet ? "200px" : "275px",
+        marginTop: isTablet ? "35px" : "0",
       }}
       className={`${styles.hero}`}
     >
@@ -100,9 +108,9 @@ const BalanceCard = ({
             whiteSpace: "nowrap",
             letterSpacing: "-0.5px",
             textAlign: "left",
-            marginTop: "15px",
-            fontSize: "36px",
-            fontWeight: 300,
+            marginTop: isTablet ? "25px" : "15px",
+            fontSize: isTablet ? "24px" : "36px",
+            fontWeight: isTablet ? 400 : 300,
             color: "#fff",
           }}
           title={child?.name}
