@@ -23,6 +23,14 @@ function NavDrawer() {
   const btnRef = React.useRef();
   const clearContextState = useClearContextState();
   const isNative = Capacitor.isNativePlatform();
+  const [isTablet, setIsTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isNative) {
+      // Detect tablet by screen width (iPad is typically 768px or wider)
+      setIsTablet(window.innerWidth >= 768);
+    }
+  }, [isNative]);
 
   return (
     <>
@@ -37,7 +45,7 @@ function NavDrawer() {
         zIndex={100}
         backgroundColor="#0B334D"
         px={4}
-        pt={isNative ? "env(safe-area-inset-top, 0px)" : 0}
+        pt={isTablet ? "40px" : 0}
         pb={3}
       >
         <NavLink to="/">
