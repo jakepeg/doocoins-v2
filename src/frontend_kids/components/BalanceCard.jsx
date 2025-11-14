@@ -127,7 +127,7 @@ const BalanceCard = ({
               gap: "0px",
               whiteSpace: "nowrap",
               justifyContent: "flex-start",
-              marginTop: { base: "-3px", md: "0px" },
+              marginTop: { base: "-8px", md: "-5px" },
             }}
           >
             <Box 
@@ -157,7 +157,7 @@ const BalanceCard = ({
         )}
 
         {/* Button - Always shown (Set Goal or Claim Goal) with integrated progress */}
-        <Box textAlign="center" mt="-22px" mb={1}>
+        <Box textAlign="center" mt="-17px" mb={1}>
           <Box
             as="button"
             onClick={(e) => {
