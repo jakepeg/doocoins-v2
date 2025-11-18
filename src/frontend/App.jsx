@@ -25,6 +25,7 @@ import ChildProvider from "./contexts/ChildContext";
 import ImageLoader from "./utils/ImageLoader";
 import "./utils/broker-simple"; // Broker pattern for mobile II authentication (completes delegation flow)
 import InviteChild from "./screens/InviteChild";
+import ShareChild from "./screens/ShareChild";
 import Alerts from "./screens/Alerts";
 import { canisterId } from "../declarations/backend";
 import { MigrationHandler } from "./components/MigrationHandler";
@@ -52,6 +53,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <InviteChild />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/share"
+              element={
+                <ProtectedRoute>
+                  <ShareChild />
                 </ProtectedRoute>
               }
             />

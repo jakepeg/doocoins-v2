@@ -1,8 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import React, { useState, useEffect } from "react";
-import { Box, Button, Text, Image, IconButton, Icon, Spinner, useToast } from "@chakra-ui/react";
+import { Box, Button, Text, IconButton, Icon, Spinner, useToast } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
-import qrChildImage from "../assets/images/qr-child.png";
 
 // Inline icons
 const BackArrowIcon = (props) => (
@@ -23,26 +22,26 @@ const CopyIcon = (props) => (
   </Icon>
 );
 
-const InviteChild = () => {
+const ShareChild = () => {
   const { actor } = useAuth();
   const child = useLocation()?.state?.child;
   const [loading, setLoading] = useState(true);
-  const [magicCode, setMagicCode] = useState([]);
+  const [shareCode, setShareCode] = useState([]);
   const [expiryTime] = useState(60); // 60 minutes
   const toast = useToast();
 
   const navigate = useNavigate();
 
-  async function generateOtp() {
+  async function generateShareCode() {
     try {
-      const response = await actor?.magicCode(child?.id);
-      const code = response?.[0]?.toString();
-      if (code) {
-        setMagicCode(code.split(''));
+      const response = await actor?.createShareCode(child?.id);
+      if (response?.ok) {
+        const code = response.ok.toString();
+        setShareCode(code.split(''));
       } else {
         toast({
-          title: "Error generating magic code",
-          description: "Please try again",
+          title: "Error generating share code",
+          description: response?.err || "Please try again",
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -51,7 +50,7 @@ const InviteChild = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to generate magic code",
+        description: "Failed to generate share code",
         status: "error",
         duration: 3000,
         isClosable: true,
@@ -61,11 +60,11 @@ const InviteChild = () => {
   }
 
   const copyCodeToClipboard = () => {
-    const code = magicCode.join('');
+    const code = shareCode.join('');
     navigator.clipboard.writeText(code);
     toast({
       title: "Copied!",
-      description: "Magic code copied to clipboard",
+      description: "Share code copied to clipboard",
       status: "success",
       duration: 2000,
       isClosable: true,
@@ -74,7 +73,7 @@ const InviteChild = () => {
 
   useEffect(() => {
     if (child?.id && actor) {
-      generateOtp();
+      generateShareCode();
     }
   }, [actor, child]);
 
@@ -88,10 +87,9 @@ const InviteChild = () => {
         flexDirection='column'
         gap={'20px'}
       >
-        <Text color={"#fff"} align={"center"} fontSize="xl">
+        <Text color={"#0B334D"} align={"center"} fontSize="xl">
           Please select a child to continue
         </Text>
-
         <Button onClick={() => navigate("/")}>Visit Home</Button>
       </Box>
     );
@@ -136,12 +134,12 @@ const InviteChild = () => {
             size="lg"
           />
           <Text fontSize="22px" color="#0B334D" fontWeight="600">
-            Invite {child.name}
+            Share {child.name}
           </Text>
         </Box>
 
         <Text fontSize="lg" color="#0B334D">
-          Get {child.name} on board with DooCoins Kids!
+          Share {child.name} with another adult (family member, teacher, etc.)
         </Text>
 
         <Box
@@ -164,7 +162,7 @@ const InviteChild = () => {
             gap={"8px"}
             mb="8px"
           >
-            {magicCode.map((digit, index) => (
+            {shareCode.map((digit, index) => (
               <Box
                 key={index}
                 bg="white"
@@ -209,32 +207,22 @@ const InviteChild = () => {
           </Text>
           <Box as="ol" ml="20px" fontSize="md">
             <Box as="li" mb="8px">
-              Scan the QR code below using your child's device camera
-              <Box mt="12px" mb="12px">
-                <Image 
-                  src={qrChildImage} 
-                  alt="QR code for DooCoins Kids app" 
-                  maxWidth="150px" 
-                  height="auto"
-                  border="1px solid #0B334D"
-                  borderRadius="8px"
-                />
-              </Box>
+              Share this code with another adult
             </Box>
             <Box as="li" mb="8px">
-              Follow the instructions to install the app
+              They open DooCoins and tap "+ Add Child"
             </Box>
             <Box as="li" mb="8px">
-              Launch the app by clicking the DooCoins icon
+              They toggle "Use Magic Code"
             </Box>
             <Box as="li">
-              Enter the magic code above
+              They enter this code to add {child.name}
             </Box>
           </Box>
         </Box>
 
         <Text fontSize="sm" color="#0B334D" fontStyle="italic">
-          If the app is already installed, just enter the magic code in the DooCoins Kids app.
+          Note: Deep links and QR codes will be available once the app is published to app stores.
         </Text>
 
         <Button
@@ -250,4 +238,4 @@ const InviteChild = () => {
   );
 };
 
-export default InviteChild;
+export default ShareChild;

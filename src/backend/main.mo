@@ -18,9 +18,22 @@ import Array "mo:base/Array";
 
 persistent actor {
   type TimerId = Nat;
+
+  // OLD TYPE: For backward-compatible upgrade (without creatorId/parentIds)
+  type ChildV1 = {
+    name : Text;
+    id : Text;
+    archived : Bool;
+  };
+
   // Reject AnonymousIdentity
   var anonIdNew : Text = "2vxsx-fae";
-  var profiles : Types.Profile = Trie.empty();
+
+  // OLD profiles variable - will be read in postupgrade and then set to empty
+  var profiles : Trie.Trie<Principal, Trie.Trie<Text, ChildV1>> = Trie.empty();
+
+  // NEW profiles variable with Child type including optional fields
+  var profilesV2 : Types.Profile = Trie.empty();
   var childNumber : Nat = 1;
   //for keeping the child to tasks mapping
   var childToTasks : Types.TaskMap = Trie.empty();
@@ -44,6 +57,12 @@ persistent actor {
   //for child to request task complete and request claim reward
   var childRequestsTasks : Trie.Trie<Text, Types.TaskReqMap> = Trie.empty();
   var childRequestsRewards : Trie.Trie<Text, Types.RewardReqMap> = Trie.empty();
+
+  // CHILD SHARING
+  //for sharing children with other adults via magic code
+  var shareInvites : Trie.Trie<Nat, Types.ShareInvite> = Trie.empty();
+  var childIdFromShareCode : Trie.Trie<Nat, Text> = Trie.empty();
+  let SHARE_CODE_EXPIRY_MINUTES : Nat = 60;
 
   // MIGRATION: NFID to Internet Identity principal linking
   var principalLinks : Migration.PrincipalLinks = Migration.initLinks();
@@ -180,6 +199,351 @@ persistent actor {
 
   // END MILESTONE #1 TASKS
 
+  // CHILD SHARING FUNCTIONS
+  //----------------------------------------------------------------------------------------------------
+
+  // Helper function to check if a principal is in the parentIds array
+  private func containsPrincipal(principals : [Principal], target : Principal) : Bool {
+    for (p in principals.vals()) {
+      if (Principal.equal(p, target)) {
+        return true;
+      };
+    };
+    return false;
+  };
+
+  // Helper function to get creator principal from child ID
+  private func getCreatorFromChildId(childId : Text) : ?Principal {
+    // Child ID format: "{principalText}-{number}"
+    let parts = Text.split(childId, #char '-');
+    let partsArray = Iter.toArray(parts);
+    if (partsArray.size() < 2) {
+      return null;
+    };
+    let principalText = partsArray[0];
+    return ?Principal.fromText(principalText);
+  };
+
+  // Helper function to check if caller is authorized for a child (in parentIds)
+  private func isAuthorizedForChild(callerId : Principal, childId : Text) : async Bool {
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    // Search all profiles for this child
+    for ((principal, children) in Trie.iter(profilesV2)) {
+      switch (Trie.find(children, keyText(childId), Text.equal)) {
+        case (?child) {
+          // Handle optional parentIds - if null, check if user is profile owner (pre-migration)
+          switch (child.parentIds) {
+            case (?ids) { return containsPrincipal(ids, resolvedPrincipal) };
+            case null { return Principal.equal(principal, resolvedPrincipal) };
+          };
+        };
+        case null {};
+      };
+    };
+    return false;
+  };
+
+  // Helper function to check if caller is the creator of a child
+  private func isCreator(callerId : Principal, childId : Text) : async Bool {
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    // Search all profiles for this child
+    for ((principal, children) in Trie.iter(profilesV2)) {
+      switch (Trie.find(children, keyText(childId), Text.equal)) {
+        case (?child) {
+          // Handle optional creatorId - if null, check if user is profile owner (pre-migration)
+          switch (child.creatorId) {
+            case (?creator) {
+              return Principal.equal(creator, resolvedPrincipal);
+            };
+            case null { return Principal.equal(principal, resolvedPrincipal) };
+          };
+        };
+        case null {};
+      };
+    };
+    return false;
+  };
+
+  // Burn share code after expiry
+  private func burnShareCode(code : Nat) : async () {
+    let expiryNanoseconds = SHARE_CODE_EXPIRY_MINUTES * 60 * 1_000_000_000;
+    ignore setTimer(
+      #nanoseconds(expiryNanoseconds),
+      func() : async () {
+        let (newShareInvites, _old) = Trie.remove(shareInvites, keyNat(code), Nat.equal);
+        shareInvites := newShareInvites;
+        let (newChildIdFromShareCode, _oldId) = Trie.remove(childIdFromShareCode, keyNat(code), Nat.equal);
+        childIdFromShareCode := newChildIdFromShareCode;
+      },
+    );
+  };
+
+  // Create a share code for a child
+  public shared (msg) func createShareCode(childId : Text) : async Result.Result<Nat, Types.Error> {
+    let callerId = msg.caller;
+
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    // Check if caller is the creator (only creators can share)
+    let isCreatorResult = await isCreator(callerId, childId);
+    if (not isCreatorResult) {
+      return #err(#NotAuthorized);
+    };
+
+    // Check if a code already exists for this child
+    for ((code, invite) in Trie.iter(shareInvites)) {
+      if (Text.equal(invite.childId, childId)) {
+        return #ok(code);
+      };
+    };
+
+    // Generate new 4-digit code
+    let code : Nat = await _randomPin();
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    let shareInvite : Types.ShareInvite = {
+      code = code;
+      childId = childId;
+      creatorId = resolvedPrincipal;
+      expiresAt = Time.now() + (SHARE_CODE_EXPIRY_MINUTES * 60 * 1_000_000_000);
+    };
+
+    let (newShareInvites, _old) = Trie.put(
+      shareInvites,
+      keyNat(code),
+      Nat.equal,
+      shareInvite,
+    );
+    shareInvites := newShareInvites;
+
+    let (newChildIdFromShareCode, _oldId) = Trie.put(
+      childIdFromShareCode,
+      keyNat(code),
+      Nat.equal,
+      childId,
+    );
+    childIdFromShareCode := newChildIdFromShareCode;
+
+    // Start expiry timer
+    ignore burnShareCode(code);
+
+    return #ok(code);
+  };
+
+  // Accept a share code and add caller to child's parentIds
+  public shared (msg) func acceptShareCode(code : Nat) : async Result.Result<Types.Child, Types.Error> {
+    let callerId = msg.caller;
+
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    // Find the share invite
+    switch (Trie.find(shareInvites, keyNat(code), Nat.equal)) {
+      case null {
+        return #err(#NotFound);
+      };
+      case (?invite) {
+        // Check if expired
+        if (invite.expiresAt <= Time.now()) {
+          return #err(#NotFound);
+        };
+
+        let childId = invite.childId;
+
+        // Find the child in the creator's profile
+        switch (Trie.find(profilesV2, keyPrincipal(invite.creatorId), Principal.equal)) {
+          case null {
+            return #err(#NotFound);
+          };
+          case (?creatorChildren) {
+            switch (Trie.find(creatorChildren, keyText(childId), Text.equal)) {
+              case null {
+                return #err(#NotFound);
+              };
+              case (?child) {
+                // Get existing parentIds or default to creator only
+                let currentParentIds = switch (child.parentIds) {
+                  case (?ids) { ids };
+                  case null { [invite.creatorId] };
+                };
+
+                // Check if caller already has access
+                if (containsPrincipal(currentParentIds, resolvedPrincipal)) {
+                  return #ok(child); // Already shared
+                };
+
+                // Add caller to parentIds
+                let newParentIds = Array.append(currentParentIds, [resolvedPrincipal]);
+                let updatedChild : Types.Child = {
+                  name = child.name;
+                  id = child.id;
+                  archived = child.archived;
+                  creatorId = child.creatorId;
+                  parentIds = ?newParentIds;
+                };
+
+                // Update child in creator's profile
+                let updatedChildren = Trie.put(
+                  creatorChildren,
+                  keyText(childId),
+                  Text.equal,
+                  updatedChild,
+                ).0;
+
+                let updatedProfiles = Trie.put(
+                  profilesV2,
+                  keyPrincipal(invite.creatorId),
+                  Principal.equal,
+                  updatedChildren,
+                ).0;
+
+                profilesV2 := updatedProfiles;
+
+                return #ok(updatedChild);
+              };
+            };
+          };
+        };
+      };
+    };
+  };
+
+  // Revoke all shares for a child (creator only)
+  public shared (msg) func revokeAllShares(childId : Text) : async Result.Result<Types.Success, Types.Error> {
+    let callerId = msg.caller;
+
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    // Check if caller is the creator
+    let isCreatorResult = await isCreator(callerId, childId);
+    if (not isCreatorResult) {
+      return #err(#NotAuthorized);
+    };
+
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    // Find the child in creator's profile
+    switch (Trie.find(profilesV2, keyPrincipal(resolvedPrincipal), Principal.equal)) {
+      case null {
+        return #err(#NotFound);
+      };
+      case (?children) {
+        switch (Trie.find(children, keyText(childId), Text.equal)) {
+          case null {
+            return #err(#NotFound);
+          };
+          case (?child) {
+            // Reset parentIds to only creator
+            let creatorPrincipal = switch (child.creatorId) {
+              case (?creator) { creator };
+              case null { resolvedPrincipal }; // Fallback to resolved principal
+            };
+            let updatedChild : Types.Child = {
+              name = child.name;
+              id = child.id;
+              archived = child.archived;
+              creatorId = child.creatorId;
+              parentIds = ?[creatorPrincipal];
+            };
+
+            let updatedChildren = Trie.put(
+              children,
+              keyText(childId),
+              Text.equal,
+              updatedChild,
+            ).0;
+
+            let updatedProfiles = Trie.put(
+              profilesV2,
+              keyPrincipal(resolvedPrincipal),
+              Principal.equal,
+              updatedChildren,
+            ).0;
+
+            profilesV2 := updatedProfiles;
+
+            return #ok(#Success);
+          };
+        };
+      };
+    };
+  };
+
+  // Clean up duplicate children in shared adults' profiles
+  public shared (msg) func cleanupDuplicateChildren() : async Result.Result<Text, Types.Error> {
+    let callerId = msg.caller;
+
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+    var removedCount : Nat = 0;
+    var updatedProfiles : Types.Profile = profilesV2;
+
+    // Iterate through caller's profile only
+    switch (Trie.find(profilesV2, keyPrincipal(resolvedPrincipal), Principal.equal)) {
+      case null {
+        return #ok("No children to clean up");
+      };
+      case (?children) {
+        var cleanedChildren : Trie.Trie<Text, Types.Child> = Trie.empty();
+
+        for ((childId, child) in Trie.iter(children)) {
+          // Check if this child should belong in caller's profile
+          let shouldKeep = switch (child.creatorId) {
+            case (?creatorId) {
+              // Keep only if caller is the creator
+              Principal.equal(resolvedPrincipal, creatorId);
+            };
+            case null {
+              // Pre-migration child: keep if profile principal matches child ID prefix
+              let childOwnerText = extractCallerFromId(childId);
+              let childOwner = Principal.fromText(childOwnerText);
+              Principal.equal(resolvedPrincipal, childOwner);
+            };
+          };
+
+          if (shouldKeep) {
+            cleanedChildren := Trie.put(
+              cleanedChildren,
+              keyText(childId),
+              Text.equal,
+              child,
+            ).0;
+          } else {
+            removedCount += 1;
+            Debug.print("🧹 Removing duplicate child: " # child.name # " (ID: " # childId # ") from caller's profile");
+          };
+        };
+
+        updatedProfiles := Trie.put(
+          updatedProfiles,
+          keyPrincipal(resolvedPrincipal),
+          Principal.equal,
+          cleanedChildren,
+        ).0;
+
+        profilesV2 := updatedProfiles;
+      };
+    };
+
+    let resultMessage = "Removed " # Nat.toText(removedCount) # " duplicate children from your profile";
+    Debug.print("🧹 CLEANUP COMPLETE: " # resultMessage);
+    return #ok(resultMessage);
+  };
+
+  // END CHILD SHARING FUNCTIONS
+
   // AUTH BROKER ENDPOINTS
   //-----------------------------------------------------------------------------------------------
   // putAuthBlob: Store a one-time blob under a random code with a nonce and expiry (TTL).
@@ -249,6 +613,8 @@ persistent actor {
       name = child.name;
       id = childId;
       archived = false;
+      creatorId = ?resolvedPrincipal;
+      parentIds = ?[resolvedPrincipal];
     };
 
     //Initializing task number to this child
@@ -291,14 +657,14 @@ persistent actor {
     childToTransactionNumber := newChildToTransactionNumber;
 
     let newProfiles = Trie.put2D(
-      profiles,
+      profilesV2,
       keyPrincipal(resolvedPrincipal),
       Principal.equal,
       keyText(childId),
       Text.equal,
       finalChild,
     );
-    profiles := newProfiles;
+    profilesV2 := newProfiles;
     return #ok(finalChild);
   };
 
@@ -368,9 +734,9 @@ persistent actor {
   // Get all the children
   //----------------------------------------------------------------------------------------------------
 
-  public shared (msg) func getChildren() : async Result.Result<[Types.Child], Types.Error> {
+  public shared (msg) func getChildren() : async Result.Result<[Types.ChildWithAccess], Types.Error> {
     let callerId = msg.caller;
-    let unArchivedChilds : Buffer.Buffer<Types.Child> = Buffer.Buffer<Types.Child>(0);
+    let unArchivedChilds : Buffer.Buffer<Types.ChildWithAccess> = Buffer.Buffer<Types.ChildWithAccess>(0);
 
     if (Principal.toText(callerId) == anonIdNew) {
       return #err(#NotAuthorized);
@@ -379,17 +745,80 @@ persistent actor {
     // Resolve principal: use NFID principal if this II principal is linked
     let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
 
-    let allChildren = Trie.find(
-      profiles,
-      keyPrincipal(resolvedPrincipal),
-      Principal.equal,
-    );
-    let allChildrenFormatted = Option.get(allChildren, Trie.empty());
-    let agnosticArchivedChildList = Trie.toArray(allChildrenFormatted, extractChildren);
+    // AUTO-CLEANUP: Remove any duplicate children in caller's profile that don't belong there
+    switch (Trie.find(profilesV2, keyPrincipal(resolvedPrincipal), Principal.equal)) {
+      case (?callerChildren) {
+        var cleanedChildren : Trie.Trie<Text, Types.Child> = Trie.empty();
+        var needsCleanup : Bool = false;
 
-    for (child in agnosticArchivedChildList.vals()) {
-      if (child.archived == false) {
-        unArchivedChilds.add(child);
+        for ((childId, child) in Trie.iter(callerChildren)) {
+          // Check if this child should belong in caller's profile
+          let shouldKeep = switch (child.creatorId) {
+            case (?creatorId) {
+              // Keep only if caller is the creator
+              Principal.equal(resolvedPrincipal, creatorId);
+            };
+            case null {
+              // Pre-migration child: keep if profile principal matches child ID prefix
+              let childOwnerText = extractCallerFromId(childId);
+              let childOwner = Principal.fromText(childOwnerText);
+              Principal.equal(resolvedPrincipal, childOwner);
+            };
+          };
+
+          if (shouldKeep) {
+            cleanedChildren := Trie.put(
+              cleanedChildren,
+              keyText(childId),
+              Text.equal,
+              child,
+            ).0;
+          } else {
+            needsCleanup := true;
+            Debug.print("🧹 AUTO-CLEANUP: Removing duplicate child: " # child.name # " (ID: " # childId # ")");
+          };
+        };
+
+        if (needsCleanup) {
+          profilesV2 := Trie.put(
+            profilesV2,
+            keyPrincipal(resolvedPrincipal),
+            Principal.equal,
+            cleanedChildren,
+          ).0;
+          Debug.print("🧹 AUTO-CLEANUP: Cleaned duplicates from caller's profile");
+        };
+      };
+      case null {};
+    };
+
+    // Search all profiles for children where caller is in parentIds
+    for ((principal, children) in Trie.iter(profilesV2)) {
+      let childrenArray = Trie.toArray(children, extractChildren);
+      for (child in childrenArray.vals()) {
+        // Check if caller has access to this child (is in parentIds)
+        let hasAccess = switch (child.parentIds) {
+          case (?ids) { containsPrincipal(ids, resolvedPrincipal) };
+          case null { Principal.equal(principal, resolvedPrincipal) }; // Pre-migration: check profile owner
+        };
+        if (hasAccess and not child.archived) {
+          // Check if caller is the creator (with principal resolution)
+          let isCreator = switch (child.creatorId) {
+            case (?creatorId) { Principal.equal(resolvedPrincipal, creatorId) };
+            case null { Principal.equal(principal, resolvedPrincipal) }; // Pre-migration: profile owner is creator
+          };
+
+          // Add computed isCreator field to child
+          let childWithAccess : Types.ChildWithAccess = {
+            name = child.name;
+            id = child.id;
+            archived = child.archived;
+            creatorId = child.creatorId;
+            parentIds = child.parentIds;
+            isCreator = isCreator;
+          };
+          unArchivedChilds.add(childWithAccess);
+        };
       };
     };
 
@@ -823,16 +1252,54 @@ persistent actor {
     // Resolve principal: use NFID principal if this II principal is linked
     let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
 
-    let profilesUpdate = Trie.put2D(
-      profiles,
-      keyPrincipal(resolvedPrincipal),
-      Principal.equal,
-      keyText(childId),
-      Text.equal,
-      child,
-    );
-    profiles := profilesUpdate;
-    return #ok(());
+    // Find the child's actual location (it lives in the creator's profile, not necessarily caller's)
+    var foundProfile : ?Principal = null;
+    var foundChild : ?Types.Child = null;
+
+    for ((profilePrincipal, children) in Trie.iter(profilesV2)) {
+      switch (Trie.find(children, keyText(childId), Text.equal)) {
+        case (?existingChild) {
+          // Verify caller has access to this child
+          let hasAccess = switch (existingChild.parentIds) {
+            case (?ids) { containsPrincipal(ids, resolvedPrincipal) };
+            case null { Principal.equal(profilePrincipal, resolvedPrincipal) };
+          };
+          if (hasAccess) {
+            foundProfile := ?profilePrincipal;
+            foundChild := ?existingChild;
+          };
+        };
+        case null {};
+      };
+    };
+
+    // Update child in its actual profile location
+    switch (foundProfile, foundChild) {
+      case (?profilePrincipal, ?existingChild) {
+        // Preserve creatorId and parentIds from existing child
+        let updatedChild : Types.Child = {
+          name = child.name;
+          id = child.id;
+          archived = child.archived;
+          creatorId = existingChild.creatorId;
+          parentIds = existingChild.parentIds;
+        };
+
+        let profilesUpdate = Trie.put2D(
+          profilesV2,
+          keyPrincipal(profilePrincipal),
+          Principal.equal,
+          keyText(childId),
+          Text.equal,
+          updatedChild,
+        );
+        profilesV2 := profilesUpdate;
+        return #ok(());
+      };
+      case _ {
+        return #err(#NotFound);
+      };
+    };
   };
 
   public shared (msg) func updateGoal(childId : Text, goalId : Nat, updatedGoal : Types.Goal) : async Result.Result<(), Types.Error> {
@@ -1345,7 +1812,7 @@ persistent actor {
     let fromIter = extractCallerFromId(childId);
     let callerId = Principal.fromText(nullToText(?fromIter));
     let allChildren = Trie.find(
-      profiles,
+      profilesV2,
       keyPrincipal(callerId),
       Principal.equal,
     );
@@ -1368,7 +1835,7 @@ persistent actor {
 
   // Helper function to check if an NFID principal has existing data
   private func hasNfidData(nfidPrincipal : Principal) : Bool {
-    switch (Trie.get(profiles, keyPrincipal(nfidPrincipal), Principal.equal)) {
+    switch (Trie.get(profilesV2, keyPrincipal(nfidPrincipal), Principal.equal)) {
       case null { false };
       case (?_) { true };
     };
@@ -1418,7 +1885,7 @@ persistent actor {
     };
 
     let allChildren = Trie.find(
-      profiles,
+      profilesV2,
       keyPrincipal(resolvedCaller),
       Principal.equal,
     );
@@ -1496,5 +1963,176 @@ persistent actor {
     Debug.print("🧹 CLEANUP COMPLETE: " # resultMessage);
 
     return #ok(resultMessage);
+  };
+
+  // CHILD SHARING MIGRATION: Add creatorId and parentIds to existing children
+  //----------------------------------------------------------------------------------------------------
+  public shared (msg) func migrateChildrenForSharing() : async Result.Result<Text, Types.Error> {
+    let callerId = msg.caller;
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    var migratedCount : Nat = 0;
+    var updatedProfiles = profilesV2;
+
+    // Iterate through all profiles
+    for ((principal, children) in Trie.iter(profilesV2)) {
+      var updatedChildren = children;
+
+      // Iterate through all children for this profile
+      for ((childId, child) in Trie.iter(children)) {
+        // Check if child needs migration (parentIds is null)
+        switch (child.parentIds) {
+          case null {
+            // Migrate this child
+            let migratedChild : Types.Child = {
+              name = child.name;
+              id = child.id;
+              archived = child.archived;
+              creatorId = ?principal; // Profile owner is the creator
+              parentIds = ?[principal]; // Profile owner is the only parent initially
+            };
+
+            updatedChildren := Trie.put(
+              updatedChildren,
+              keyText(childId),
+              Text.equal,
+              migratedChild,
+            ).0;
+
+            migratedCount += 1;
+            Debug.print("✅ Migrated child: " # child.name # " (ID: " # childId # ")");
+          };
+          case (?_) {
+            // Already migrated, skip
+          };
+        };
+      };
+
+      // Update the profile with migrated children
+      updatedProfiles := Trie.put(
+        updatedProfiles,
+        keyPrincipal(principal),
+        Principal.equal,
+        updatedChildren,
+      ).0;
+    };
+
+    profilesV2 := updatedProfiles;
+
+    let resultMessage = "Successfully migrated " # Nat.toText(migratedCount) # " children for sharing feature.";
+    Debug.print("🔄 MIGRATION COMPLETE: " # resultMessage);
+
+    return #ok(resultMessage);
+  };
+
+  // Fix creator/parent principals for existing children (for NFID migration)
+  //----------------------------------------------------------------------------------------------------
+  public shared (msg) func fixMyChildrenOwnership() : async Result.Result<Text, Types.Error> {
+    let callerId = msg.caller;
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    // Resolve principal: use NFID principal if this II principal is linked
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    var fixedCount : Nat = 0;
+
+    // Find all profiles that might contain this user's children
+    for ((profilePrincipal, children) in Trie.iter(profilesV2)) {
+      var updatedChildren = children;
+      var profileNeedsUpdate = false;
+
+      for ((childId, child) in Trie.iter(children)) {
+        // Check if this child belongs to the caller's profile (by child ID prefix or profile ownership)
+        let childOwnerText = extractCallerFromId(childId);
+        let childOwner = Principal.fromText(childOwnerText);
+        if (Principal.equal(childOwner, resolvedPrincipal) or Principal.equal(profilePrincipal, resolvedPrincipal)) {
+          // Update this child to use the current caller's principal
+          let fixedChild : Types.Child = {
+            name = child.name;
+            id = child.id;
+            archived = child.archived;
+            creatorId = ?callerId; // Use current caller's principal
+            parentIds = ?[callerId]; // Use current caller's principal
+          };
+
+          updatedChildren := Trie.put(
+            updatedChildren,
+            keyText(childId),
+            Text.equal,
+            fixedChild,
+          ).0;
+
+          fixedCount += 1;
+          profileNeedsUpdate := true;
+          Debug.print("✅ Fixed child ownership: " # child.name # " (ID: " # childId # ") -> " # Principal.toText(callerId));
+        };
+      };
+
+      // Update profile if any children were changed
+      if (profileNeedsUpdate) {
+        profilesV2 := Trie.put(
+          profilesV2,
+          keyPrincipal(profilePrincipal),
+          Principal.equal,
+          updatedChildren,
+        ).0;
+      };
+    };
+
+    let resultMessage = "Successfully fixed ownership for " # Nat.toText(fixedCount) # " children.";
+    Debug.print("🔄 FIX COMPLETE: " # resultMessage);
+
+    return #ok(resultMessage);
+  };
+
+  // UPGRADE HOOKS: Handle backward-compatible migration for Child type changes
+  //----------------------------------------------------------------------------------------------------
+
+  system func postupgrade() {
+    Debug.print("🔄 POSTUPGRADE: Migrating old profiles to new format with sharing fields...");
+
+    var migratedCount = 0;
+
+    // Read from OLD profiles variable (ChildV1 type without optional fields)
+    // and convert to NEW profilesV2 variable (Child type with optional fields)
+    for ((principal, childrenTrie) in Trie.iter(profiles)) {
+      var newChildrenTrie : Trie.Trie<Text, Types.Child> = Trie.empty();
+
+      for ((childId, childV1) in Trie.iter(childrenTrie)) {
+        // Convert ChildV1 to Child with populated optional fields
+        let child : Types.Child = {
+          name = childV1.name;
+          id = childV1.id;
+          archived = childV1.archived;
+          creatorId = ?principal; // Profile owner is the creator
+          parentIds = ?[principal]; // Profile owner is the only parent
+        };
+
+        newChildrenTrie := Trie.put(
+          newChildrenTrie,
+          keyText(childId),
+          Text.equal,
+          child,
+        ).0;
+
+        migratedCount += 1;
+      };
+
+      profilesV2 := Trie.put(
+        profilesV2,
+        keyPrincipal(principal),
+        Principal.equal,
+        newChildrenTrie,
+      ).0;
+    };
+
+    // Clear the old profiles variable
+    profiles := Trie.empty();
+
+    Debug.print("✅ POSTUPGRADE: Migrated " # Nat.toText(migratedCount) # " children with sharing fields");
   };
 };

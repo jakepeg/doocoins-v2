@@ -3,6 +3,7 @@ import { Box, Text, VStack, useToast } from "@chakra-ui/react";
 import { useNavigate } from "react-router-dom";
 import { set } from "idb-keyval";
 import { ChildContext } from "../contexts/ChildContext";
+import { useAuth } from "../use-auth-client";
 import ActionsMenu from "../../shared/components/ActionsMenu";
 
 export const swipeContainerStyles = {
@@ -41,10 +42,34 @@ const TrashIcon = (props) => (
   </svg>
 );
 
+const BlockIcon = (props) => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8 0-1.85.63-3.55 1.69-4.9L16.9 18.31A7.902 7.902 0 0112 20zm6.31-3.1L7.1 5.69A7.902 7.902 0 0112 4c4.42 0 8 3.58 8 8 0 1.85-.63 3.55-1.69 4.9z" />
+  </svg>
+);
+
 const ChildItem = ({ child, handleTogglePopup }) => {
   const navigate = useNavigate();
   const { setChild } = React.useContext(ChildContext);
+  const { identity } = useAuth();
   const toast = useToast();
+  
+  // Backend now computes isCreator with principal resolution
+  const isCreator = React.useMemo(() => {
+    // isCreator is now a boolean from backend, not an optional
+    if (child?.isCreator === undefined || child?.isCreator === null) {
+      return true; // Default to true for backward compatibility
+    }
+    return child.isCreator;
+  }, [child?.isCreator]);
+
+  // Check if child is shared (has multiple parents)
+  const isShared = React.useMemo(() => {
+    // Handle optional field: parentIds comes as array from Candid optional
+    if (!child?.parentIds || child.parentIds.length === 0) return false;
+    const parentIds = Array.isArray(child.parentIds[0]) ? child.parentIds[0] : child.parentIds;
+    return parentIds && parentIds.length > 1;
+  }, [child?.parentIds]);
 
   const setChildData = async () => {
     setChild({
@@ -62,25 +87,7 @@ const ChildItem = ({ child, handleTogglePopup }) => {
     navigate("/wallet");
   };
 
-  const handleShareChild = async () => {
-    const shareData = {
-      title: `DooCoins: ${child.name}`,
-      text: `${child.name}'s DooCoins account`,
-      url: typeof window !== "undefined" ? window.location.origin : undefined,
-    };
-    try {
-      if (navigator.share && typeof navigator.share === "function") {
-        await navigator.share(shareData);
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url ?? ""}`.trim());
-        toast({ title: "Link copied", status: "success", duration: 2000, isClosable: true });
-      } else {
-        toast({ title: "Sharing not supported", status: "info", duration: 2000, isClosable: true });
-      }
-    } catch (e) {
-      // user cancelled or error
-    }
-  };
+
 
   return (
     <Box
@@ -98,48 +105,77 @@ const ChildItem = ({ child, handleTogglePopup }) => {
       boxSizing="border-box"
     >
       <VStack align="start" spacing={1}>
-        <Text textStyle="largeLightDark">
-          {child.name}
-        </Text>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Text textStyle="largeLightDark">
+            {child.name}
+          </Text>
+          {isShared && (
+            <Text fontSize="lg" title="Shared with other adults">
+              👥
+            </Text>
+          )}
+        </Box>
         <Text textStyle="smallLightDark">
           {child.balance} DooCoins
         </Text>
       </VStack>
       <Box onClick={(e) => e.stopPropagation()}>
         <ActionsMenu
-          actions={[
-            {
-              id: "view",
-              label: `View ${child.name}`,
-              icon: <EyeIcon />,
-              onClick: () => handleSelectChild(),
-            },
-            {
-              id: "share",
-              label: `Share ${child.name}`,
-              icon: <ShareIcon />,
-              onClick: handleShareChild,
-            },
-            {
-              id: "invite",
-              label: `Invite ${child.name}`,
-              icon: <MailIcon />,
-              onClick: () => navigate("/invite", { state: { child } }),
-            },
-            {
-              id: "edit",
-              label: `Edit ${child.name}`,
-              icon: <PencilIcon />,
-              onClick: () => handleTogglePopup?.(true, child, "edit"),
-            },
-            {
-              id: "delete",
-              label: `Delete ${child.name}`,
-              icon: <TrashIcon />,
-              onClick: () => handleTogglePopup?.(true, child, "delete"),
-              isDestructive: true,
-            },
-          ]}
+          actions={
+            isCreator
+              ? [
+                  {
+                    id: "view",
+                    label: `View ${child.name}`,
+                    icon: <EyeIcon />,
+                    onClick: () => handleSelectChild(),
+                  },
+                  {
+                    id: "share",
+                    label: `Share ${child.name}`,
+                    icon: <ShareIcon />,
+                    onClick: () => navigate("/share", { state: { child } }),
+                  },
+                  {
+                    id: "invite",
+                    label: `Invite ${child.name}`,
+                    icon: <MailIcon />,
+                    onClick: () => navigate("/invite", { state: { child } }),
+                  },
+                  {
+                    id: "edit",
+                    label: `Rename ${child.name}`,
+                    icon: <PencilIcon />,
+                    onClick: () => handleTogglePopup?.(true, child, "edit"),
+                  },
+                  ...(isShared
+                    ? [
+                        {
+                          id: "revoke",
+                          label: `Revoke all shares`,
+                          icon: <BlockIcon />,
+                          onClick: () => handleTogglePopup?.(true, child, "revoke"),
+                          isDestructive: true,
+                        },
+                      ]
+                    : []),
+                  {
+                    id: "delete",
+                    label: `Delete ${child.name}`,
+                    icon: <TrashIcon />,
+                    onClick: () => handleTogglePopup?.(true, child, "delete"),
+                    isDestructive: true,
+                  },
+                ]
+              : [
+                  {
+                    id: "view",
+                    label: `View ${child.name}`,
+                    icon: <EyeIcon />,
+                    onClick: () => handleSelectChild(),
+                  },
+                ]
+          }
         />
       </Box>
     </Box>

@@ -16,7 +16,8 @@ import {
   Box,
   VStack,
   Button,
-  Link
+  Link,
+  useToast
 } from "@chakra-ui/react";
 import { ChildContext } from "../contexts/ChildContext";
 import strings from "../utils/constants";
@@ -25,6 +26,7 @@ import { useNavigate } from "react-router-dom";
 function ChildList() {
   const { actor, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const toast = useToast();
   const isNative = Capacitor.isNativePlatform();
   // Migration context removed - users directed to V1 to upgrade
   const {
@@ -37,6 +39,7 @@ function ChildList() {
     delete: false,
     edit: false,
     add_child: false,
+    revoke: false,
   });
   const [selectedChild, setSelectedChild] = React.useState(null);
   const [loader, setLoader] = React.useState({ init: true, singles: false });
@@ -107,18 +110,70 @@ function ChildList() {
 
   function updateChild(childID, childName) {
     handleCloseEditPopup();
-    const child_object = { id: childID, name: childName, archived: false };
+    // Find the existing child to preserve creatorId and parentIds
+    const existingChild = children.find(c => c.id === childID);
+    
+    // Build child object with proper Candid optional format
+    const child_object = { 
+      id: childID, 
+      name: childName, 
+      archived: false
+    };
+    
+    // Only include creatorId/parentIds if they exist (preserve exact format from backend)
+    if (existingChild?.creatorId !== undefined) {
+      child_object.creatorId = existingChild.creatorId;
+    }
+    if (existingChild?.parentIds !== undefined) {
+      child_object.parentIds = existingChild.parentIds;
+    }
+    
+    // Optimistically update local state
+    const updatedChildren = children.map(c => 
+      c.id === childID ? { ...c, name: childName } : c
+    );
+    setChildren(updatedChildren);
+    set("childList", updatedChildren);
+    
     setLoader((prevState) => ({ ...prevState, init: true }));
     actor?.updateChild(childID, child_object).then((response) => {
+      setLoader((prevState) => ({ ...prevState, init: false }));
+    }).catch(() => {
+      // On error, refetch from backend
       getChildren({ callService: true });
     });
   }
 
   function deleteChild(childID, childName) {
     handleCloseDeletePopup();
-    const child_object = { id: childID, name: childName, archived: true };
+    // Find the existing child to preserve creatorId and parentIds
+    const existingChild = children.find(c => c.id === childID);
+    
+    // Build child object with proper Candid optional format
+    const child_object = { 
+      id: childID, 
+      name: childName, 
+      archived: true
+    };
+    
+    // Only include creatorId/parentIds if they exist (preserve exact format from backend)
+    if (existingChild?.creatorId !== undefined) {
+      child_object.creatorId = existingChild.creatorId;
+    }
+    if (existingChild?.parentIds !== undefined) {
+      child_object.parentIds = existingChild.parentIds;
+    }
+    
+    // Optimistically remove from local state
+    const updatedChildren = children.filter(c => c.id !== childID);
+    setChildren(updatedChildren);
+    set("childList", updatedChildren);
+    
     setLoader((prevState) => ({ ...prevState, init: true }));
     actor?.updateChild(childID, child_object).then((response) => {
+      setLoader((prevState) => ({ ...prevState, init: false }));
+    }).catch(() => {
+      // On error, refetch from backend
       getChildren({ callService: true });
     });
   }
@@ -182,12 +237,49 @@ function ChildList() {
     setShowPopup((prevState) => ({ ...prevState, ["edit"]: false }));
   };
 
+  const handleCloseAddChildPopup = () => {
+    setShowPopup((prevState) => ({
+      ...prevState,
+      ["add_child"]: false,
+    }));
+  };
+
   const handleToggleAddChildPopup = () => {
     setShowPopup((prevState) => ({
       ...prevState,
-      ["add_child"]: !prevState.add_child,
+      ["add_child"]: !prevState["add_child"],
     }));
   };
+
+  const handleCloseRevokePopup = () => {
+    setShowPopup((prevState) => ({ ...prevState, ["revoke"]: false }));
+  };
+
+  function revokeShares(childID, childName) {
+    handleCloseRevokePopup();
+    setLoader((prevState) => ({ ...prevState, init: true }));
+    actor?.revokeAllShares(childID).then((response) => {
+      if (response?.ok) {
+        toast({
+          title: "Shares revoked",
+          description: `All shares for ${childName} have been removed`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        getChildren({ callService: true });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to revoke shares",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setLoader((prevState) => ({ ...prevState, init: false }));
+      }
+    });
+  }
 
   const handleSubmit = async (childName) => {
     if (childName) {
@@ -231,6 +323,46 @@ function ChildList() {
         setLoader((prevState) => ({ ...prevState, singles: false }));
       });
     }
+  };
+
+  const handleAcceptShare = async (code) => {
+    handleToggleAddChildPopup();
+    setLoader((prevState) => ({ ...prevState, init: true }));
+    
+    actor?.acceptShareCode(code).then((response) => {
+      if (response?.ok) {
+        toast({
+          title: "Child added!",
+          description: `${response.ok.name} has been shared with you`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        getChildren({ callService: true });
+      } else {
+        const errorMsg = response?.err?.NotFound 
+          ? "Invalid or expired code" 
+          : "Failed to add child";
+        toast({
+          title: "Error",
+          description: errorMsg,
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setLoader((prevState) => ({ ...prevState, init: false }));
+      }
+    }).catch((error) => {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: "Failed to accept share code",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setLoader((prevState) => ({ ...prevState, init: false }));
+    });
   };
 
   // trailingActions removed
@@ -326,6 +458,7 @@ function ChildList() {
         <AddChildDialog
           handleClosePopup={handleToggleAddChildPopup}
           handleSubmit={handleSubmit}
+          handleAcceptShare={handleAcceptShare}
         />
       )}
       {showPopup.delete && (
@@ -344,9 +477,19 @@ function ChildList() {
           namePlaceholder="Child Name"
         />
       )}
+      {showPopup.revoke && (
+        <DeleteDialog
+          handleCloseDeletePopup={handleCloseRevokePopup}
+          selectedItem={selectedChild}
+          handleDelete={revokeShares}
+          title="Revoke all shares?"
+          message={`This will remove access to ${selectedChild?.name} for all other adults. Only you will be able to see and manage this child.`}
+          confirmText="Revoke"
+        />
+      )}
       <div
         className={`${
-          showPopup.delete || showPopup.edit || showPopup.add_child
+          showPopup.delete || showPopup.edit || showPopup.add_child || showPopup.revoke
             ? modelStyles.blur_background
             : undefined
         }`}
