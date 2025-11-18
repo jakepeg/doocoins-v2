@@ -40,6 +40,7 @@ function ChildList() {
     edit: false,
     add_child: false,
     revoke: false,
+    remove: false,
   });
   const [selectedChild, setSelectedChild] = React.useState(null);
   const [loader, setLoader] = React.useState({ init: true, singles: false });
@@ -254,6 +255,36 @@ function ChildList() {
   const handleCloseRevokePopup = () => {
     setShowPopup((prevState) => ({ ...prevState, ["revoke"]: false }));
   };
+
+  const handleCloseRemovePopup = () => {
+    setShowPopup((prevState) => ({ ...prevState, ["remove"]: false }));
+  };
+
+  function removeSharedChild(childID, childName) {
+    handleCloseRemovePopup();
+    setLoader((prevState) => ({ ...prevState, init: true }));
+    actor?.removeSharedAccess(childID).then((response) => {
+      if (response?.ok) {
+        toast({
+          title: "Child removed",
+          description: `${childName} has been removed from your list`,
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+        getChildren({ callService: true });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to remove child",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        setLoader((prevState) => ({ ...prevState, init: false }));
+      }
+    });
+  }
 
   function revokeShares(childID, childName) {
     handleCloseRevokePopup();
@@ -487,9 +518,19 @@ function ChildList() {
           confirmText="Revoke"
         />
       )}
+      {showPopup.remove && (
+        <DeleteDialog
+          handleCloseDeletePopup={handleCloseRemovePopup}
+          selectedItem={selectedChild}
+          handleDelete={removeSharedChild}
+          title="Remove child?"
+          message={`This will remove ${selectedChild?.name} from your child list. The child will still exist in the creator's account.`}
+          confirmText="Remove"
+        />
+      )}
       <div
         className={`${
-          showPopup.delete || showPopup.edit || showPopup.add_child || showPopup.revoke
+          showPopup.delete || showPopup.edit || showPopup.add_child || showPopup.revoke || showPopup.remove
             ? modelStyles.blur_background
             : undefined
         }`}

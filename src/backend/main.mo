@@ -478,6 +478,83 @@ persistent actor {
     };
   };
 
+  // Remove caller from a child's parentIds (unshare for non-creators)
+  public shared (msg) func removeSharedAccess(childId : Text) : async Result.Result<Types.Success, Types.Error> {
+    let callerId = msg.caller;
+
+    if (Principal.toText(callerId) == anonIdNew) {
+      return #err(#NotAuthorized);
+    };
+
+    let resolvedPrincipal = Migration.resolvePrincipal(principalLinks, callerId);
+
+    // Find the child in all profiles
+    for ((profilePrincipal, children) in Trie.iter(profilesV2)) {
+      switch (Trie.find(children, keyText(childId), Text.equal)) {
+        case (?child) {
+          // Check if caller has access to this child
+          let hasAccess = switch (child.parentIds) {
+            case (?ids) { containsPrincipal(ids, resolvedPrincipal) };
+            case null { Principal.equal(profilePrincipal, resolvedPrincipal) };
+          };
+
+          if (hasAccess) {
+            // Check if caller is the creator
+            let isCreator = switch (child.creatorId) {
+              case (?creatorId) {
+                Principal.equal(resolvedPrincipal, creatorId);
+              };
+              case null { Principal.equal(profilePrincipal, resolvedPrincipal) };
+            };
+
+            if (isCreator) {
+              // Creators cannot remove themselves, they must delete the child
+              return #err(#NotAuthorized);
+            };
+
+            // Remove caller from parentIds
+            let newParentIds = switch (child.parentIds) {
+              case (?ids) {
+                let filtered = Array.filter<Principal>(ids, func(p) = not Principal.equal(p, resolvedPrincipal));
+                ?filtered;
+              };
+              case null { null };
+            };
+
+            let updatedChild : Types.Child = {
+              name = child.name;
+              id = child.id;
+              archived = child.archived;
+              creatorId = child.creatorId;
+              parentIds = newParentIds;
+            };
+
+            let updatedChildren = Trie.put(
+              children,
+              keyText(childId),
+              Text.equal,
+              updatedChild,
+            ).0;
+
+            let updatedProfiles = Trie.put(
+              profilesV2,
+              keyPrincipal(profilePrincipal),
+              Principal.equal,
+              updatedChildren,
+            ).0;
+
+            profilesV2 := updatedProfiles;
+
+            return #ok(#Success);
+          };
+        };
+        case null {};
+      };
+    };
+
+    return #err(#NotFound);
+  };
+
   // Clean up duplicate children in shared adults' profiles
   public shared (msg) func cleanupDuplicateChildren() : async Result.Result<Text, Types.Error> {
     let callerId = msg.caller;
