@@ -351,7 +351,11 @@ const Balance = () => {
           >
             Choose a Goal
           </ModalHeader>
-          <ModalCloseButton color="black" />
+          <ModalCloseButton 
+            color="black"
+            top="16px"
+            right="16px"
+          />
           <ModalBody py={4} px={4}>
             {availableRewards.length === 0 ? (
               <Box textAlign="center" py={6}>
