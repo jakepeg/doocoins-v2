@@ -4,6 +4,7 @@ import { ChildContext } from "../contexts/ChildContext";
 import { del, get, set } from "idb-keyval";
 import { useToast, Text, Skeleton, Stack, Box } from "@chakra-ui/react";
 import { useAuth } from "../use-auth-client";
+import { useLocation, useNavigate } from "react-router-dom";
 import RequestItem from "../components/Requests/RequestItem";
 import useHasRewards from "../hooks/useHasRewards";
 import EmptyStateMessage from "../components/EmptyStateMessage";
@@ -12,6 +13,10 @@ const Alerts = () => {
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const ITEM_LIMIT = 20;
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isAllChildrenMode = location.search.includes('all=true');
+  const [allChildren, setAllChildren] = useState([]);
 
   const toast = useToast();
   const {
@@ -41,16 +46,82 @@ const Alerts = () => {
   }, [actor, child?.id, hasNewData]);
 
   React.useEffect(() => {
-    if (child?.id) {
+    if (isAllChildrenMode) {
+      getAllChildrenAlerts();
+    } else if (child?.id) {
       getAlerts({ callService: true });
     }
-  }, [actor, child?.id]);
+  }, [actor, child?.id, isAllChildrenMode]);
 
   useEffect(() => {
     if (!list?.rewards?.length && !list?.tasks?.length && reqCount > 0) {
       setReqCount(0);
     }
   }, [list?.rewards, list?.tasks, reqCount]);
+
+  async function getAllChildrenAlerts() {
+    setLoading(true);
+    try {
+      // Get all children from cache
+      const childList = await get("childList");
+      if (!childList || !childList.length) {
+        setLoading(false);
+        setList({ tasks: [], rewards: [] });
+        return;
+      }
+
+      // Fetch requests from all children
+      const allRequests = await Promise.all(
+        childList.map(async (child) => {
+          const [tasks, rewards] = await Promise.all([
+            actor?.getTaskReqs(child.id).then(res => Object.values(res || {})),
+            actor?.getRewardReqs(child.id)
+          ]);
+          
+          // Add child info to each request
+          const tasksWithChild = (tasks || []).map(task => ({
+            ...task,
+            childId: child.id,
+            childName: child.name,
+            type: 'task'
+          }));
+          
+          const rewardsWithChild = (rewards || []).map(reward => ({
+            ...reward,
+            childId: child.id,
+            childName: child.name,
+            type: 'reward'
+          }));
+          
+          return [...tasksWithChild, ...rewardsWithChild];
+        })
+      );
+
+      // Flatten and sort by timestamp (newest first)
+      const flatRequests = allRequests.flat().sort((a, b) => {
+        // Assuming requests have a timestamp or use id as proxy
+        return b.id?.localeCompare(a.id) || 0;
+      });
+
+      // Separate back into tasks and rewards for compatibility
+      const tasks = flatRequests.filter(r => r.type === 'task');
+      const rewards = flatRequests.filter(r => r.type === 'reward');
+
+      setList({ tasks, rewards });
+      setAllChildren(childList);
+    } catch (error) {
+      console.error('Error fetching all children alerts:', error);
+      toast({
+        title: "An error occurred.",
+        description: `Apologies, please try again later.`,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   function getAlerts({
     disableFullLoader = false,
@@ -207,30 +278,35 @@ const Alerts = () => {
     let date = dateNum.toString();
 
     if (task) {
-      let maxIdObject = null;
-
-      // Iterate through the data array to find the object with the highest "id"
-      for (const item of transactions) {
-        if (!maxIdObject || Number(item.id) > Number(maxIdObject.id)) {
-          maxIdObject = item;
-        }
-      }
-
-      const new_transactions = {
-        completedDate: date,
-        id: maxIdObject?.id ? parseInt(maxIdObject?.id) + 1 : 1,
-        value: task.value,
-        name: task.name,
-        transactionType: "TASK_CREDIT",
-      };
-      setChild((prevState) => ({
-        ...prevState,
-        balance: prevState.balance + task.value,
-      }));
+      let new_transactions = null;
       
-      // Get current transactions and add new one
-      const currentTransactions = await get("transactionList");
-      await handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
+      // Only update transactions and balance in single-child mode
+      if (!isAllChildrenMode) {
+        let maxIdObject = null;
+
+        // Iterate through the data array to find the object with the highest "id"
+        for (const item of transactions) {
+          if (!maxIdObject || Number(item.id) > Number(maxIdObject.id)) {
+            maxIdObject = item;
+          }
+        }
+
+        new_transactions = {
+          completedDate: date,
+          id: maxIdObject?.id ? parseInt(maxIdObject?.id) + 1 : 1,
+          value: task.value,
+          name: task.name,
+          transactionType: "TASK_CREDIT",
+        };
+        setChild((prevState) => ({
+          ...prevState,
+          balance: prevState.balance + task.value,
+        }));
+        
+        // Get current transactions and add new one
+        const currentTransactions = await get("transactionList");
+        await handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
+      }
       
       // API call approveTask
       setBlockingChildUpdate(true);
@@ -240,8 +316,10 @@ const Alerts = () => {
         tasks: prevState.tasks?.filter((_task) => _task.id !== task.id),
       }));
 
+      const targetChildName = isAllChildrenMode ? task.childName : child.name;
+
       toast({
-        title: `Keep up the good work, ${child.name}.`,
+        title: `Keep up the good work, ${targetChildName}.`,
         status: "success",
         duration: 4000,
         isClosable: true,
@@ -252,48 +330,57 @@ const Alerts = () => {
           .approveTask(task.childId, parseInt(task.taskId), date)
           .then(async (returnedApproveTask) => {
             if ("ok" in returnedApproveTask) {
-              actor?.getChildren().then(async (returnedChilren) => {
-                if ("ok" in returnedChilren) {
-                  rejectRequest({ task });
-                  const children = Object.values(returnedChilren);
-                  const updatedChildrenData = await Promise.all(
-                    children[0].map(async (child) => {
-                      const balance = await getBalance(child.id);
-                      return {
-                        ...child,
-                        balance: parseInt(balance),
-                      };
-                    })
-                  );
-                  set("childList", updatedChildrenData);
-                  await getChildren({ revokeStateUpdate: true });
-                  // setLoader((prevState) => ({ ...prevState, init: false }));
-                  setBlockingChildUpdate(false);
-                } else {
-                  toast({
-                    title: `Oops, something went wrong.`,
-                    description:
-                      "Could not approve the task, please try again later.",
-                    status: "error",
-                    duration: 4000,
-                    isClosable: true,
-                  });
-                  // setLoader((prevState) => ({ ...prevState, init: false }));
-                  console.error(returnedChilren.err);
-                }
-              });
+              rejectRequest({ task });
+              
+              if (isAllChildrenMode) {
+                // In combined mode, just refresh the combined view
+                getAllChildrenAlerts();
+                setBlockingChildUpdate(false);
+              } else {
+                actor?.getChildren().then(async (returnedChilren) => {
+                  if ("ok" in returnedChilren) {
+                    const children = Object.values(returnedChilren);
+                    const updatedChildrenData = await Promise.all(
+                      children[0].map(async (child) => {
+                        const balance = await getBalance(child.id);
+                        return {
+                          ...child,
+                          balance: parseInt(balance),
+                        };
+                      })
+                    );
+                    set("childList", updatedChildrenData);
+                    await getChildren({ revokeStateUpdate: true });
+                    // setLoader((prevState) => ({ ...prevState, init: false }));
+                    setBlockingChildUpdate(false);
+                  } else {
+                    toast({
+                      title: `Oops, something went wrong.`,
+                      description:
+                        "Could not approve the task, please try again later.",
+                      status: "error",
+                      duration: 4000,
+                      isClosable: true,
+                    });
+                    // setLoader((prevState) => ({ ...prevState, init: false }));
+                    console.error(returnedChilren.err);
+                  }
+                });
+              }
             } else {
               // setLoader((prevState) => ({ ...prevState, init: false }));
-              // Revert transaction on error
-              const currentTransactions = await get("transactionList");
-              const filteredTransactions = (currentTransactions || []).filter(
-                (transaction) => transaction.id !== new_transactions.id
-              );
-              await handleUpdateTransactions(filteredTransactions);
-              setChild((prevState) => ({
-                ...prevState,
-                balance: prevState.balance - task.value,
-              }));
+              // Revert transaction on error (only in single-child mode)
+              if (!isAllChildrenMode && new_transactions) {
+                const currentTransactions = await get("transactionList");
+                const filteredTransactions = (currentTransactions || []).filter(
+                  (transaction) => transaction.id !== new_transactions.id
+                );
+                await handleUpdateTransactions(filteredTransactions);
+                setChild((prevState) => ({
+                  ...prevState,
+                  balance: prevState.balance - task.value,
+                }));
+              }
               // Restore task to the list
               setList((prevState) => ({
                 ...prevState,
@@ -322,13 +409,15 @@ const Alerts = () => {
           ...prevState,
           tasks: [...(prevState.tasks || []), task],
         }));
-        // Revert transaction on error
-        const currentTransactions = await get("transactionList");
-        handleUpdateTransactions(
-          (currentTransactions || []).filter(
-            (transaction) => transaction.id !== new_transactions.id
-          )
-        );
+        // Revert transaction on error (only in single-child mode)
+        if (!isAllChildrenMode && new_transactions) {
+          const currentTransactions = await get("transactionList");
+          handleUpdateTransactions(
+            (currentTransactions || []).filter(
+              (transaction) => transaction.id !== new_transactions.id
+            )
+          );
+        }
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,
@@ -340,30 +429,38 @@ const Alerts = () => {
         console.log(`error block`, error);
       }
     } else if (reward) {
-      const new_transactions = {
-        completedDate: date,
-        id: transactions?.[0]?.id ? parseInt(transactions?.[0]?.id) + 1 : 1,
-        value: reward.value,
-        name: reward.name,
-        transactionType: "GOAL_DEBIT",
-      };
+      let new_transactions = null;
       
-      // Get current transactions and add new one
-      const currentTransactions = await get("transactionList");
-      handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
+      // Only update transactions and balance in single-child mode
+      if (!isAllChildrenMode) {
+        new_transactions = {
+          completedDate: date,
+          id: transactions?.[0]?.id ? parseInt(transactions?.[0]?.id) + 1 : 1,
+          value: reward.value,
+          name: reward.name,
+          transactionType: "GOAL_DEBIT",
+        };
+        
+        // Get current transactions and add new one
+        const currentTransactions = await get("transactionList");
+        handleUpdateTransactions([new_transactions, ...(currentTransactions || [])]);
 
-      setChild((prevState) => ({
-        ...prevState,
-        balance: prevState.balance - reward.value,
-      }));
+        setChild((prevState) => ({
+          ...prevState,
+          balance: prevState.balance - reward.value,
+        }));
+      }
 
       setList((prevState) => ({
         ...prevState,
         rewards: prevState.rewards?.filter((_reward) => _reward.id !== reward.strId),
       }));
 
+      const targetChildId = isAllChildrenMode ? reward.childId : child.id;
+      const targetChildName = isAllChildrenMode ? reward.childName : child.name;
+
       toast({
-        title: `Yay - well deserved, ${child.name}.`,
+        title: `Yay - well deserved, ${targetChildName}.`,
         status: "success",
         duration: 4000,
         isClosable: true,
@@ -371,45 +468,54 @@ const Alerts = () => {
 
       try {
         await actor
-          .claimGoal(child.id, parseInt(reward.id), date)
+          .claimGoal(targetChildId, parseInt(reward.id), date)
           .then(async (returnedClaimReward) => {
             if ("ok" in returnedClaimReward) {
               // Clear the current goal after claiming (reset to no goal)
-              await actor?.currentGoal(child.id, 0);
+              await actor?.currentGoal(targetChildId, 0);
               
               rejectRequest({ reward });
-              // getReward({ rewardId: reward_id, revokeStateUpdate: true });
-              actor?.getChildren().then(async (returnedChilren) => {
-                const children = Object.values(returnedChilren);
-                const updatedChildrenData = await Promise.all(
-                  children[0].map(async (child) => {
-                    const balance = await getBalance(child.id);
-
-                    return {
-                      ...child,
-                      balance: parseInt(balance),
-                    };
-                  })
-                );
-                set("childList", updatedChildrenData);
-                await getChildren({ revokeStateUpdate: true });
-                // setIsLoading(false);
+              
+              if (isAllChildrenMode) {
+                // In combined mode, just refresh the combined view
+                getAllChildrenAlerts();
                 setBlockingChildUpdate(false);
-              });
+              } else {
+                // getReward({ rewardId: reward_id, revokeStateUpdate: true });
+                actor?.getChildren().then(async (returnedChilren) => {
+                  const children = Object.values(returnedChilren);
+                  const updatedChildrenData = await Promise.all(
+                    children[0].map(async (child) => {
+                      const balance = await getBalance(child.id);
+
+                      return {
+                        ...child,
+                        balance: parseInt(balance),
+                      };
+                    })
+                  );
+                  set("childList", updatedChildrenData);
+                  await getChildren({ revokeStateUpdate: true });
+                  // setIsLoading(false);
+                  setBlockingChildUpdate(false);
+                });
+              }
             } else {
               console.error(returnedClaimReward.err);
-              // Revert transaction on error
-              const currentTransactions = await get("transactionList");
-              handleUpdateTransactions(
-                (currentTransactions || []).filter(
-                  (transaction) => transaction.id !== new_transactions.id
-                )
-              );
-              // Restore balance
-              setChild((prevState) => ({
-                ...prevState,
-                balance: prevState.balance + reward.value,
-              }));
+              // Revert transaction on error (only in single-child mode)
+              if (!isAllChildrenMode && new_transactions) {
+                const currentTransactions = await get("transactionList");
+                handleUpdateTransactions(
+                  (currentTransactions || []).filter(
+                    (transaction) => transaction.id !== new_transactions.id
+                  )
+                );
+                // Restore balance
+                setChild((prevState) => ({
+                  ...prevState,
+                  balance: prevState.balance + reward.value,
+                }));
+              }
               // Restore reward to the list
               setList((prevState) => ({
                 ...prevState,
@@ -441,13 +547,15 @@ const Alerts = () => {
           ...prevState,
           rewards: [...(prevState.rewards || []), reward],
         }));
-        // Revert transaction on error
-        const currentTransactions = await get("transactionList");
-        handleUpdateTransactions(
-          (currentTransactions || []).filter(
-            (transaction) => transaction.id !== new_transactions.id
-          )
-        );
+        // Revert transaction on error (only in single-child mode)
+        if (!isAllChildrenMode && new_transactions) {
+          const currentTransactions = await get("transactionList");
+          handleUpdateTransactions(
+            (currentTransactions || []).filter(
+              (transaction) => transaction.id !== new_transactions.id
+            )
+          );
+        }
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,
@@ -464,12 +572,18 @@ const Alerts = () => {
   const rejectRequest = async ({ task, reward }) => {
     if (task) {
       try {
-        await actor.removeTaskReq(child.id, task.id);
-        getAlerts({
-          disableFullLoader: true,
-          callService: true,
-          revokeStateUpdate: true,
-        });
+        const targetChildId = isAllChildrenMode ? task.childId : child.id;
+        await actor.removeTaskReq(targetChildId, task.id);
+        if (isAllChildrenMode) {
+          // In combined mode, just refresh the combined view
+          getAllChildrenAlerts();
+        } else {
+          getAlerts({
+            disableFullLoader: true,
+            callService: true,
+            revokeStateUpdate: true,
+          });
+        }
       } catch (error) {
         toast({
           title: "An error occurred.",
@@ -483,12 +597,18 @@ const Alerts = () => {
       }
     } else if (reward) {
       try {
-        await actor.removeRewardReq(child.id, reward.strId);
-        getAlerts({
-          disableFullLoader: true,
-          callService: true,
-          revokeStateUpdate: true,
-        });
+        const targetChildId = isAllChildrenMode ? reward.childId : child.id;
+        await actor.removeRewardReq(targetChildId, reward.strId);
+        if (isAllChildrenMode) {
+          // In combined mode, just refresh the combined view
+          getAllChildrenAlerts();
+        } else {
+          getAlerts({
+            disableFullLoader: true,
+            callService: true,
+            revokeStateUpdate: true,
+          });
+        }
       } catch (error) {
         toast({
           title: "An error occurred.",
@@ -527,6 +647,16 @@ const Alerts = () => {
               <ul className="list-wrapper">
                 {displayedRewards.map((reward, idx) => (
                   <li key={reward.id || idx} style={{ listStyle: "none" }}>
+                    {isAllChildrenMode && reward.childName && (
+                      <Text
+                        textStyle="smallLight"
+                        color="#666"
+                        marginBottom={1}
+                        marginTop={idx === 0 ? 0 : 3}
+                      >
+                        {reward.childName}
+                      </Text>
+                    )}
                     <RequestItem
                       request={{
                         ...reward,
@@ -558,6 +688,16 @@ const Alerts = () => {
                 ))}
                 {displayedTasks.map((task, idx) => (
                   <li key={task.id || idx} style={{ listStyle: "none" }}>
+                    {isAllChildrenMode && task.childName && (
+                      <Text
+                        textStyle="smallLight"
+                        color="#666"
+                        marginBottom={1}
+                        marginTop={idx === 0 && !displayedRewards.length ? 0 : 3}
+                      >
+                        {task.childName}
+                      </Text>
+                    )}
                     <RequestItem
                       request={{ ...task, value: parseInt(task.value) }}
                       type="task"
@@ -604,7 +744,7 @@ const Alerts = () => {
   //   return <LoadingSpinner />;
   // }
 
-  if (!child) {
+  if (!child && !isAllChildrenMode) {
     return (
       <div className={`light-panel`}>
         <div

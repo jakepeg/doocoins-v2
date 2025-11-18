@@ -166,7 +166,7 @@ function ProtectedRoute({ children }) {
           marginRight="-50vw"
         >
           <Box maxWidth="768px" width="100%" margin="0 auto">
-            {showMobileLayout && !isChildListRoute && (
+            {showMobileLayout && !isChildListRoute && !(location.pathname === "/alerts" && location.search.includes('all=true')) && (
               <Balance 
                 childName={child?.name} 
                 childBalance={child?.balance}

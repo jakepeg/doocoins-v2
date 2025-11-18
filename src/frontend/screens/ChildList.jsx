@@ -15,6 +15,7 @@ import {
   Text, 
   Box,
   VStack,
+  HStack,
   Button,
   Link,
   useToast
@@ -46,6 +47,9 @@ function ChildList() {
   const [loader, setLoader] = React.useState({ init: true, singles: false });
   const [showAll, setShowAll] = React.useState(false);
   const ITEM_LIMIT = 20;
+  const [activeTab, setActiveTab] = React.useState("children");
+  const [alertsList, setAlertsList] = React.useState({ tasks: [], rewards: [] });
+  const [alertsLoading, setAlertsLoading] = React.useState(false);
 
   React.useEffect(() => {
     if (actor && isAuthenticated) {
@@ -73,12 +77,17 @@ function ChildList() {
               const children = Object.values(returnedChilren);
               const updatedChildrenData = await Promise.all(
                 children[0].map(async (child) => {
-                  const balance = await getBalance(child.id);
-                  const currentGoal = await actor?.getCurrentGoal(child.id);
+                  const [balance, currentGoal, rewardCount, taskCount] = await Promise.all([
+                    getBalance(child.id),
+                    actor?.getCurrentGoal(child.id),
+                    actor?.hasRewards(child.id),
+                    actor?.hasTasks(child.id)
+                  ]);
                   return {
                     ...child,
                     balance: parseInt(balance),
                     hasGoal: parseInt(currentGoal) > 0,
+                    pendingRequests: (parseInt(rewardCount) || 0) + (parseInt(taskCount) || 0),
                   };
                 }),
               );
@@ -94,12 +103,17 @@ function ChildList() {
       } else {
         const updatedChildrenData = await Promise.all(
           Object.values(val).map(async (child) => {
-            const balance = await getBalance(child.id);
-            const currentGoal = await actor?.getCurrentGoal(child.id);
+            const [balance, currentGoal, rewardCount, taskCount] = await Promise.all([
+              getBalance(child.id),
+              actor?.getCurrentGoal(child.id),
+              actor?.hasRewards(child.id),
+              actor?.hasTasks(child.id)
+            ]);
             return {
               ...child,
               balance: parseInt(balance),
               hasGoal: parseInt(currentGoal) > 0,
+              pendingRequests: (parseInt(rewardCount) || 0) + (parseInt(taskCount) || 0),
             };
           }),
         );
@@ -108,6 +122,69 @@ function ChildList() {
       }
     });
   }
+
+  async function getAllChildrenAlerts() {
+    setAlertsLoading(true);
+    try {
+      const childList = children || await get("childList");
+      if (!childList || !childList.length) {
+        setAlertsLoading(false);
+        setAlertsList({ tasks: [], rewards: [] });
+        return;
+      }
+
+      const allRequests = await Promise.all(
+        childList.map(async (child) => {
+          const [tasks, rewards] = await Promise.all([
+            actor?.getTaskReqs(child.id).then(res => Object.values(res || {})),
+            actor?.getRewardReqs(child.id)
+          ]);
+          
+          const tasksWithChild = (tasks || []).map(task => ({
+            ...task,
+            childId: child.id,
+            childName: child.name,
+            type: 'task'
+          }));
+          
+          const rewardsWithChild = (rewards || []).map(reward => ({
+            ...reward,
+            childId: child.id,
+            childName: child.name,
+            type: 'reward'
+          }));
+          
+          return [...tasksWithChild, ...rewardsWithChild];
+        })
+      );
+
+      const flatRequests = allRequests.flat().sort((a, b) => {
+        return b.id?.localeCompare(a.id) || 0;
+      });
+
+      const tasks = flatRequests.filter(r => r.type === 'task');
+      const rewards = flatRequests.filter(r => r.type === 'reward');
+
+      setAlertsList({ tasks, rewards });
+    } catch (error) {
+      console.error('Error fetching alerts:', error);
+      toast({
+        title: "An error occurred.",
+        description: `Apologies, please try again later.`,
+        status: "error",
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setAlertsLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
+    if (activeTab === "requests" && actor && children) {
+      getAllChildrenAlerts();
+    }
+  }, [activeTab, actor, children]);
 
   function updateChild(childID, childName) {
     handleCloseEditPopup();
@@ -483,6 +560,208 @@ function ChildList() {
     );
   }, [displayedChildren, children, showAll]);
 
+  // Children Tab Content Component
+  const ChildrenTabContent = () => (
+    <>
+      <div className={`child-list-wrapper`} style={{ position: "relative" }}>
+        <h2 style={{ marginBottom: "20px" }} className="title-button">
+          <Text as="span" textStyle="smallHeavyDark">Children</Text>
+          <span
+            role="button"
+            onClick={handleToggleAddChildPopup}
+            className="plus-sign"
+          />
+        </h2>
+      </div>
+      {loader.init ? (
+        <Stack margin={"0 20px 20px 20px"}>
+          <Skeleton height="20px" />
+          <Skeleton height="20px" mt={"12px"} />
+          <Skeleton height="20px" mt={"12px"} />
+        </Stack>
+      ) : (
+        <>{ChildrenList}</>
+      )}
+      {loader.singles && (
+        <Stack margin={"0 20px 20px 20px"}>
+          <Skeleton height="20px" mt={"12px"} />
+        </Stack>
+      )}
+    </>
+  );
+
+  // Requests Tab Content Component
+  const RequestsTabContent = () => {
+    const RequestItem = ({ request, type, onApprove, onDecline }) => (
+      <Box 
+        backgroundColor="white"
+        padding={4}
+        borderRadius="md"
+        marginBottom={3}
+        boxShadow="sm"
+      >
+        <VStack align="stretch" spacing={2}>
+          <HStack justify="space-between">
+            <Text textStyle="mediumHeavyDark">{request.name}</Text>
+            <Text textStyle="mediumHeavyDark" color="#00A4D7">{request.value} DC</Text>
+          </HStack>
+          <Text textStyle="smallLight" color="#666">{request.childName}</Text>
+          <HStack spacing={2} marginTop={2}>
+            <button
+              className={modelStyles.popup_edit_action_btn}
+              onClick={onApprove}
+              style={{ flex: 1, margin: 0 }}
+            >
+              Approve
+            </button>
+            <p
+              role="button"
+              className={modelStyles.popup_cancel_action_btn}
+              onClick={onDecline}
+              style={{ 
+                flex: 1, 
+                textAlign: "center", 
+                margin: 0,
+                border: "1px solid #00A4D7",
+                borderRadius: "8px",
+                padding: "12px 8px"
+              }}
+            >
+              Decline
+            </p>
+          </HStack>
+        </VStack>
+      </Box>
+    );
+
+    const approveRequest = async ({ task, reward }) => {
+      try {
+        if (task) {
+          const date = new Date();
+          await actor.approveTask(task.childId, parseInt(task.taskId), date);
+          toast({
+            title: `Keep up the good work, ${task.childName}.`,
+            status: "success",
+            duration: 4000,
+            isClosable: true,
+          });
+        } else if (reward) {
+          const date = new Date();
+          const targetChildId = reward.childId;
+          await actor.claimGoal(targetChildId, parseInt(reward.id), date);
+          await actor?.currentGoal(targetChildId, 0);
+          toast({
+            title: `Yay - well deserved, ${reward.childName}.`,
+            status: "success",
+            duration: 4000,
+            isClosable: true,
+          });
+        }
+        getAllChildrenAlerts();
+        getChildren({ callService: true });
+      } catch (error) {
+        console.error('Approval error:', error);
+        toast({
+          title: "An error occurred.",
+          description: `Apologies, please try again later.`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    };
+
+    const rejectRequest = async ({ task, reward }) => {
+      try {
+        if (task) {
+          await actor.removeTaskReq(task.childId, task.id);
+        } else if (reward) {
+          await actor.removeRewardReq(reward.childId, reward.strId);
+        }
+        getAllChildrenAlerts();
+        getChildren({ callService: true });
+      } catch (error) {
+        console.error('Rejection error:', error);
+        toast({
+          title: "An error occurred.",
+          description: `Apologies, please try again later.`,
+          status: "error",
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    };
+
+    return (
+      <Box padding={4}>
+        <Text textStyle="smallHeavyDark" marginBottom={4}>Pending Requests</Text>
+        {alertsLoading ? (
+          <Stack>
+            <Skeleton height="80px" />
+            <Skeleton height="80px" />
+            <Skeleton height="80px" />
+          </Stack>
+        ) : alertsList.rewards?.length || alertsList.tasks?.length ? (
+          <>
+            {alertsList.rewards?.map((reward) => (
+              <RequestItem
+                key={reward.id}
+                request={{
+                  ...reward,
+                  value: parseInt(reward.value),
+                  id: parseInt(reward.reward || reward.id),
+                  strId: reward.id,
+                }}
+                type="reward"
+                onApprove={() => approveRequest({ 
+                  reward: {
+                    ...reward,
+                    value: parseInt(reward.value),
+                    id: parseInt(reward.reward || reward.id),
+                    strId: reward.id,
+                  }
+                })}
+                onDecline={() => rejectRequest({ 
+                  reward: {
+                    ...reward,
+                    value: parseInt(reward.value),
+                    id: parseInt(reward.reward || reward.id),
+                    strId: reward.id,
+                  }
+                })}
+              />
+            ))}
+            {alertsList.tasks?.map((task) => (
+              <RequestItem
+                key={task.id}
+                request={{ ...task, value: parseInt(task.value) }}
+                type="task"
+                onApprove={() => approveRequest({ task: { ...task, value: parseInt(task.value) }})}
+                onDecline={() => rejectRequest({ task: { ...task, value: parseInt(task.value) }})}
+              />
+            ))}
+          </>
+        ) : (
+          <EmptyStateMessage>
+            There are no pending requests.
+          </EmptyStateMessage>
+        )}
+      </Box>
+    );
+  };
+
+  // Purchases Tab Content Component
+  const PurchasesTabContent = () => (
+    <Box padding={4} textAlign="center" py={12}>
+      <VStack spacing={4}>
+        <Text textStyle="largeHeavyDark" color="#666">Coming Soon</Text>
+        <Text textStyle="smallLight" color="#999" maxWidth="300px">
+          In-app purchases and premium features will be available here.
+        </Text>
+      </VStack>
+    </Box>
+  );
+
   return (
     <>
       {showPopup.add_child && (
@@ -559,18 +838,23 @@ function ChildList() {
               Manage your children's accounts
             </Text>
 
-            {/* Dashboard Boxes */}
+            {/* Tab Buttons */}
             <Box 
               display="grid"
               gridTemplateColumns="repeat(3, 1fr)"
               gap={4}
               marginTop={4}
             >
-              {/* Box 1 - Children */}
+              {/* Tab 1 - Children */}
               <Box 
                 backgroundColor="#2C4F64"
                 padding={4}
                 borderRadius="md"
+                cursor="pointer"
+                borderTop={activeTab === "children" ? "4px solid #00A4D7" : "4px solid transparent"}
+                _hover={{ backgroundColor: "#3A5F78" }}
+                transition="all 0.2s"
+                onClick={() => setActiveTab("children")}
               >
                 <Text 
                   textStyle="largeHeavyWhite"
@@ -585,71 +869,61 @@ function ChildList() {
                 </Text>
               </Box>
 
-              {/* Box 2 - Total DooCoins */}
+              {/* Tab 2 - Requests */}
               <Box 
                 backgroundColor="#2C4F64"
                 padding={4}
                 borderRadius="md"
+                cursor="pointer"
+                borderTop={activeTab === "requests" ? "4px solid #00A4D7" : "4px solid transparent"}
+                _hover={{ backgroundColor: "#3A5F78" }}
+                transition="all 0.2s"
+                onClick={() => setActiveTab("requests")}
               >
                 <Text 
                   textStyle="largeHeavyWhite"
                 >
-                  {children?.reduce((total, child) => total + (child.balance || 0), 0) || 0}
+                  {children?.reduce((sum, child) => sum + (child.pendingRequests || 0), 0) || 0}
                 </Text>
                 <Text 
                   textStyle="smallLightWhite"
                   marginTop={1}
                 >
-                  Total DooCoins
+                  Requests
                 </Text>
               </Box>
 
-              {/* Box 3 - Active Goals */}
+              {/* Tab 3 - Purchases */}
               <Box 
                 backgroundColor="#2C4F64"
                 padding={4}
                 borderRadius="md"
+                cursor="pointer"
+                borderTop={activeTab === "purchases" ? "4px solid #00A4D7" : "4px solid transparent"}
+                _hover={{ backgroundColor: "#3A5F78" }}
+                transition="all 0.2s"
+                onClick={() => setActiveTab("purchases")}
               >
                 <Text 
                   textStyle="largeHeavyWhite"
                 >
-                  {children?.filter(child => child.hasGoal).length || 0}
+                  0
                 </Text>
                 <Text 
                   textStyle="smallLightWhite"
                   marginTop={1}
                 >
-                  Active Goals
+                  Purchases
                 </Text>
               </Box>
             </Box>
           </Box>
         </Box>
 
-        <div className={`child-list-wrapper`} style={{ position: "relative" }}>
-          <h2 style={{ marginBottom: "20px" }} className="title-button">
-            <Text as="span" textStyle="smallHeavyDark">Children</Text>
-            <span
-              role="button"
-              onClick={handleToggleAddChildPopup}
-              className="plus-sign"
-            />
-          </h2>
-        </div>
-        {loader.init ? (
-          <Stack margin={"0 20px 20px 20px"}>
-            <Skeleton height="20px" />
-            <Skeleton height="20px" mt={"12px"} />
-            <Skeleton height="20px" mt={"12px"} />
-          </Stack>
-        ) : (
-          <>{ChildrenList}</>
-        )}
-        {loader.singles && (
-          <Stack margin={"0 20px 20px 20px"}>
-            <Skeleton height="20px" mt={"12px"} />
-          </Stack>
-        )}
+        {/* Tab Content Area */}
+        {activeTab === "children" && <ChildrenTabContent />}
+        {activeTab === "requests" && <RequestsTabContent />}
+        {activeTab === "purchases" && <PurchasesTabContent />}
       </div>
     </>
   );
