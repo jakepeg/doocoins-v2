@@ -790,9 +790,7 @@ const Rewards = () => {
       )}
 
       <div
-        className={`${
-          isModalOpen ? modelStyles.blur_background : undefined
-        } light-panel`}
+        className="light-panel"
       >
         <div className={`panel-header-wrapper`} style={{ position: "relative" }}>
           <h2 className="title-button">

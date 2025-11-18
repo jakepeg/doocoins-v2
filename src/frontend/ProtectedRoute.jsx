@@ -130,9 +130,7 @@ function ProtectedRoute({ children }) {
         />
       )}
       <Box
-        className={`container ${
-          showPopup.delete || showPopup.edit ? modelStyles.blur_background : ""
-        }`}
+        className="container"
         backgroundColor="#DFF3FF"
         gap={0}
         display="flex"

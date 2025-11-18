@@ -529,11 +529,6 @@ function ChildList() {
         />
       )}
       <div
-        className={`${
-          showPopup.delete || showPopup.edit || showPopup.add_child || showPopup.revoke || showPopup.remove
-            ? modelStyles.blur_background
-            : undefined
-        }`}
         style={{ background: "#DFF3FF" }}
       >
         {/* Hero Section - Full width with centered container */}

@@ -1,5 +1,25 @@
 @import "../../assets/css/variables.css";
 
+/* Dark overlay backdrop */
+.popup_overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  z-index: calc(var(--highest-index) - 1);
+  transition: background-color 0.3s ease-in-out, backdrop-filter 0.3s ease-in-out;
+}
+
+.popup_overlay.overlay_active {
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 .popup_wrapper {
   position: fixed;
   left: 50%;

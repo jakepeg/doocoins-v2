@@ -583,9 +583,7 @@ const Tasks = () => {
         />
       )}
       <div
-        className={`${
-          isModalOpen ? modelStyles.blur_background : undefined
-        } light-panel`}
+        className="light-panel"
       >
         <div
           className={`panel-header-wrapper`}

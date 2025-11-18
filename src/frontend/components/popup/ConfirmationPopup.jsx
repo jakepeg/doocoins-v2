@@ -29,11 +29,20 @@ const ConfirmationPopup = (props) => {
   }, []);
 
   return (
-    <div className={`${styles.popup_wrapper} ${active ? styles.active : ''}`}>
-      <div className={styles.popup}>
-        {props.children}
+    <>
+      {/* Dark overlay backdrop with blur */}
+      <div 
+        className={`${styles.popup_overlay} ${active ? styles.overlay_active : ''}`}
+        onClick={props.handleClosePopup}
+      />
+      
+      {/* Popup content */}
+      <div className={`${styles.popup_wrapper} ${active ? styles.active : ''}`}>
+        <div className={styles.popup}>
+          {props.children}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
