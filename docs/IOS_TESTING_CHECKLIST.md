@@ -173,7 +173,7 @@
 
 - [ ] Login to Account B
 - [ ] Click "+" button to add child
-- [ ] Check "Enter Magic Code" 
+- [ ] Check "Enter Magic Code"
 - [ ] Enter the 4-digit code from Account A
 - [ ] Click "Add Child" button
 - [ ] Verify toast notification: "[Child name] has been shared with you"
@@ -257,13 +257,13 @@
 
 **Device Info:**
 
-- Model: ******\_\_\_\_******
-- iOS Version: ******\_\_\_\_******
-- Build Number: ******\_\_\_\_******
+- Model: **\*\***\_\_\_\_**\*\***
+- iOS Version: **\*\***\_\_\_\_**\*\***
+- Build Number: **\*\***\_\_\_\_**\*\***
 
-**Test Date:** ******\_\_\_\_******
+**Test Date:** **\*\***\_\_\_\_**\*\***
 
-**Tester:** ******\_\_\_\_******
+**Tester:** **\*\***\_\_\_\_**\*\***
 
 **Overall Result:** ☐ Pass ☐ Fail ☐ Partial
 
