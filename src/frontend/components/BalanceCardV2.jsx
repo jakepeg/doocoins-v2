@@ -51,6 +51,9 @@ const BalanceCardV2 = ({
     ? Number(percentage) 
     : 0;
 
+  // Check if user is creator - if not defined, default to true for backward compatibility
+  const isCreator = child?.isCreator !== undefined ? child.isCreator : true;
+
   return (
     <header
       style={{
@@ -68,50 +71,52 @@ const BalanceCardV2 = ({
       {/* Background SVG */}
       <ActiveBackground />
 
-      {/* Actions Menu - Top Right */}
-      <Box
-        position="absolute"
-        top="12px"
-        right="12px"
-        zIndex={10}
-        onClick={(e) => e.stopPropagation()}
-        sx={{
-          backgroundColor: "rgba(255, 255, 255, 0.3)",
-          borderRadius: "50%",
-          width: "30px",
-          height: "30px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <ActionsMenu
-          actions={[
-            {
-              id: "share",
-              label: `Share ${child?.name}`,
-              icon: <ShareIcon />,
-              onClick: handleShareChild,
-            },
-            {
-              id: "invite",
-              label: `Invite ${child?.name}`,
-              icon: <MailIcon />,
-              onClick: handleNavigateToInvite,
-            },
-            {
-              id: "edit",
-              label: `Edit ${child?.name}`,
-              icon: <PencilIcon />,
-              onClick: handleToggleEditPopup,
-            },
-          ]}
-          ariaLabel="Child actions menu"
-          iconColor="black"
-          buttonBg="transparent"
-          buttonHoverBg="whiteAlpha.200"
-        />
-      </Box>
+      {/* Actions Menu - Top Right - Only show if user is creator */}
+      {isCreator && (
+        <Box
+          position="absolute"
+          top="12px"
+          right="12px"
+          zIndex={10}
+          onClick={(e) => e.stopPropagation()}
+          sx={{
+            backgroundColor: "rgba(255, 255, 255, 0.3)",
+            borderRadius: "50%",
+            width: "30px",
+            height: "30px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <ActionsMenu
+            actions={[
+              {
+                id: "share",
+                label: `Share ${child?.name}`,
+                icon: <ShareIcon />,
+                onClick: handleShareChild,
+              },
+              {
+                id: "invite",
+                label: `Invite ${child?.name}`,
+                icon: <MailIcon />,
+                onClick: handleNavigateToInvite,
+              },
+              {
+                id: "edit",
+                label: `Edit ${child?.name}`,
+                icon: <PencilIcon />,
+                onClick: handleToggleEditPopup,
+              },
+            ]}
+            ariaLabel="Child actions menu"
+            iconColor="black"
+            buttonBg="transparent"
+            buttonHoverBg="whiteAlpha.200"
+          />
+        </Box>
+      )}
 
       {/* TODO: Customize this layout for V2 design */}
       <Box

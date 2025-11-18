@@ -74,17 +74,30 @@ const Balance = ({ handleTogglePopup }) => {
   React.useEffect(() => {
     if (!blockingChildUpdate) {
       get("selectedChild")
-        .then(async (data) => {
-          const [balance, name] = await Promise.all([
-            get(`balance-${data}`),
-            get(`selectedChildName`),
-          ]);
-          if (data) {
-            setChild({
-              id: data,
-              balance: parseInt(balance),
-              name,
-            });
+        .then(async (childId) => {
+          if (childId) {
+            // Get full child data from childList cache to preserve isCreator
+            const childList = await get("childList");
+            const fullChildData = childList?.find(c => c.id === childId);
+            
+            if (fullChildData) {
+              // Use full child data including isCreator
+              setChild({
+                ...fullChildData,
+                balance: parseInt(fullChildData.balance),
+              });
+            } else {
+              // Fallback to individual cache keys if childList not available
+              const [balance, name] = await Promise.all([
+                get(`balance-${childId}`),
+                get(`selectedChildName`),
+              ]);
+              setChild({
+                id: childId,
+                balance: parseInt(balance),
+                name,
+              });
+            }
           } else {
             navigate("/");
           }

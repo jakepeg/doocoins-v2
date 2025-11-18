@@ -76,6 +76,7 @@ const ChildItem = ({ child, handleTogglePopup }) => {
       id: child?.id,
       balance: parseInt(child?.balance),
       name: child.name,
+      isCreator: child?.isCreator, // Preserve isCreator for access control
     });
   };
 

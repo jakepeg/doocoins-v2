@@ -47,6 +47,9 @@ const BalanceCardV1 = ({
   handleOpenGoalPicker,
   handleClaimGoal,
 }) => {
+  // Check if user is creator - if not defined, default to true for backward compatibility
+  const isCreator = child?.isCreator !== undefined ? child.isCreator : true;
+
   return (
     <header
       style={{
@@ -58,39 +61,41 @@ const BalanceCardV1 = ({
       }}
       className={`${styles.hero}`}
     >
-      {/* Actions Menu - Top Right */}
-      <Box
-        position="absolute"
-        top="12px"
-        right="12px"
-        zIndex={1000}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ActionsMenu
-          actions={[
-            {
-              id: "share",
-              label: "Share child",
-              icon: <ShareIcon />,
-              onClick: handleShareChild,
-            },
-            {
-              id: "invite",
-              label: "Invite to app",
-              icon: <MailIcon />,
-              onClick: handleNavigateToInvite,
-            },
-            {
-              id: "edit",
-              label: "Edit name",
-              icon: <PencilIcon />,
-              onClick: handleToggleEditPopup,
-            },
-          ]}
-          ariaLabel="Child actions menu"
-          iconColor="white"
-        />
-      </Box>
+      {/* Actions Menu - Top Right - Only show if user is creator */}
+      {isCreator && (
+        <Box
+          position="absolute"
+          top="12px"
+          right="12px"
+          zIndex={1000}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ActionsMenu
+            actions={[
+              {
+                id: "share",
+                label: "Share child",
+                icon: <ShareIcon />,
+                onClick: handleShareChild,
+              },
+              {
+                id: "invite",
+                label: "Invite to app",
+                icon: <MailIcon />,
+                onClick: handleNavigateToInvite,
+              },
+              {
+                id: "edit",
+                label: "Edit name",
+                icon: <PencilIcon />,
+                onClick: handleToggleEditPopup,
+              },
+            ]}
+            ariaLabel="Child actions menu"
+            iconColor="white"
+          />
+        </Box>
+      )}
 
       <Box
         display={"flex"}
