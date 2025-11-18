@@ -158,6 +158,56 @@
 
 ---
 
+## Part 19: Parent App - Child Sharing Feature
+
+### Parent App (Parent A) - Share Child
+
+- [ ] Navigate to child list
+- [ ] Click on child's three-dot menu
+- [ ] Click "Share [child name]"
+- [ ] Click "Copy Code" button
+- [ ] Verify toast notification: "Code copied to clipboard"
+- [ ] Verify code is actually copied to clipboard
+
+### Parent App (Parent B) - Accept Shared Child
+
+- [ ] Login to Account B
+- [ ] Click "+" button to add child
+- [ ] Check "Enter Magic Code" 
+- [ ] Enter the 4-digit code from Account A
+- [ ] Click "Add Child" button
+- [ ] Verify toast notification: "[Child name] has been shared with you"
+- [ ] Verify child appears in Account B's child list with 👥 icon
+- [ ] Verify limited menu options in actions menu (View, Remove only)
+- [ ] Verify actions menu hidden on balance card
+
+### Parent App (Parent A) - Revoke Shares
+
+- [ ] Verify 👥 shared icon displays next to child name
+- [ ] Verify all menu options in actions menu (Share, Invite, Rename, Delete, Revoke)
+- [ ] Click "Revoke all shares"
+- [ ] Verify confirmation dialog
+- [ ] Click "Revoke"
+- [ ] Verify toast: "Shares revoked" with success message
+- [ ] Verify 👥 icon disappears from child
+- [ ] Share a second child (repeat share process)
+
+### Parent App (Parent B) - Remove Shared Child
+
+- [ ] Verify first shared child no longer appears in list
+- [ ] Click "Remove [child name]" in actions menu for second shared child
+- [ ] Verify confirmation dialog shows: "This will remove [child name] from your child list. The child will still exist in the creator's account."
+- [ ] Click "Remove"
+- [ ] Verify toast: "Child removed" message
+- [ ] Verify child disappears from Account B's list
+
+### Parent App (Parent A) - Verify After Remove
+
+- [ ] Verify second shared child still exists in list
+- [ ] Verify 👥 icon removed (no longer shared)
+
+---
+
 ## Additional Edge Cases to Test
 
 ### Multiple Children (If Time Permits)
