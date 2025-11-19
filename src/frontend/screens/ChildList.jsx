@@ -601,11 +601,11 @@ function ChildList() {
         boxShadow="sm"
       >
         <VStack align="stretch" spacing={2}>
+          <Text textStyle="largeLightDark">{request.name}</Text>
           <HStack justify="space-between">
-            <Text textStyle="mediumHeavyDark">{request.name}</Text>
-            <Text textStyle="mediumHeavyDark" color="#00A4D7">{request.value} DC</Text>
+            <Text textStyle="smallLightDark">{request.childName}</Text>
+            <Text textStyle="smallLightDark">{request.value} DooCoins</Text>
           </HStack>
-          <Text textStyle="smallLight" color="#666">{request.childName}</Text>
           <HStack spacing={2} marginTop={2}>
             <button
               className={modelStyles.popup_edit_action_btn}
@@ -693,8 +693,10 @@ function ChildList() {
     };
 
     return (
-      <Box padding={4}>
-        <Text textStyle="smallHeavyDark" marginBottom={4}>Pending Requests</Text>
+      <div className={`child-list-wrapper`} style={{ position: "relative" }}>
+        <h2 style={{ marginBottom: "20px" }} className="title-button">
+          <Text as="span" textStyle="smallHeavyDark">Pending Requests</Text>
+        </h2>
         {alertsLoading ? (
           <Stack>
             <Skeleton height="80px" />
@@ -746,7 +748,7 @@ function ChildList() {
             There are no pending requests.
           </EmptyStateMessage>
         )}
-      </Box>
+      </div>
     );
   };
 
