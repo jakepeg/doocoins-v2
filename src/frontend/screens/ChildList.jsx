@@ -50,12 +50,29 @@ function ChildList() {
   const [activeTab, setActiveTab] = React.useState("children");
   const [alertsList, setAlertsList] = React.useState({ tasks: [], rewards: [] });
   const [alertsLoading, setAlertsLoading] = React.useState(false);
+  const [prevRequestCount, setPrevRequestCount] = React.useState(0);
+  const [shouldPulse, setShouldPulse] = React.useState(false);
+  const requestsIntervalRef = React.useRef();
+  const badgeIntervalRef = React.useRef();
 
   React.useEffect(() => {
     if (actor && isAuthenticated) {
       getChildren({ callService: false });
     }
   }, [actor, isAuthenticated]);
+
+  // Helper function to compare alerts and detect changes
+  function areRequestsDifferent(oldAlerts, newAlerts) {
+    const oldTotal = oldAlerts.tasks.length + oldAlerts.rewards.length;
+    const newTotal = newAlerts.tasks.length + newAlerts.rewards.length;
+    
+    if (oldTotal !== newTotal) return true;
+    
+    const oldIds = [...oldAlerts.tasks.map(t => t.id), ...oldAlerts.rewards.map(r => r.id)].sort().join(',');
+    const newIds = [...newAlerts.tasks.map(t => t.id), ...newAlerts.rewards.map(r => r.id)].sort().join(',');
+    
+    return oldIds !== newIds;
+  }
 
   function getChildren({ callService = false }) {
     del("selectedChild");
@@ -123,12 +140,16 @@ function ChildList() {
     });
   }
 
-  async function getAllChildrenAlerts() {
-    setAlertsLoading(true);
+  async function getAllChildrenAlerts(silent = false) {
+    if (!silent) {
+      setAlertsLoading(true);
+    }
     try {
       const childList = children || await get("childList");
       if (!childList || !childList.length) {
-        setAlertsLoading(false);
+        if (!silent) {
+          setAlertsLoading(false);
+        }
         setAlertsList({ tasks: [], rewards: [] });
         return;
       }
@@ -176,17 +197,149 @@ function ChildList() {
         isClosable: true,
       });
     } finally {
-      setAlertsLoading(false);
+      if (!silent) {
+        setAlertsLoading(false);
+      }
     }
   }
 
   React.useEffect(() => {
-    if (activeTab === "requests" && actor && children) {
+    if (activeTab === "requests" && actor) {
       getAllChildrenAlerts();
-      // Also refresh children data to update pendingRequests counts
-      getChildren({ callService: true });
     }
-  }, [activeTab, actor, children]);
+  }, [activeTab, actor]);
+
+  // Smart polling on requests tab - only updates UI if data changed
+  React.useEffect(() => {
+    if (activeTab === "requests" && actor) {
+      const pollAlerts = async () => {
+        try {
+          const childList = children || await get("childList");
+          if (!childList || !childList.length) return;
+
+          const allRequests = await Promise.all(
+            childList.map(async (child) => {
+              const [tasks, rewards] = await Promise.all([
+                actor?.getTaskReqs(child.id).then(res => Object.values(res || {})),
+                actor?.getRewardReqs(child.id)
+              ]);
+              
+              const tasksWithChild = (tasks || []).map(task => ({
+                ...task,
+                childId: child.id,
+                childName: child.name,
+                type: 'task'
+              }));
+              
+              const rewardsWithChild = (rewards || []).map(reward => ({
+                ...reward,
+                childId: child.id,
+                childName: child.name,
+                type: 'reward'
+              }));
+              
+              return [...tasksWithChild, ...rewardsWithChild];
+            })
+          );
+
+          const flatRequests = allRequests.flat().sort((a, b) => {
+            return b.id?.localeCompare(a.id) || 0;
+          });
+
+          const tasks = flatRequests.filter(r => r.type === 'task');
+          const rewards = flatRequests.filter(r => r.type === 'reward');
+          const newAlerts = { tasks, rewards };
+
+          // Only update if data actually changed
+          if (areRequestsDifferent(alertsList, newAlerts)) {
+            setAlertsList(newAlerts);
+          }
+        } catch (error) {
+          console.error('Error polling alerts:', error);
+        }
+      };
+
+      requestsIntervalRef.current = setInterval(pollAlerts, 20000);
+
+      return () => {
+        if (requestsIntervalRef.current) {
+          clearInterval(requestsIntervalRef.current);
+        }
+      };
+    }
+  }, [activeTab, actor, children, alertsList]);
+
+  // Background polling for badge counts - runs on all tabs
+  React.useEffect(() => {
+    if (!actor || !children?.length) return;
+
+    const pollBadgeCounts = async () => {
+      try {
+        const updatedChildren = await Promise.all(
+          children.map(async (child) => {
+            const [rewardCount, taskCount] = await Promise.all([
+              actor?.hasRewards(child.id),
+              actor?.hasTasks(child.id)
+            ]);
+            
+            return {
+              ...child,
+              pendingRequests: (parseInt(rewardCount) || 0) + (parseInt(taskCount) || 0)
+            };
+          })
+        );
+
+        const newTotal = updatedChildren.reduce((sum, child) => sum + (child.pendingRequests || 0), 0);
+        
+        // Trigger pulse animation if count increased
+        if (newTotal > prevRequestCount) {
+          setShouldPulse(true);
+          setTimeout(() => setShouldPulse(false), 500);
+        }
+        
+        setPrevRequestCount(newTotal);
+        setChildren(updatedChildren);
+        await set("childList", updatedChildren);
+      } catch (error) {
+        console.error('Error polling badge counts:', error);
+      }
+    };
+
+    badgeIntervalRef.current = setInterval(pollBadgeCounts, 30000);
+
+    return () => {
+      if (badgeIntervalRef.current) {
+        clearInterval(badgeIntervalRef.current);
+      }
+    };
+  }, [actor, children, prevRequestCount]);
+
+  // Pause polling when app is backgrounded
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Clear intervals when app is backgrounded
+        if (requestsIntervalRef.current) {
+          clearInterval(requestsIntervalRef.current);
+        }
+        if (badgeIntervalRef.current) {
+          clearInterval(badgeIntervalRef.current);
+        }
+      } else {
+        // Restart polling when app becomes visible
+        if (activeTab === "requests" && actor) {
+          // Trigger immediate refresh on requests tab
+          getAllChildrenAlerts(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [activeTab, actor]);
 
   function updateChild(childID, childName) {
     handleCloseEditPopup();
@@ -892,6 +1045,12 @@ function ChildList() {
               >
                 <Text 
                   textStyle="largeHeavyWhite"
+                  style={{
+                    color: (children?.reduce((sum, child) => sum + (child.pendingRequests || 0), 0) || 0) > 0 ? '#FF4444' : 'white',
+                    transform: shouldPulse ? 'scale(1.2)' : 'scale(1)',
+                    transition: 'transform 0.5s ease, color 0.3s ease',
+                    display: 'inline-block'
+                  }}
                 >
                   {children?.reduce((sum, child) => sum + (child.pendingRequests || 0), 0) || 0}
                 </Text>
