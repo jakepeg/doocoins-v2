@@ -298,6 +298,11 @@ function ChildList() {
           setTimeout(() => setShouldPulse(false), 500);
         }
         
+        // If badge count changed and we're on requests tab, refresh the list
+        if (newTotal !== prevRequestCount && activeTab === "requests") {
+          getAllChildrenAlerts(true);
+        }
+        
         setPrevRequestCount(newTotal);
         setChildren(updatedChildren);
         await set("childList", updatedChildren);
@@ -317,7 +322,7 @@ function ChildList() {
         clearInterval(badgeIntervalRef.current);
       }
     };
-  }, [actor, children, prevRequestCount]);
+  }, [actor, children, prevRequestCount, activeTab]);
 
   // Pause polling when app is backgrounded
   React.useEffect(() => {
