@@ -88,6 +88,63 @@ const Balance = () => {
     return () => window.removeEventListener("focus", handleFocus);
   }, [child?.id, actor, refetching]);
 
+  // Poll for request status when pending approval - check if parent declined
+  React.useEffect(() => {
+    if (!isPendingApproval || !child?.id || !actor || !goal?.id) return;
+
+    const checkRequestStatus = async () => {
+      try {
+        // Get all pending reward requests for this child
+        const requests = await actor.getRewardReqs(child.id);
+        
+        // Check if our specific reward request still exists
+        const ourRequest = requests.find(req => 
+          parseInt(req.reward) === parseInt(goal.id) || 
+          req.id?.includes(`${child.id}-${goal.id}`)
+        );
+        
+        if (!ourRequest) {
+          // Request no longer exists - parent either approved or declined it
+          // Fetch fresh data from backend to check current goal status
+          const currentGoalId = await actor.getCurrentGoal(child.id);
+          const parsedGoalId = parseInt(currentGoalId);
+          
+          // If goal was cleared (set to 0), it was approved
+          if (parsedGoalId === 0 || isNaN(parsedGoalId)) {
+            console.log("Request was approved by parent (goal cleared)");
+            // Refresh data to show updated balance/transactions
+            await refetchContent({ refetch: true });
+          } else {
+            // Goal still exists but request is gone - it was declined
+            console.log("Request was declined by parent, clearing pending state");
+            toast({
+              title: "Request declined.",
+              description: "Your reward request was declined. You can try again!",
+              status: "error",
+              variant: "solid",
+              duration: 4000,
+              isClosable: true,
+            });
+          }
+          
+          // Clear pending state in either case
+          setIsPendingApproval(false);
+          set("goalPendingApproval", false, store);
+        }
+      } catch (error) {
+        console.error("Error checking request status:", error);
+      }
+    };
+
+    // Check immediately on mount
+    checkRequestStatus();
+
+    // Poll every 5 seconds while pending
+    const intervalId = setInterval(checkRequestStatus, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [isPendingApproval, child?.id, actor, goal?.id, store, toast]);
+
   const getChildGoal = () => {
     get("childGoal", store).then(async (data) => {
       if (data) {
@@ -278,6 +335,30 @@ const Balance = () => {
     
     try {
       setIsLoading(true);
+      
+      // Check if there's already a pending request for this reward
+      const existingRequests = await actor.getRewardReqs(child.id);
+      const existingRequest = existingRequests.find(req => 
+        parseInt(req.reward) === parseInt(goal.id)
+      );
+      
+      if (existingRequest) {
+        // Request already exists, just update UI state
+        console.log("Request already exists, updating UI state");
+        setIsPendingApproval(true);
+        set("goalPendingApproval", true, store);
+        toast({
+          title: `Request already pending.`,
+          description: "Your reward claim is awaiting parent approval.",
+          status: "success",
+          variant: "solid",
+          duration: 4000,
+          isClosable: true,
+        });
+        return;
+      }
+      
+      // Create new request
       await actor.requestClaimReward(
         child.id,
         parseInt(goal.id),

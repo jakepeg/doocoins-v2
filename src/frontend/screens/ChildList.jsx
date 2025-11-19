@@ -306,7 +306,11 @@ function ChildList() {
       }
     };
 
-    badgeIntervalRef.current = setInterval(pollBadgeCounts, 30000);
+    // Run immediately on mount
+    pollBadgeCounts();
+
+    // Then poll every 10 seconds
+    badgeIntervalRef.current = setInterval(pollBadgeCounts, 10000);
 
     return () => {
       if (badgeIntervalRef.current) {
@@ -332,6 +336,10 @@ function ChildList() {
           // Trigger immediate refresh on requests tab
           getAllChildrenAlerts(true);
         }
+        // Always refresh badge counts when app becomes visible
+        if (actor && children?.length) {
+          getChildren({ callService: true });
+        }
       }
     };
 
@@ -340,7 +348,7 @@ function ChildList() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [activeTab, actor]);
+  }, [activeTab, actor, children]);
 
   function updateChild(childID, childName) {
     handleCloseEditPopup();
