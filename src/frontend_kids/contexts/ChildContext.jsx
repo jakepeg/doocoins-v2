@@ -278,6 +278,90 @@ export default function ChildProvider({ children }) {
     }
   }, [isLoading])
 
+  // Poll for completed requests and auto-refresh when approved/declined
+  useEffect(() => {
+    if (!actor || !child?.id || refetching) return;
+
+    let previousRequestCounts = { tasks: 0, rewards: 0 };
+
+    const checkRequestStatus = async () => {
+      try {
+        // Get current pending requests
+        const [taskRequests, rewardRequests] = await Promise.all([
+          actor.getTaskReqs(child.id),
+          actor.getRewardReqs(child.id)
+        ]);
+
+        const currentCounts = {
+          tasks: taskRequests.length,
+          rewards: rewardRequests.length
+        };
+
+        // If request count decreased, a request was approved or declined
+        if (previousRequestCounts.tasks > currentCounts.tasks || 
+            previousRequestCounts.rewards > currentCounts.rewards) {
+          console.log('Request count decreased, refreshing data...');
+          
+          // Refresh all data to show updated balance and transactions
+          await refetchContent({ refetch: true });
+          
+          toast({
+            title: "Request processed",
+            description: "Your request has been reviewed!",
+            status: "success",
+            variant: "solid",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+
+        previousRequestCounts = currentCounts;
+      } catch (error) {
+        console.error('Error checking request status:', error);
+      }
+    };
+
+    // Check every 10 seconds
+    const intervalId = setInterval(checkRequestStatus, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [actor, child?.id, refetching, refetchContent, toast]);
+
+  // Refresh data when window gains focus
+  useEffect(() => {
+    if (!actor || !child?.id) return;
+
+    const handleFocus = async () => {
+      console.log('Window focused, checking for updates...');
+      
+      try {
+        // Quick check if there are any completed requests
+        const [taskRequests, rewardRequests] = await Promise.all([
+          actor.getTaskReqs(child.id),
+          actor.getRewardReqs(child.id)
+        ]);
+
+        // If we had pending requests stored and now have fewer, refresh
+        const storedTaskCount = await get('pendingTaskCount', store);
+        const storedRewardCount = await get('pendingRewardCount', store);
+        
+        if ((storedTaskCount && taskRequests.length < storedTaskCount) ||
+            (storedRewardCount && rewardRequests.length < storedRewardCount)) {
+          await refetchContent({ refetch: true });
+        }
+
+        // Update stored counts
+        await set('pendingTaskCount', taskRequests.length, store);
+        await set('pendingRewardCount', rewardRequests.length, store);
+      } catch (error) {
+        console.error('Error on focus refresh:', error);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [actor, child?.id, refetchContent, store]);
+
   const values = React.useCallback(() => {
     return {
       child,

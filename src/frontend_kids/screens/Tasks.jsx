@@ -146,6 +146,11 @@ const Tasks = () => {
         selectedTask.name,
         selectedTask.value
       );
+      
+      // Update stored pending count
+      const currentCount = await actor.getTaskReqs(child.id);
+      await set('pendingTaskCount', currentCount.length, store);
+      
       toast({
         title: `well done ${child.name}, the task is pending`,
         status: "success",

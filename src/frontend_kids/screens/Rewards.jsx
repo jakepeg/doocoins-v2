@@ -272,6 +272,11 @@ const Rewards = () => {
         parseInt(selectedReward.value),
         selectedReward.name
       );
+      
+      // Update stored pending count
+      const currentCount = await actor.getRewardReqs(child.id);
+      await set('pendingRewardCount', currentCount.length, store);
+      
       toast({
         title: `well done ${child.name}, the reward is pending`,
         status: "success",
