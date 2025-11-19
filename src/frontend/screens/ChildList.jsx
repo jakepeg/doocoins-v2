@@ -52,6 +52,7 @@ function ChildList() {
   const [alertsLoading, setAlertsLoading] = React.useState(false);
   const [prevRequestCount, setPrevRequestCount] = React.useState(0);
   const [shouldPulse, setShouldPulse] = React.useState(false);
+  const [processingRequests, setProcessingRequests] = React.useState(new Set());
   const requestsIntervalRef = React.useRef();
   const badgeIntervalRef = React.useRef();
 
@@ -790,6 +791,26 @@ function ChildList() {
     );
 
     const approveRequest = async ({ task, reward }) => {
+      const requestId = task?.id || reward?.strId || reward?.id;
+      
+      // Instant feedback: mark as processing
+      setProcessingRequests(prev => new Set([...prev, requestId]));
+      
+      // Optimistic UI: remove from list immediately
+      const itemName = task?.childName || reward?.childName;
+      setAlertsList(prev => ({
+        tasks: task ? prev.tasks.filter(t => t.id !== task.id) : prev.tasks,
+        rewards: reward ? prev.rewards.filter(r => r.id !== reward.id && r.strId !== reward.strId) : prev.rewards
+      }));
+      
+      // Show instant toast
+      toast({
+        title: task ? `Approving task for ${itemName}...` : `Approving reward for ${itemName}...`,
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      
       try {
         if (task) {
           let dateNum = Math.floor(Date.now() / 1000);
@@ -818,10 +839,12 @@ function ChildList() {
             isClosable: true,
           });
         }
-        getAllChildrenAlerts();
+        getAllChildrenAlerts(true);
         getChildren({ callService: true });
       } catch (error) {
         console.error('Approval error:', error);
+        // Revert optimistic update on error
+        getAllChildrenAlerts(true);
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,
@@ -829,26 +852,60 @@ function ChildList() {
           duration: 4000,
           isClosable: true,
         });
+      } finally {
+        setProcessingRequests(prev => {
+          const next = new Set(prev);
+          next.delete(requestId);
+          return next;
+        });
       }
     };
 
     const rejectRequest = async ({ task, reward }) => {
+      const requestId = task?.id || reward?.strId || reward?.id;
+      
+      // Instant feedback: mark as processing
+      setProcessingRequests(prev => new Set([...prev, requestId]));
+      
+      // Optimistic UI: remove from list immediately
+      const itemName = task?.childName || reward?.childName;
+      setAlertsList(prev => ({
+        tasks: task ? prev.tasks.filter(t => t.id !== task.id) : prev.tasks,
+        rewards: reward ? prev.rewards.filter(r => r.id !== reward.id && r.strId !== reward.strId) : prev.rewards
+      }));
+      
+      // Show instant toast
+      toast({
+        title: `Declining request for ${itemName}...`,
+        status: "info",
+        duration: 2000,
+        isClosable: true,
+      });
+      
       try {
         if (task) {
           await actor.removeTaskReq(task.childId, task.id);
         } else if (reward) {
           await actor.removeRewardReq(reward.childId, reward.strId);
         }
-        getAllChildrenAlerts();
+        getAllChildrenAlerts(true);
         getChildren({ callService: true });
       } catch (error) {
         console.error('Rejection error:', error);
+        // Revert optimistic update on error
+        getAllChildrenAlerts(true);
         toast({
           title: "An error occurred.",
           description: `Apologies, please try again later.`,
           status: "error",
           duration: 4000,
           isClosable: true,
+        });
+      } finally {
+        setProcessingRequests(prev => {
+          const next = new Set(prev);
+          next.delete(requestId);
+          return next;
         });
       }
     };
