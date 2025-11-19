@@ -183,6 +183,8 @@ function ChildList() {
   React.useEffect(() => {
     if (activeTab === "requests" && actor && children) {
       getAllChildrenAlerts();
+      // Also refresh children data to update pendingRequests counts
+      getChildren({ callService: true });
     }
   }, [activeTab, actor, children]);
 
@@ -637,8 +639,11 @@ function ChildList() {
     const approveRequest = async ({ task, reward }) => {
       try {
         if (task) {
-          const date = new Date();
+          let dateNum = Math.floor(Date.now() / 1000);
+          let date = dateNum.toString();
           await actor.approveTask(task.childId, parseInt(task.taskId), date);
+          // Remove the task request after approval
+          await actor.removeTaskReq(task.childId, task.id);
           toast({
             title: `Keep up the good work, ${task.childName}.`,
             status: "success",
@@ -646,10 +651,13 @@ function ChildList() {
             isClosable: true,
           });
         } else if (reward) {
-          const date = new Date();
+          let dateNum = Math.floor(Date.now() / 1000);
+          let date = dateNum.toString();
           const targetChildId = reward.childId;
           await actor.claimGoal(targetChildId, parseInt(reward.id), date);
           await actor?.currentGoal(targetChildId, 0);
+          // Remove the reward request after claiming
+          await actor.removeRewardReq(reward.childId, reward.strId);
           toast({
             title: `Yay - well deserved, ${reward.childName}.`,
             status: "success",
