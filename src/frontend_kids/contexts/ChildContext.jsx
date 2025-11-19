@@ -342,10 +342,30 @@ export default function ChildProvider({ children }) {
     // Check immediately to initialize
     checkForChanges();
 
-    // Then check every 10 seconds
-    const intervalId = setInterval(checkForChanges, 10000);
+    // Then check every 10 seconds when visible
+    let intervalId = setInterval(checkForChanges, 10000);
+    
+    // Adjust polling based on visibility
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Clear fast polling when backgrounded
+        clearInterval(intervalId);
+        // Set up slow 5-minute background polling
+        intervalId = setInterval(checkForChanges, 300000); // 5 minutes
+      } else {
+        // App became visible - switch back to fast polling
+        clearInterval(intervalId);
+        checkForChanges(); // Immediate check
+        intervalId = setInterval(checkForChanges, 10000); // 10 seconds
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
-    return () => clearInterval(intervalId);
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [actor, child?.id, refetching, refetchContent, toast]);
 
   // Refresh data when window gains focus

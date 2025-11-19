@@ -325,24 +325,65 @@ function ChildList() {
     };
   }, [actor, children, prevRequestCount, activeTab]);
 
-  // Pause polling when app is backgrounded
+  // Adjust polling when app is backgrounded - slower polls to save battery
   React.useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // Clear intervals when app is backgrounded
+        // Clear fast intervals when app is backgrounded
         if (requestsIntervalRef.current) {
           clearInterval(requestsIntervalRef.current);
         }
         if (badgeIntervalRef.current) {
           clearInterval(badgeIntervalRef.current);
         }
+        
+        // Set up slow 5-minute background polling for notifications
+        if (actor && children?.length) {
+          const backgroundPoll = async () => {
+            if (!document.hidden) return; // Double check still hidden
+            
+            try {
+              const updatedChildren = await Promise.all(
+                children.map(async (child) => {
+                  const [rewardCount, taskCount] = await Promise.all([
+                    actor?.hasRewards(child.id),
+                    actor?.hasTasks(child.id)
+                  ]);
+                  
+                  return {
+                    ...child,
+                    pendingRequests: (parseInt(rewardCount) || 0) + (parseInt(taskCount) || 0)
+                  };
+                })
+              );
+
+              const newTotal = updatedChildren.reduce((sum, child) => sum + (child.pendingRequests || 0), 0);
+              
+              if (newTotal !== prevRequestCount) {
+                setPrevRequestCount(newTotal);
+                setChildren(updatedChildren);
+                await set("childList", updatedChildren);
+              }
+            } catch (error) {
+              console.error('Error polling badge counts in background:', error);
+            }
+          };
+          
+          badgeIntervalRef.current = setInterval(backgroundPoll, 300000); // 5 minutes
+        }
       } else {
-        // Restart polling when app becomes visible
+        // App became visible - clear slow polling and trigger immediate refresh
+        if (requestsIntervalRef.current) {
+          clearInterval(requestsIntervalRef.current);
+        }
+        if (badgeIntervalRef.current) {
+          clearInterval(badgeIntervalRef.current);
+        }
+        
+        // Trigger immediate refresh
         if (activeTab === "requests" && actor) {
-          // Trigger immediate refresh on requests tab
           getAllChildrenAlerts(true);
         }
-        // Always refresh badge counts when app becomes visible
         if (actor && children?.length) {
           getChildren({ callService: true });
         }
@@ -354,7 +395,7 @@ function ChildList() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [activeTab, actor, children]);
+  }, [activeTab, actor, children, prevRequestCount]);
 
   function updateChild(childID, childName) {
     handleCloseEditPopup();
