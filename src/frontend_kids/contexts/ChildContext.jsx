@@ -278,51 +278,72 @@ export default function ChildProvider({ children }) {
     }
   }, [isLoading])
 
-  // Poll for completed requests and auto-refresh when approved/declined
+  // Poll for balance and request changes to auto-refresh
   useEffect(() => {
     if (!actor || !child?.id || refetching) return;
 
-    let previousRequestCounts = { tasks: 0, rewards: 0 };
+    let previousData = null;
 
-    const checkRequestStatus = async () => {
+    const checkForChanges = async () => {
       try {
-        // Get current pending requests
-        const [taskRequests, rewardRequests] = await Promise.all([
+        // Get current pending requests and balance
+        const [taskRequests, rewardRequests, currentBalance] = await Promise.all([
           actor.getTaskReqs(child.id),
-          actor.getRewardReqs(child.id)
+          actor.getRewardReqs(child.id),
+          actor.getBalance(child.id)
         ]);
 
-        const currentCounts = {
+        const currentData = {
           tasks: taskRequests.length,
-          rewards: rewardRequests.length
+          rewards: rewardRequests.length,
+          balance: parseInt(currentBalance)
         };
 
-        // If request count decreased, a request was approved or declined
-        if (previousRequestCounts.tasks > currentCounts.tasks || 
-            previousRequestCounts.rewards > currentCounts.rewards) {
-          console.log('Request count decreased, refreshing data...');
+        // Initialize on first check
+        if (previousData === null) {
+          previousData = currentData;
+          return;
+        }
+
+        // Check if anything changed
+        const requestCountDecreased = previousData.tasks > currentData.tasks || 
+                                      previousData.rewards > currentData.rewards;
+        const balanceChanged = previousData.balance !== currentData.balance;
+
+        if (requestCountDecreased || balanceChanged) {
+          console.log('Data changed, refreshing...', {
+            requestCountDecreased,
+            balanceChanged,
+            oldBalance: previousData.balance,
+            newBalance: currentData.balance
+          });
           
           // Refresh all data to show updated balance and transactions
           await refetchContent({ refetch: true });
           
-          toast({
-            title: "Request processed",
-            description: "Your request has been reviewed!",
-            status: "success",
-            variant: "solid",
-            duration: 3000,
-            isClosable: true,
-          });
+          if (requestCountDecreased) {
+            toast({
+              title: "Request processed",
+              description: "Your request has been reviewed!",
+              status: "success",
+              variant: "solid",
+              duration: 3000,
+              isClosable: true,
+            });
+          }
         }
 
-        previousRequestCounts = currentCounts;
+        previousData = currentData;
       } catch (error) {
-        console.error('Error checking request status:', error);
+        console.error('Error checking for changes:', error);
       }
     };
 
-    // Check every 10 seconds
-    const intervalId = setInterval(checkRequestStatus, 10000);
+    // Check immediately to initialize
+    checkForChanges();
+
+    // Then check every 10 seconds
+    const intervalId = setInterval(checkForChanges, 10000);
 
     return () => clearInterval(intervalId);
   }, [actor, child?.id, refetching, refetchContent, toast]);
