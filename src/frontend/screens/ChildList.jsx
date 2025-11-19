@@ -58,7 +58,7 @@ function ChildList() {
 
   React.useEffect(() => {
     if (actor && isAuthenticated) {
-      getChildren({ callService: false });
+      getChildren({ callService: true });
     }
   }, [actor, isAuthenticated]);
 
@@ -136,6 +136,7 @@ function ChildList() {
           }),
         );
         setChildren(updatedChildrenData);
+        await set("childList", updatedChildrenData);
         setLoader((prevState) => ({ ...prevState, init: false }));
       }
     });
